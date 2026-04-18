@@ -1,4 +1,6 @@
 import { Metadata, ResolvingMetadata } from 'next';
+import { ObjectId } from 'mongodb';
+import { connectToDatabase } from '@/database/db';
 import MonkProfileClient from './MonkProfileClient';
 
 export function generateStaticParams() {
@@ -36,12 +38,6 @@ export async function generateMetadata(
         }
     }
 
-    // Fetch data - using absolute URL if needed or relative if internal API logic supports it
-    // In Server Components, usually recommend calling DB directly or absolute URL
-    // Since we don't have direct DB access configured here comfortably, we'll try the API route with full URL if possible
-    // For now using localhost or assuming deployment URL - better to use process.env value
-    // Ideally we should import a getMonk fetcher function so we don't depend on self-API call during build
-    // But let's try fetch
     let product;
     try {
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
@@ -60,7 +56,6 @@ export async function generateMetadata(
         }
     }
 
-    // Optionally access and extend (rather than replace) parent metadata
     const previousImages = (await parent).openGraph?.images || [];
 
     return {
@@ -82,11 +77,73 @@ export async function generateMetadata(
 }
 
 export default async function MonkPage({ params }: Props) {
-    // We need to await params in Next.js 15+, or it's good practice anyway if it might be a promise
-    // The type definition above says Promise
     const resolvedParams = await params;
     if (resolvedParams.id === 'initial') {
         return <SkeletonLoader />;
     }
-    return <MonkProfileClient />;
+
+    let initialMonk: Record<string, unknown> | null = null;
+    const initialServices: unknown[] = [];
+    const initialReviews = {
+        reviews: [] as unknown[],
+        stats: { averageRating: 0, totalReviews: 0 },
+    };
+
+    try {
+        const { db } = await connectToDatabase();
+        const id = resolvedParams.id;
+
+        let query: { $or: Record<string, unknown>[] } = {
+            $or: [{ clerkId: id }, { _id: id }],
+        };
+        if (ObjectId.isValid(id)) {
+            query.$or.push({ _id: new ObjectId(id) });
+        }
+
+        const reviewQuery = ObjectId.isValid(id)
+            ? { monkId: new ObjectId(id) }
+            : { monkId: id };
+
+        const [monkDoc, servicesDoc, reviewsDoc] = await Promise.all([
+            db.collection('users').findOne({ $and: [query, { role: 'monk' }] }),
+            db.collection('services').find({}).toArray(),
+            db.collection('reviews').find(reviewQuery).toArray(),
+        ]);
+
+        if (monkDoc) {
+            initialMonk = { ...monkDoc, _id: monkDoc._id.toString() } as Record<string, unknown>;
+        }
+
+        for (const s of servicesDoc) {
+            const doc = s as { _id: ObjectId };
+            initialServices.push({ ...s, _id: doc._id.toString() });
+        }
+
+        const ratings = (reviewsDoc as { rating?: number }[])
+            .map((r) => r.rating)
+            .filter((n): n is number => typeof n === 'number' && !Number.isNaN(n));
+        initialReviews.reviews = (reviewsDoc as { _id: ObjectId }[]).map((r) => ({
+            ...r,
+            _id: r._id.toString(),
+        }));
+        initialReviews.stats = {
+            totalReviews: ratings.length,
+            averageRating:
+                ratings.length > 0
+                    ? Number(
+                        (ratings.reduce((a: number, b: number) => a + b, 0) / ratings.length).toFixed(1),
+                    )
+                    : 0,
+        };
+    } catch (e) {
+        console.error('Server prefetch error:', e);
+    }
+
+    return (
+        <MonkProfileClient
+            initialMonk={initialMonk}
+            initialServices={initialServices}
+            initialReviews={initialReviews}
+        />
+    );
 }

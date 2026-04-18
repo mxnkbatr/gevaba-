@@ -421,7 +421,7 @@ export default function BookingPage() {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto pb-40">
+      <div className="flex-1 overflow-y-auto pb-6">
 
         {/* ══ SECTION 1: SERVICE SELECTION ══ */}
         {allServices.length > 0 && (
@@ -686,53 +686,61 @@ export default function BookingPage() {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
-      {/* ══ STICKY CTA BUTTON ══ */}
-      <div
-        className="fixed left-0 right-0 px-5 pt-4 pb-3 bg-white/95 backdrop-blur-xl border-t border-stone/10 z-40"
-        style={{ bottom: "calc(64px + env(safe-area-inset-bottom, 0px))" }}
-      >
-        <AnimatePresence mode="wait">
-          {step === "error" ? (
-            <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
-              <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-2xl p-3 mb-2">
-                <AlertCircle size={16} className="text-red-500 shrink-0" />
-                <p className="text-[13px] font-bold text-red-600">{errorMsg}</p>
-              </div>
-              <button
-                onClick={() => { setStep("select"); setErrorMsg(""); }}
-                className="cta-button w-full py-4 min-h-[52px] rounded-[1.15rem] text-[13px] active:scale-95 transition-all border-0"
-              >
-                {t({ mn: "Дахин оролдох", en: "Try Again" })}
-              </button>
-            </motion.div>
-          ) : (
-            <motion.button
-              key="confirm"
-              whileTap={selectedDate && selectedTime && !submitting ? { scale: 0.97 } : {}}
-              onClick={handleConfirm}
-              disabled={!selectedService || !selectedDate || !selectedTime || submitting}
-              className={`w-full h-16 flex items-center justify-center gap-2 transition-all ${
-                selectedService && selectedDate && selectedTime && !submitting
-                  ? "cta-button border-0 shadow-gold rounded-[1.15rem]"
-                  : "rounded-[2rem] bg-stone/30 text-earth/40 cursor-not-allowed border border-transparent font-semibold text-[15px]"
-              }`}
-            >
-              {submitting ? (
-                <>
-                  <Loader2 size={22} className="animate-spin" />
-                  <span>{t({ mn: "Захиалж байна...", en: "Booking..." })}</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles size={20} />
-                  <span>{t({ mn: "Захиалга баталгаажуулах", en: "Confirm Booking" })}</span>
-                </>
-              )}
-            </motion.button>
-          )}
-        </AnimatePresence>
+        {/* ══ CONFIRM CTA (урсгалд — хуанлийг бүрхэхгүй) ══ */}
+        <div className="mt-8 border-t border-stone/15 bg-cream px-5 pt-5 pb-2">
+          <AnimatePresence mode="wait">
+            {step === "error" ? (
+              <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
+                <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-2xl p-3 mb-2">
+                  <AlertCircle size={16} className="text-red-500 shrink-0" />
+                  <p className="text-[13px] font-bold text-red-600">{errorMsg}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setStep("select"); setErrorMsg(""); }}
+                  className="cta-button w-full py-4 min-h-[52px] rounded-[1.15rem] text-[13px] active:scale-95 transition-all border-0"
+                >
+                  {t({ mn: "Дахин оролдох", en: "Try Again" })}
+                </button>
+              </motion.div>
+            ) : (
+              <motion.div key="confirm" initial={false}>
+                {(!selectedService || !selectedTime) && (
+                  <p className="mb-3 text-center text-[11px] font-semibold uppercase tracking-wider text-earth/45">
+                    {t({
+                      mn: "Үйлчилгээ болон цаг сонгоно уу",
+                      en: "Choose a service and a time slot",
+                    })}
+                  </p>
+                )}
+                <motion.button
+                  type="button"
+                  whileTap={selectedService && selectedDate && selectedTime && !submitting ? { scale: 0.97 } : {}}
+                  onClick={handleConfirm}
+                  disabled={!selectedService || !selectedDate || !selectedTime || submitting}
+                  className={`w-full h-16 flex items-center justify-center gap-2 transition-all ${
+                    selectedService && selectedDate && selectedTime && !submitting
+                      ? "cta-button border-0 shadow-gold rounded-[1.15rem]"
+                      : "rounded-[1.15rem] bg-stone/25 text-earth/50 cursor-not-allowed border border-stone/20 font-semibold text-[15px]"
+                  }`}
+                >
+                  {submitting ? (
+                    <>
+                      <Loader2 size={22} className="animate-spin" />
+                      <span>{t({ mn: "Захиалж байна...", en: "Booking..." })}</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles size={20} className={selectedService && selectedDate && selectedTime ? "text-neutral-900" : "text-earth/35"} />
+                      <span>{t({ mn: "Захиалга баталгаажуулах", en: "Confirm Booking" })}</span>
+                    </>
+                  )}
+                </motion.button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );

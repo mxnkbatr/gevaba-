@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -102,9 +102,30 @@ export default function HomePage({
   );
 
   const [heroIndex, setHeroIndex] = useState(0);
+  const prevHeroIndexRef = useRef(0);
+
+  /** Only mount hero images for current, neighbors, and previous slide — fewer parallel LCP requests */
+  const heroSlideIndicesToRender = useMemo(() => {
+    const n = heroSlides.length;
+    if (n <= 1) return [0];
+    const prev = prevHeroIndexRef.current;
+    return [
+      ...new Set([
+        heroIndex,
+        (heroIndex - 1 + n) % n,
+        (heroIndex + 1) % n,
+        prev,
+      ]),
+    ];
+  }, [heroIndex, heroSlides.length]);
+
+  useEffect(() => {
+    prevHeroIndexRef.current = heroIndex;
+  }, [heroIndex]);
 
   useEffect(() => {
     setHeroIndex(0);
+    prevHeroIndexRef.current = 0;
   }, [heroSlides.length]);
 
   useEffect(() => {
@@ -178,7 +199,9 @@ export default function HomePage({
       {/* — Hero carousel (VCM-style) — */}
       <header className="mb-8 anim-fade-up">
         <div className="relative aspect-[16/11] w-full overflow-hidden rounded-[20px] shadow-sm">
-          {heroSlides.map((slide, i) => (
+          {heroSlideIndicesToRender.map((i) => {
+            const slide = heroSlides[i];
+            return (
             <div
               key={`${slide.key}-${i}`}
               className={`absolute inset-0 transition-opacity duration-700 ease-out ${
@@ -193,7 +216,8 @@ export default function HomePage({
                   fill
                   className="object-cover"
                   sizes="(max-width:768px) 100vw, 640px"
-                  priority={i === 0}
+                  priority={i === 0 && heroIndex === 0}
+                  fetchPriority={i === heroIndex ? "high" : "low"}
                   unoptimized={
                     slide.src.startsWith("http") &&
                     !slide.src.includes("res.cloudinary.com")
@@ -206,7 +230,8 @@ export default function HomePage({
                 />
               )}
             </div>
-          ))}
+            );
+          })}
 
           <div
             className="absolute inset-0 z-[1] bg-gradient-to-t from-black/75 via-black/25 to-black/10 pointer-events-none"

@@ -56,31 +56,32 @@ export default function ProfilePage() {
     if (!user) return;
     try {
       const userId = user.id;
-      
-      // 1. Fetch Profile first (needed to know if monk)
-      let profileData = null;
-      if (user.role === "monk") {
-        const r = await fetch(`/api/monks/${userId}`);
-        if (r.ok) profileData = await r.json();
-      } else {
-        const r = await fetch(`/api/users/${userId}`, { cache: "no-store" });
-        if (r.ok) profileData = await r.json();
-      }
-      
+
+      const profileUrl =
+        user.role === "monk"
+          ? `/api/monks/${userId}`
+          : `/api/users/${userId}`;
+
+      const [profileRes, monksRes] = await Promise.all([
+        fetch(profileUrl, { cache: "no-store" }),
+        fetch("/api/monks"),
+      ]);
+
+      let profileData = profileRes.ok ? await profileRes.json() : null;
       if (!profileData && user.authType === "custom") profileData = user;
-      
+
       if (profileData) {
         setProfile(profileData);
         const isM = profileData.role === "monk";
-        
-        // 2. Parallel fetch bookings and monks
-        const [bRes, mRes] = await Promise.all([
-          fetch(`/api/bookings?${isM ? "monkId" : "userId"}=${profileData._id}`),
-          !isM ? fetch("/api/monks") : Promise.resolve(null)
-        ]);
 
-        if (bRes?.ok) setBookings(await bRes.json());
-        if (mRes?.ok) setAllMonks(await mRes.json());
+        const bRes = await fetch(
+          `/api/bookings?${isM ? "monkId" : "userId"}=${profileData._id}`,
+        );
+        if (bRes.ok) setBookings(await bRes.json());
+
+        if (!isM && monksRes?.ok) {
+          setAllMonks(await monksRes.json());
+        }
       }
     } catch (e) {
       console.error("Profile fetch error:", e);

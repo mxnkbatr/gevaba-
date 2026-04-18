@@ -9,15 +9,39 @@ export const revalidate = 60;
 const getMonks = cache(async () => {
   try {
     const { db } = await connectToDatabase();
-    const monks = await db.collection("users").find({ role: "monk" }).toArray() as unknown as Monk[];
+    // List view only: same filter + projection as /api/monks (avoid huge bios/schedules on RSC)
+    const monks = (await db
+      .collection("users")
+      .find(
+        {
+          role: "monk",
+          $or: [
+            { "name.en": { $exists: true, $ne: "" } },
+            { "name.mn": { $exists: true, $ne: "" } },
+          ],
+        },
+        {
+          projection: {
+            name: 1,
+            title: 1,
+            image: 1,
+            imageUrl: 1,
+            avatar: 1,
+            isAvailable: 1,
+            isSpecial: 1,
+            specialties: 1,
+            monkNumber: 1,
+            yearsOfExperience: 1,
+          },
+        },
+      )
+      .toArray()) as unknown as Monk[];
 
-    // Serialize for safely passing to Client Component
-    const serialized = monks.map(monk => ({
+    const serialized = monks.map((monk) => ({
       ...monk,
-      _id: monk._id?.toString() ?? ""
+      _id: monk._id?.toString() ?? "",
     }));
 
-    // Sort: Special monks first
     return serialized.sort((a, b) => {
       if (a.isSpecial && !b.isSpecial) return -1;
       if (!a.isSpecial && b.isSpecial) return 1;

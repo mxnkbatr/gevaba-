@@ -25,32 +25,68 @@ export default function MonkShowcaseClient({
   const [monks, setMonks] = useState<Monk[]>(initialMonks || []);
 
   useEffect(() => {
-    const refreshMonks = async () => {
-      try {
-        const cached = await getCachedMonks();
-        if (cached && cached.length > 0) {
-          setMonks(cached);
-        }
+    let cancelled = false;
 
+    const refreshFromNetwork = async () => {
+      try {
         const res = await fetch("/api/monks");
-        if (res.ok) {
-          const freshData = await res.json();
-          setMonks(freshData);
-          await cacheMonks(freshData);
-        }
+        if (!res.ok || cancelled) return;
+        const freshData = await res.json();
+        if (cancelled) return;
+        setMonks(freshData);
+        await cacheMonks(freshData);
       } catch (err) {
         console.warn("Background monk refresh failed", err);
       }
     };
 
-    const run = () => refreshMonks();
+    // SSR already gave us a list: do not overwrite with stale IndexedDB first, and defer
+    // the duplicate Mongo/API round-trip until idle (faster tab + less jank).
+    if (initialMonks?.length) {
+      const run = () => {
+        void refreshFromNetwork();
+      };
+      let idleId: number | undefined;
+      /** DOM timers use numeric ids; Node typings use Timeout — use number for browser build */
+      let timeoutId: number | undefined;
+      if (typeof requestIdleCallback !== "undefined") {
+        idleId = requestIdleCallback(run, { timeout: 15000 });
+      } else {
+        timeoutId = window.setTimeout(run, 5000);
+      }
+      return () => {
+        cancelled = true;
+        if (idleId !== undefined) cancelIdleCallback(idleId);
+        if (timeoutId !== undefined) clearTimeout(timeoutId);
+      };
+    }
+
+    const coldStart = async () => {
+      try {
+        const cached = await getCachedMonks();
+        if (!cancelled && cached && cached.length > 0) {
+          setMonks(cached);
+        }
+      } catch {
+        /* ignore cache read errors */
+      }
+      await refreshFromNetwork();
+    };
+
+    const run = () => void coldStart();
     if (typeof requestIdleCallback !== "undefined") {
       const id = requestIdleCallback(run, { timeout: 2500 });
-      return () => cancelIdleCallback(id);
+      return () => {
+        cancelled = true;
+        cancelIdleCallback(id);
+      };
     }
     const t = setTimeout(run, 1);
-    return () => clearTimeout(t);
-  }, []);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [initialMonks?.length]);
 
   const filteredMonks = useMemo<Monk[]>(() => {
     const query = searchQuery.toLowerCase();

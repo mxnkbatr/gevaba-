@@ -27,7 +27,53 @@ interface Review {
     createdAt: string;
 }
 
-export default function MonkProfileClient() {
+interface MonkProfileProps {
+    initialMonk?: any;
+    initialServices?: any[];
+    initialReviews?: {
+        reviews: any[];
+        stats: { averageRating: number; totalReviews: number };
+    };
+}
+
+function buildAvailableServices(mData: any, sData: any[], lang: string, routeMonkId: string) {
+    const monkIdStr = mData?._id ?? routeMonkId;
+    const isSpecial = mData.isSpecial === true;
+    const services = isSpecial
+        ? sData
+        : sData.filter((s: any) => {
+              const isDirectMatch = s.monkId === monkIdStr;
+              const isReferenced =
+                  Array.isArray(mData.services) &&
+                  mData.services.some((ms: any) => {
+                      const msId = typeof ms === "string" ? ms : ms.id || ms._id;
+                      return msId === s._id || msId === s.id;
+                  });
+              return isDirectMatch || isReferenced || s.isUniversal;
+          });
+
+    const uniqueServicesMap = new Map();
+    services.forEach((s: any) => {
+        const key =
+            s.name?.[lang as "mn" | "en"] ||
+            s.title?.[lang as "mn" | "en"] ||
+            s.name?.mn ||
+            s.id;
+        if (!uniqueServicesMap.has(key)) uniqueServicesMap.set(key, s);
+    });
+
+    return Array.from(uniqueServicesMap.values()).map((s: any) => ({
+        ...s,
+        price: s.price || (isSpecial ? 88800 : 50000),
+        duration: s.duration || "60 мин",
+    }));
+}
+
+export default function MonkProfileClient({
+    initialMonk = null,
+    initialServices = [],
+    initialReviews = { reviews: [], stats: { averageRating: 0, totalReviews: 0 } },
+}: MonkProfileProps) {
     const params = useParams();
     const router = useRouter();
     const monkId = Array.isArray(params.id) ? params.id[0] : params.id;
@@ -37,14 +83,14 @@ export default function MonkProfileClient() {
     const isSignedIn = !!user;
 
     // --- State ---
-    const [monk, setMonk] = useState<any | null>(null);
+    const [monk, setMonk] = useState<any | null>(initialMonk);
     const [availableServices, setAvailableServices] = useState<any[]>([]);
-    const [reviews, setReviews] = useState<Review[]>([]);
-    const [reviewStats, setReviewStats] = useState({ averageRating: 0, totalReviews: 0 });
+    const [reviews, setReviews] = useState<Review[]>(initialReviews.reviews);
+    const [reviewStats, setReviewStats] = useState(initialReviews.stats);
     const [isWishlisted, setIsWishlisted] = useState(false);
     const [isBioExpanded, setIsBioExpanded] = useState(false);
     const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
-    const [loading, setLoading] = useState(true);
+    const [loading, setLoading] = useState(!initialMonk);
     const [wishlistLoading, setWishlistLoading] = useState(false);
     const [submittingReview, setSubmittingReview] = useState(false);
     
@@ -55,18 +101,47 @@ export default function MonkProfileClient() {
     // --- Refs ---
     const calendarRef = useRef<HTMLDivElement>(null);
 
-    // --- Data Loading ---
+    // --- Hydrate services from SSR (monk + reviews already in state) ---
+    useEffect(() => {
+        if (!monkId || !initialMonk) return;
+        let cancelled = false;
+
+        (async () => {
+            try {
+                let sData = initialServices ?? [];
+                if (!sData.length) {
+                    const sRes = await fetch("/api/services");
+                    sData = sRes.ok ? await sRes.json() : [];
+                }
+                if (cancelled) return;
+                setAvailableServices(
+                    buildAvailableServices(initialMonk, sData, lang, monkId),
+                );
+            } catch (error) {
+                console.error(error);
+            } finally {
+                if (!cancelled) setLoading(false);
+            }
+        })();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [monkId, lang, initialMonk, initialServices]);
+
+    // --- Data loading (client-only when server did not prefetch monk) ---
     useEffect(() => {
         async function loadData() {
             if (!monkId) return;
+            if (initialMonk) return;
+
             try {
                 setLoading(true);
-                
-                // 1. Fetch Monk & Services & Reviews in parallel
+
                 const [mRes, sRes, rRes] = await Promise.all([
                     fetch(`/api/monks/${monkId}`),
-                    fetch('/api/services'),
-                    fetch(`/api/reviews/${monkId}`)
+                    fetch("/api/services"),
+                    fetch(`/api/reviews/${monkId}`),
                 ]);
 
                 const mData = await mRes.json();
@@ -76,38 +151,15 @@ export default function MonkProfileClient() {
                 setMonk(mData);
                 setReviews(rData.reviews || []);
                 setReviewStats(rData.stats || { averageRating: 0.0, totalReviews: 0 });
-
-                // 2. Process Services
-                const isSpecial = mData.isSpecial === true;
-                const services = isSpecial
-                    ? sData 
-                    : sData.filter((s: any) => {
-                        const isDirectMatch = s.monkId === monkId;
-                        const isReferenced = Array.isArray(mData.services) && mData.services.some((ms: any) => {
-                            const msId = typeof ms === 'string' ? ms : (ms.id || ms._id);
-                            return msId === s._id || msId === s.id;
-                        });
-                        return isDirectMatch || isReferenced || s.isUniversal;
-                    });
-
-                const uniqueServicesMap = new Map();
-                services.forEach((s: any) => {
-                    const key = s.name?.[lang as 'mn'|'en'] || s.title?.[lang as 'mn'|'en'] || s.name?.mn || s.id;
-                    if (!uniqueServicesMap.has(key)) uniqueServicesMap.set(key, s);
-                });
-                
-                const formatted = Array.from(uniqueServicesMap.values()).map((s: any) => ({
-                    ...s,
-                    price: s.price || (isSpecial ? 88800 : 50000),
-                    duration: s.duration || "60 мин"
-                }));
-                setAvailableServices(formatted);
-
-            } catch (error) { console.error(error); }
-            finally { setLoading(false); }
+                setAvailableServices(buildAvailableServices(mData, sData, lang, monkId));
+            } catch (error) {
+                console.error(error);
+            } finally {
+                setLoading(false);
+            }
         }
         loadData();
-    }, [monkId, lang]);
+    }, [monkId, lang, initialMonk]);
 
     // Check Wishlist Status
     useEffect(() => {
@@ -305,7 +357,9 @@ export default function MonkProfileClient() {
             </div>
 
             {/* ── MAIN CONTENT ── */}
-            <div className="relative z-20 px-6 pt-8 pb-40 space-y-12">
+            <div
+                className="relative z-20 space-y-12 px-6 pt-8 pb-[calc(env(safe-area-inset-bottom\,0px)+var(--tab-bar-height\,84px)+1rem)]"
+            >
                 
                 {/* 1. Stats Grid */}
                 <section className="grid grid-cols-4 gap-3">
@@ -398,6 +452,26 @@ export default function MonkProfileClient() {
                         ))}
                     </div>
                 </section>
+
+                {/* Primary CTA — урсгалд: заслын жагсаалтын доор */}
+                <div className="-mx-6 flex items-center gap-3 border-t border-black/[0.06] bg-cream/92 px-5 py-3 shadow-[0_-4px_24px_rgba(0,0,0,0.04)] backdrop-blur-2xl">
+                    <button
+                        type="button"
+                        onClick={() => router.push(`/${lang}/messenger?monkId=${monkId}`)}
+                        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.35rem] border border-black/[0.06] bg-white text-gold shadow-sm transition-transform active:scale-95"
+                    >
+                        <MessageCircle size={26} strokeWidth={2} />
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => handleBook()}
+                        className="cta-button relative flex min-h-[56px] flex-1 gap-2 overflow-hidden rounded-[1.35rem] text-[13px] transition-transform active:scale-[0.98]"
+                    >
+                        <Calendar size={18} strokeWidth={2.2} />
+                        {!isSignedIn ? t({ mn: "Нэвтэрч орох", en: "Sign in to Book" }) : t({ mn: "Цаг захиалах", en: "Book Ritual" })}
+                    </button>
+                </div>
 
                 {/* 4. Bio Section */}
                 <section>
@@ -526,30 +600,6 @@ export default function MonkProfileClient() {
                         </div>
                     )}
                 </section>
-            </div>
-
-            {/* ── STICKY BOTTOM BAR ── */}
-            <div
-                className="fixed left-0 right-0 z-50 flex items-center gap-3 border-t border-black/[0.06] bg-cream/92 px-5 pt-3 shadow-[0_-8px_32px_rgba(0,0,0,0.06)] backdrop-blur-2xl"
-                style={{
-                    bottom: "var(--tab-bar-height, 0px)",
-                    paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))",
-                }}
-            >
-                <button 
-                    onClick={() => router.push(`/${lang}/messenger?monkId=${monkId}`)}
-                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.35rem] border border-black/[0.06] bg-white text-gold shadow-sm transition-transform active:scale-95"
-                >
-                    <MessageCircle size={26} strokeWidth={2} />
-                </button>
-                
-                <button
-                    onClick={() => handleBook()}
-                    className="cta-button relative flex min-h-[56px] flex-1 gap-2 overflow-hidden rounded-[1.35rem] text-[13px] transition-transform active:scale-[0.98]"
-                >
-                    <Calendar size={18} strokeWidth={2.2} />
-                    {!isSignedIn ? t({ mn: "Нэвтэрч орох", en: "Sign in to Book" }) : t({ mn: "Цаг захиалах", en: "Book Ritual" })}
-                </button>
             </div>
         </div>
     );

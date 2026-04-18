@@ -12,9 +12,9 @@ import { NotificationProvider } from '@/contexts/NotificationContext'
 import OfflineBanner from '../components/OfflineBanner'
 import SplashScreenGate from '../components/SplashScreenGate'
 
+/** Variable cuts: one WOFF2 each vs many static weights — faster FCP/LCP on mobile */
 const playfair = Playfair_Display({
   subsets: ['latin', 'cyrillic'],
-  weight: ['400', '600', '700'],
   variable: '--font-playfair',
   display: 'swap',
   adjustFontFallback: true,
@@ -22,7 +22,6 @@ const playfair = Playfair_Display({
 
 const inter = Inter({
   subsets: ['latin', 'cyrillic'],
-  weight: ['400', '500', '600', '700'],
   variable: '--font-inter',
   display: 'swap',
   adjustFontFallback: true,
