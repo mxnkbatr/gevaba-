@@ -13,6 +13,18 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
 };
 
+/** Нэвтрэлт шаардлагатай зөвхөн эдгээр замууд — бусад дээр Clerk auth() дуудахгүй (dev/prod хоёуланд хурдан) */
+function routeNeedsAuthGate(pathWithoutLocale: string): boolean {
+  const p = pathWithoutLocale === '' ? '/' : pathWithoutLocale;
+  if (p.startsWith('/admin')) return true;
+  if (p.startsWith('/monk/content')) return true;
+  if (p.startsWith('/messenger')) return true;
+  if (p.startsWith('/booking/')) return true;
+  if (p.startsWith('/dashboard')) return true;
+  if (p.startsWith('/profile')) return true;
+  return false;
+}
+
 async function getCustomTokenData(token: string | undefined): Promise<{ userId: string, role: string } | null> {
   if (!token) return null;
   try {
@@ -59,15 +71,24 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
   const locale = pathnameHasLocale ? pathname.split('/')[1] : defaultLocale;
   const pathWithoutLocale = pathnameHasLocale ? pathname.replace(`/${locale}`, '') : pathname;
 
-  // AUTH PROTECTION LOGIC
-  // Helper to redirect
+  // Locale fallback redirect (хуучин логик — auth-аас өмнө)
+  if (!pathnameHasLocale) {
+    const newUrl = new URL(`/${locale}${pathname === '/' ? '' : pathname}`, req.url);
+    return NextResponse.redirect(newUrl);
+  }
+
+  // Нээлттэй хуудсууд: Clerk auth() / JWT шалгалтгүйгээр шууд өнгөрөх
+  if (!routeNeedsAuthGate(pathWithoutLocale)) {
+    return NextResponse.next();
+  }
+
+  // AUTH PROTECTION LOGIC (зөвхөн хамгаалагдсан замууд)
   const redirectToLogin = () => {
     const loginUrl = new URL(`/${locale}/sign-in`, req.url);
     loginUrl.searchParams.set('redirect', pathname);
     return NextResponse.redirect(loginUrl);
   };
 
-  // Determine user identity
   const customToken = req.cookies.get('auth_token')?.value;
   const customData = await getCustomTokenData(customToken);
   
@@ -81,7 +102,6 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
       const authState = await auth();
       if (authState.userId) {
           hasUser = true;
-          // Extract role from unsafeMetadata or sessionClaims
           const sessionRole = (authState.sessionClaims?.metadata as any)?.role || (authState.sessionClaims?.publicMetadata as any)?.role;
           role = sessionRole || 'client';
       }
@@ -114,11 +134,6 @@ export default clerkMiddleware(async (auth, req: NextRequest) => {
       }
   }
 
-  // Locale fallback redirect
-  if (!pathnameHasLocale) {
-    const newUrl = new URL(`/${locale}${pathname === '/' ? '' : pathname}`, req.url);
-    return NextResponse.redirect(newUrl);
-  }
 });
 
 export const config = {

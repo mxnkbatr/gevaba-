@@ -45,7 +45,7 @@ export default function DashboardStats({
           <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-2 ${stat.color}`}>
             <stat.icon size={18} />
           </div>
-          <p className="text-[18px] font-black text-ink leading-none">{stat.value}</p>
+          <p className="text-[18px] font-semibold text-ink leading-none">{stat.value}</p>
           <p className="text-[10px] font-bold text-earth/50 mt-1">{stat.label}</p>
         </div>
       ))}

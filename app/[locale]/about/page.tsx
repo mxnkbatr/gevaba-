@@ -24,7 +24,7 @@ import OptimizedVideo from "../../components/OptimizedVideo";
 
 // Adds a subtle paper/film texture overlay
 const GrainOverlay = () => (
-  <div className="pointer-events-none fixed inset-0 z-50 opacity-[0.04] mix-blend-multiply">
+  <div className="pointer-events-none fixed inset-0 z-50 opacity-[0.022] mix-blend-multiply">
     <svg className="h-full w-full">
       <filter id="noiseFilter">
         <feTurbulence type="fractalNoise" baseFrequency="0.6" stitchTiles="stitch" />
@@ -85,14 +85,14 @@ export default function AboutPage() {
     cardBorder: "border-indigo-500/20",
     gradientOverlay: "from-[#05050a]/80"
   } : {
-    bg: "bg-[#FDFBF7]", // Original Cream
-    bgSection: "bg-[#F5F2EA]", // Original Section
-    text: "text-[#451a03]", // Original Dark Brown
-    textMuted: "text-[#78350F]/60", // Original Muted
-    accent: "text-amber-600",
-    cardBg: "bg-white",
-    cardBorder: "border-amber-900/10",
-    gradientOverlay: "from-[#FDFBF7]/90"
+    bg: "bg-cream",
+    bgSection: "bg-white/35",
+    text: "text-ink",
+    textMuted: "text-earth/65",
+    accent: "text-gold-dark",
+    cardBg: "bg-white/90",
+    cardBorder: "border-gold/18",
+    gradientOverlay: "from-cream/92"
   };
 
   // Added hex colors to the original array for the spotlight effect
@@ -169,7 +169,7 @@ export default function AboutPage() {
                   </div>
                 </BlurReveal>
 
-                <h1 className="text-6xl md:text-9xl font-serif font-black tracking-tight leading-[0.9]">
+                <h1 className="text-6xl md:text-9xl font-serif font-semibold tracking-tight leading-[0.9]">
                   <BlurReveal delay={0.1}>
                     {t({ mn: "Өв Соёл", en: "Heritage" })}
                   </BlurReveal>
@@ -249,8 +249,8 @@ export default function AboutPage() {
               <div className="container mx-auto px-6 relative z-10">
                 <div className="text-center mb-24 max-w-3xl mx-auto">
                   <motion.div initial={{ y: 20, opacity: 0 }} whileInView={{ y: 0, opacity: 1 }} viewport={{ once: true }}>
-                    <h2 className="text-4xl md:text-7xl font-serif font-bold mb-6">{t({ mn: "Давуу Тал", en: "Why Choose Us" })}</h2>
-                    <div className={`w-24 h-1 mx-auto ${theme.bg === 'bg-[#05050a]' ? 'bg-amber-500' : 'bg-[#451a03]'} opacity-20`} />
+                    <h2 className="text-4xl md:text-7xl font-serif font-semibold mb-6">{t({ mn: "Давуу Тал", en: "Why Choose Us" })}</h2>
+                    <div className={`w-24 h-1 mx-auto ${isDark ? 'bg-amber-500' : 'bg-gold-dark/28'} opacity-90`} />
                   </motion.div>
                 </div>
 
@@ -353,7 +353,7 @@ function SpotlightCard({ card, index, theme }: { card: any, index: number, theme
 
         {/* Floating Number at bottom */}
         <div className="flex justify-between items-end">
-          <span className="text-4xl font-black opacity-5 select-none">0{index + 1}</span>
+          <span className="text-4xl font-semibold opacity-[0.06] select-none">0{index + 1}</span>
           <div className={`p-2 rounded-full bg-current/5 ${card.colorClass} opacity-0 group-hover:opacity-100 transition-all duration-300 translate-y-4 group-hover:translate-y-0`}>
             <Compass size={18} />
           </div>

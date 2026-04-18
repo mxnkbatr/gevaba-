@@ -2,6 +2,8 @@ import React, { cache } from "react";
 import { connectToDatabase } from "@/database/db";
 import BlogListClient from "../../components/BlogListClient";
 
+export const revalidate = 60;
+
 // --- DATA FETCHING (SERVER SIDE + CACHED) ---
 const getBlogs = cache(async () => {
     try {
@@ -19,7 +21,7 @@ const getBlogs = cache(async () => {
             content: blog.content || { mn: "", en: "" },
             date: blog.date ? new Date(blog.date).toISOString() : new Date().toISOString(),
             cover: blog.cover || "",
-            category: blog.category || "Wisdom",
+            category: blog.category || "wisdom",
             authorName: blog.authorName || "Багш",
             authorId: blog.authorId ? blog.authorId.toString() : ""
         }));

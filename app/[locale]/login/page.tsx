@@ -57,7 +57,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full flex bg-[#FFFBEB] font-serif selection:bg-[#F59E0B] selection:text-white overflow-hidden">
+    <div className="min-h-screen w-full flex bg-cream font-serif selection:bg-gold/25 selection:text-ink overflow-hidden text-ink">
 
       {/* --- LEFT SIDE: THE VISUAL SANCTUARY (Hidden on Mobile) --- */}
       <div className="hidden lg:flex w-1/2 relative overflow-hidden bg-[#1a0a05]">
@@ -76,9 +76,6 @@ export default function LoginPage() {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#1a0a05] via-[#451a03]/50 to-transparent" />
         </motion.div>
-
-        {/* Floating Particles */}
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-30 animate-pulse" />
 
         {/* Content */}
         <div className="relative z-10 m-auto max-w-lg px-12 text-center">
@@ -107,15 +104,14 @@ export default function LoginPage() {
       <div className="w-full lg:w-1/2 relative flex items-center justify-center p-6 sm:p-12">
 
         {/* Decorative Background Elements */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#F59E0B]/5 rounded-full blur-[100px] pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#D97706]/5 rounded-full blur-[80px] pointer-events-none" />
-        <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/rice-paper-2.png')] opacity-60 mix-blend-multiply pointer-events-none" />
+        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gold/8 rounded-full blur-[100px] pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gold-dark/6 rounded-full blur-[80px] pointer-events-none" />
 
         {/* Giant Rotating Knot Watermark */}
         <motion.div
           animate={{ rotate: -360 }}
           transition={{ duration: 200, repeat: Infinity, ease: "linear" }}
-          className="absolute -right-24 -bottom-24 w-[600px] h-[600px] text-[#451a03]/5 pointer-events-none"
+          className="absolute -right-24 -bottom-24 w-[600px] h-[600px] text-ink/[0.06] pointer-events-none"
         >
           <EndlessKnot className="w-full h-full" />
         </motion.div>
@@ -126,23 +122,23 @@ export default function LoginPage() {
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8 }}
-          className="relative z-10 w-full max-w-md bg-white/50 backdrop-blur-md p-8 sm:p-12 rounded-[2.5rem] border border-white/60 shadow-[0_20px_50px_-10px_rgba(69,26,3,0.1)]"
+          className="monastery-card relative z-10 w-full max-w-md bg-white/72 backdrop-blur-xl p-8 sm:p-12 rounded-[2rem] border border-gold/16 shadow-gold"
         >
           {/* Header */}
           <div className="text-center mb-10">
-            <Link href="/" className="inline-flex items-center gap-2 text-[#D97706] hover:text-[#B45309] transition-colors mb-6 group">
+            <Link href={`/${language}`} className="inline-flex items-center gap-2 text-gold-dark hover:text-gold-dark/80 transition-colors mb-6 group">
               <Flower size={20} className="group-hover:rotate-180 transition-transform duration-700" />
               <span className="font-bold font-sans uppercase tracking-widest text-xs">Гэвабол</span>
             </Link>
-            <h2 className="text-3xl font-bold text-[#451a03] mb-3">{content.welcomeBack}</h2>
-            <p className="text-[#78350F]/70 text-sm font-sans leading-relaxed">
+            <h2 className="text-[1.65rem] font-semibold tracking-tight text-ink mb-3 sm:text-3xl">{content.welcomeBack}</h2>
+            <p className="text-earth/70 text-sm font-sans leading-relaxed">
               {content.identifyDesc}
             </p>
           </div>
 
           {/* CLERK LOADING STATE (Prevents hydration mismatch) */}
           <ClerkLoading>
-            <div className="flex flex-col items-center justify-center py-12 gap-4 text-[#D97706]">
+            <div className="flex flex-col items-center justify-center py-12 gap-4 text-gold-dark">
               <Loader2 size={32} className="animate-spin" />
               <p className="text-xs font-bold uppercase tracking-widest opacity-60">{content.loadingText}</p>
             </div>
@@ -157,7 +153,7 @@ export default function LoginPage() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="relative w-full overflow-hidden rounded-2xl bg-[#451a03] p-5 text-[#FFFBEB] font-bold shadow-xl transition-all hover:bg-[#5f2405] group cursor-pointer"
+                  className="cta-button relative w-full overflow-hidden rounded-[1.15rem] p-5 min-h-[52px] shadow-xl transition-all group cursor-pointer border-0"
                 >
                   {/* Golden Shimmer Effect */}
                   <div className="absolute inset-0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
@@ -171,14 +167,14 @@ export default function LoginPage() {
 
               <div className="text-center space-y-4">
                 <Link
-                  href="/forgot-password"
-                  className="text-[10px] font-sans text-[#D97706]/60 hover:text-[#D97706] hover:underline font-bold uppercase tracking-[0.2em] transition-colors"
+                  href={`/${language}/forgot-password`}
+                  className="text-[10px] font-sans text-earth/55 hover:text-gold-dark hover:underline font-semibold uppercase tracking-[0.2em] transition-colors"
                 >
                   {content.forgotPassword}
                 </Link>
                 <div className="relative py-2">
-                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-[#D97706]/10" /></div>
-                  <div className="relative flex justify-center text-[10px] font-bold uppercase tracking-widest"><span className="bg-white/50 backdrop-blur-sm px-4 text-[#D97706]/40">{content.or}</span></div>
+                  <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gold/12" /></div>
+                  <div className="relative flex justify-center text-[10px] font-semibold uppercase tracking-widest"><span className="rounded-full bg-white/70 px-4 py-0.5 text-earth/45 backdrop-blur-sm">{content.or}</span></div>
                 </div>
               </div>
 
@@ -187,9 +183,9 @@ export default function LoginPage() {
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="w-full py-4 rounded-2xl border-2 border-[#D97706]/20 bg-[#FFFBEB]/50 hover:border-[#D97706] hover:bg-[#FDE68A]/20 transition-all flex items-center justify-center gap-2 text-[#78350F] font-bold group cursor-pointer"
+                  className="w-full py-4 rounded-2xl border border-gold/22 bg-cream/60 hover:border-gold/40 hover:bg-white/80 transition-all flex items-center justify-center gap-2 text-ink font-semibold group cursor-pointer shadow-sm"
                 >
-                  <User size={18} className="text-[#D97706] group-hover:scale-110 transition-transform" />
+                  <User size={18} className="text-gold-dark group-hover:scale-110 transition-transform" />
                   <span>{content.joinBtn}</span>
                 </motion.button>
               </SignUpButton>
@@ -198,10 +194,10 @@ export default function LoginPage() {
           </ClerkLoaded>
 
           {/* Footer Note */}
-          <div className="mt-12 text-center border-t border-[#D97706]/10 pt-6">
-            <p className="text-[#78350F]/60 text-xs font-sans">
+          <div className="mt-12 text-center border-t border-gold/12 pt-6">
+            <p className="text-earth/60 text-xs font-sans leading-relaxed">
               {content.agreeText}
-              <Link href="#" className="font-bold text-[#D97706] hover:underline ml-1">
+              <Link href={`/${language}/terms`} className="font-semibold text-gold-dark hover:underline ml-1">
                 {content.eightfoldPath}
               </Link>
             </p>

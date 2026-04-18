@@ -177,6 +177,20 @@ async function createIndexes() {
         console.log('✅ Messages indexes created\n');
 
         // ==========================================
+        // NOTIFICATIONS (GET /api/user/notifications)
+        // ==========================================
+        console.log('📦 Creating indexes for notifications collection...');
+        await db.collection('notifications').createIndex(
+            { userId: 1, createdAt: -1 },
+            { name: 'idx_notifications_user_created' }
+        );
+        await db.collection('notifications').createIndex(
+            { userId: 1, read: 1 },
+            { name: 'idx_notifications_user_read' }
+        );
+        console.log('✅ Notifications indexes created\n');
+
+        // ==========================================
         // BLOGS COLLECTION INDEXES
         // ==========================================
         console.log('📦 Creating indexes for blogs collection...');
@@ -200,7 +214,7 @@ async function createIndexes() {
         // ==========================================
         console.log('📊 Verifying indexes...\n');
 
-        const collections = ['users', 'bookings', 'services', 'messages', 'direct_messages', 'blogs'];
+        const collections = ['users', 'bookings', 'services', 'messages', 'direct_messages', 'notifications', 'blogs'];
 
         for (const collName of collections) {
             const indexes = await db.collection(collName).indexes();

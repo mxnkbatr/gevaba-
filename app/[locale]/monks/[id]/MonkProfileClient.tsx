@@ -10,8 +10,12 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { useLanguage } from "../../../contexts/LanguageContext";
+import {
+    formatWeekdayShort,
+    MONTHS_EN_SHORT,
+    formatBlogPostDate,
+} from "@/app/lib/dateUtils";
 import { useAuth } from "@/contexts/AuthContext";
-import { motion, AnimatePresence } from "framer-motion";
 
 // --- Types ---
 interface Review {
@@ -212,8 +216,11 @@ export default function MonkProfileClient() {
             days.push({
                 full: d.toISOString().split('T')[0],
                 day: d.getDate(),
-                weekday: d.toLocaleDateString(lang === 'mn' ? 'mn-MN' : 'en-US', { weekday: 'short' }),
-                month: d.toLocaleDateString(lang === 'mn' ? 'mn-MN' : 'en-US', { month: 'short' })
+                weekday: formatWeekdayShort(d, lang),
+                month:
+                    lang === "mn"
+                        ? `${d.getMonth() + 1}`
+                        : MONTHS_EN_SHORT[d.getMonth()],
             });
         }
         return days;
@@ -221,7 +228,7 @@ export default function MonkProfileClient() {
 
     if (loading || !monk) return (
         <div className="h-[100svh] flex items-center justify-center bg-cream">
-            <div className="w-12 h-12 rounded-full border-4 border-gold border-t-transparent animate-spin" />
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-black/10 border-t-gold" />
         </div>
     );
 
@@ -265,46 +272,35 @@ export default function MonkProfileClient() {
                             onClick={toggleWishlist}
                             className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-2xl border border-white/30 flex items-center justify-center shadow-lg active:scale-90 transition-transform"
                         >
-                            <AnimatePresence mode="wait">
-                                <motion.div
-                                    key={isWishlisted ? "active" : "inactive"}
-                                    initial={{ scale: 0.8, opacity: 0 }}
-                                    animate={{ scale: 1, opacity: 1 }}
-                                    exit={{ scale: 0.8, opacity: 0 }}
-                                >
-                                    <Heart 
-                                        size={22} 
-                                        className={isWishlisted ? "text-red-500 fill-red-500" : "text-white"} 
-                                    />
-                                </motion.div>
-                            </AnimatePresence>
+                            <Heart
+                                size={22}
+                                className={`transition-colors duration-200 ${
+                                    isWishlisted ? "text-red-500 fill-red-500" : "text-white"
+                                }`}
+                            />
                         </button>
                     </div>
                 </div>
 
                 {/* Identity Card (Bottom Overlap) */}
                 <div className="absolute inset-x-0 bottom-0 z-20 px-6 pb-4">
-                    <motion.div 
-                        initial={{ opacity: 0, y: 30 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="flex flex-col items-center"
-                    >
+                    <div className="anim-fade-up flex flex-col items-center">
                         <div className="relative mb-3 group">
                             <div className="w-28 h-28 rounded-[2.8rem] border-4 border-white shadow-2xl overflow-hidden bg-white/50 backdrop-blur-md">
                                 <img src={monk.image || "/default-monk.jpg"} className="w-full h-full object-cover" />
                             </div>
                             {monk.isAvailable !== false && (
-                                <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-emerald-500 border-4 border-white shadow-lg shadow-emerald-500/30">
-                                    <div className="w-full h-full rounded-full bg-emerald-500 animate-ping opacity-30" />
-                                </div>
+                                <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-[3px] border-white bg-[#30d158] shadow-sm" />
                             )}
                         </div>
                         <h1 className="text-3xl font-black text-ink tracking-tight text-center">{monkName}</h1>
                         <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[14px] font-black text-gold uppercase tracking-widest">{monkTitle}</span>
+                            <span className="text-[14px] font-black uppercase tracking-widest text-gold">
+                                {monkTitle}
+                            </span>
                             <ShieldCheck size={16} className="text-emerald-500" />
                         </div>
-                    </motion.div>
+                    </div>
                 </div>
             </div>
 
@@ -319,8 +315,11 @@ export default function MonkProfileClient() {
                         { icon: <Award />, val: `${monk.yearsOfExperience || 10}ж`, label: t({ mn: "Туршлага", en: "Exp" }) },
                         { icon: <Clock />, val: "~2ц", label: t({ mn: "Хариу", en: "Resp" }) },
                     ].map((s, i) => (
-                        <div key={i} className="bg-white rounded-[2rem] p-3 flex flex-col items-center justify-center border border-stone/10 shadow-sm">
-                            <div className="text-gold/60 mb-1.5 scale-90">{s.icon}</div>
+                        <div
+                            key={i}
+                            className="flex flex-col items-center justify-center rounded-[1.75rem] border border-black/[0.06] bg-white p-3 shadow-sm"
+                        >
+                            <div className="mb-1.5 scale-90 text-earth/45">{s.icon}</div>
                             <div className="text-[16px] font-black text-ink leading-none">{s.val}</div>
                             <div className="text-[9px] font-black uppercase tracking-wider text-earth/40 mt-1">{s.label}</div>
                         </div>
@@ -330,7 +329,7 @@ export default function MonkProfileClient() {
                 {/* 2. Availability Calendar */}
                 <section>
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-[12px] font-black text-gold uppercase tracking-[0.2em]">
+                        <h2 className="text-[12px] font-black uppercase tracking-[0.2em] text-earth/50">
                             {t({ mn: "Боломжит өдрүүд", en: "Availability" })}
                         </h2>
                         <span className="text-[11px] font-bold text-earth/40">{t({ mn: "Дараагийн 14 хоног", en: "Next 14 days" })}</span>
@@ -345,17 +344,21 @@ export default function MonkProfileClient() {
                                 <button
                                     key={d.full}
                                     onClick={() => setSelectedDate(d.full)}
-                                    className={`shrink-0 w-16 h-20 rounded-[1.8rem] flex flex-col items-center justify-center transition-all border ${
-                                        isSelected 
-                                            ? "bg-ink border-ink text-white shadow-xl shadow-ink/20 scale-110" 
-                                            : "bg-white border-stone/10 text-earth hover:border-gold/30"
+                                    className={`flex h-20 w-16 shrink-0 flex-col items-center justify-center rounded-[1.8rem] border transition-all ${
+                                        isSelected
+                                            ? "scale-105 border-black/[0.08] bg-gold text-neutral-900 shadow-sm"
+                                            : "border-black/[0.06] bg-white text-earth shadow-sm hover:border-black/[0.1]"
                                     }`}
                                 >
-                                    <span className={`text-[10px] font-bold uppercase mb-1 ${isSelected ? "opacity-60" : "text-earth/40"}`}>
+                                    <span
+                                        className={`mb-1 text-[10px] font-bold uppercase ${isSelected ? "text-neutral-800/60" : "text-earth/40"}`}
+                                    >
                                         {d.weekday}
                                     </span>
                                     <span className="text-[18px] font-black leading-none">{d.day}</span>
-                                    {isSelected && <div className="w-1 h-1 rounded-full bg-gold mt-1.5" />}
+                                    {isSelected && (
+                                        <div className="mt-1.5 h-1 w-1 rounded-full bg-neutral-900/35" />
+                                    )}
                                 </button>
                             );
                         })}
@@ -364,16 +367,16 @@ export default function MonkProfileClient() {
 
                 {/* 3. Services (Horizontal Carousel) */}
                 <section>
-                    <h2 className="text-[12px] font-black text-gold uppercase tracking-[0.2em] mb-5">
+                    <h2 className="mb-5 text-[12px] font-black uppercase tracking-[0.2em] text-earth/50">
                         {t({ mn: "Санал болгож буй засал", en: "Rituals & Services" })}
                     </h2>
                     <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar -mx-6 px-6">
                         {availableServices.map((svc: any) => (
                             <div 
                                 key={svc._id || svc.id}
-                                className="shrink-0 w-[240px] bg-white rounded-[2.5rem] p-6 border border-stone/10 shadow-sm flex flex-col"
+                                className="flex w-[240px] shrink-0 flex-col rounded-[20px] border border-black/[0.06] bg-white p-6 shadow-sm"
                             >
-                                <div className="w-12 h-12 rounded-2xl bg-amber-50 text-gold flex items-center justify-center mb-4">
+                                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl border border-black/[0.06] bg-[#F2F2F7] text-gold">
                                     <Sparkles size={24} />
                                 </div>
                                 <h3 className="text-[16px] font-black text-ink leading-tight mb-1 truncate">
@@ -386,7 +389,7 @@ export default function MonkProfileClient() {
                                     <p className="text-[18px] font-black text-ink">₮{svc.price.toLocaleString()}</p>
                                     <button 
                                         onClick={() => handleBook(svc._id || svc.id)}
-                                        className="w-10 h-10 rounded-xl bg-gold/10 text-gold flex items-center justify-center active:scale-90 transition-transform"
+                                        className="flex h-10 w-10 items-center justify-center rounded-xl border border-black/[0.06] bg-gold text-neutral-900 transition-transform active:scale-90"
                                     >
                                         <ChevronLeft size={20} className="rotate-180" />
                                     </button>
@@ -399,10 +402,10 @@ export default function MonkProfileClient() {
                 {/* 4. Bio Section */}
                 <section>
                     <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-[12px] font-black text-gold uppercase tracking-[0.2em]">
+                        <h2 className="text-[12px] font-black uppercase tracking-[0.2em] text-earth/50">
                             {t({ mn: "Танилцуулга", en: "Biography" })}
                         </h2>
-                        <Globe size={16} className="text-gold/40" />
+                        <Globe size={16} className="text-earth/35" />
                     </div>
                     <div className="relative">
                         <p className={`text-[15px] font-medium text-earth/80 leading-relaxed font-serif ${!isBioExpanded ? "line-clamp-4" : ""}`}>
@@ -411,7 +414,7 @@ export default function MonkProfileClient() {
                         {monkBio.length > 200 && (
                             <button 
                                 onClick={() => setIsBioExpanded(!isBioExpanded)}
-                                className="mt-2 text-[13px] font-black text-gold flex items-center gap-1 active:scale-95 transition-transform"
+                                className="mt-2 flex items-center gap-1 text-[13px] font-black text-gold transition-transform active:scale-95"
                             >
                                 {isBioExpanded ? t({ mn: "Хураах", en: "Show Less" }) : t({ mn: "Дэлгэрэнгүй", en: "Read More" })}
                                 <ChevronLeft size={16} className={isBioExpanded ? "rotate-90" : "-rotate-90"} />
@@ -423,7 +426,7 @@ export default function MonkProfileClient() {
                 {/* 5. Reviews Section */}
                 <section className="space-y-6">
                     <div className="flex items-baseline justify-between mb-2">
-                        <h2 className="text-[12px] font-black text-gold uppercase tracking-[0.2em]">
+                        <h2 className="text-[12px] font-black uppercase tracking-[0.2em] text-earth/50">
                             {t({ mn: "Үнэлгээ & Сэтгэгдэл", en: "Ratings & Reviews" })}
                         </h2>
                         <div className="flex items-center gap-1 text-gold">
@@ -437,7 +440,10 @@ export default function MonkProfileClient() {
                     <div className="space-y-4">
                         {reviews.length > 0 ? (
                             reviews.map((r) => (
-                                <div key={r._id} className="bg-stone/10 rounded-[2rem] p-5">
+                                <div
+                                    key={r._id}
+                                    className="rounded-[20px] border border-black/[0.06] bg-white p-5 shadow-sm"
+                                >
                                     <div className="flex justify-between items-start mb-3">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 rounded-full bg-white overflow-hidden">
@@ -447,13 +453,24 @@ export default function MonkProfileClient() {
                                                 <p className="text-[14px] font-black text-ink leading-none">{r.userName}</p>
                                                 <div className="flex gap-0.5 mt-1">
                                                     {[...Array(5)].map((_, i) => (
-                                                        <Star key={i} size={10} className={i < r.rating ? "text-gold fill-gold" : "text-stone"} />
+                                                        <Star
+                                                            key={i}
+                                                            size={10}
+                                                            className={
+                                                                i < r.rating
+                                                                    ? "fill-gold text-gold"
+                                                                    : "text-stone"
+                                                            }
+                                                        />
                                                     ))}
                                                 </div>
                                             </div>
                                         </div>
                                         <span className="text-[10px] font-bold text-earth/30">
-                                            {new Date(r.createdAt).toLocaleDateString()}
+                                            {formatBlogPostDate(
+                                                r.createdAt,
+                                                lang === "mn" ? "mn" : "en",
+                                            )}
                                         </span>
                                     </div>
                                     <p className="text-[14px] text-earth/70 leading-relaxed italic">"{r.comment}"</p>
@@ -468,7 +485,7 @@ export default function MonkProfileClient() {
 
                     {/* Submit Review Form (Mobile Friendly) */}
                     {isSignedIn && (
-                        <div className="bg-white rounded-[2.5rem] p-6 border border-stone/10 shadow-sm mt-8">
+                        <div className="mt-8 rounded-[20px] border border-black/[0.06] bg-white p-6 shadow-sm">
                             <h3 className="text-[14px] font-black text-ink mb-4">{t({ mn: "Үнэлгээ өгөх", en: "Rate this Monk" })}</h3>
                             <div className="flex gap-2 mb-4">
                                 {[1, 2, 3, 4, 5].map((star) => (
@@ -479,7 +496,11 @@ export default function MonkProfileClient() {
                                     >
                                         <Star 
                                             size={28} 
-                                            className={star <= newReviewRating ? "text-gold fill-gold" : "text-stone/30"} 
+                                            className={
+                                                star <= newReviewRating
+                                                    ? "fill-gold text-gold"
+                                                    : "text-stone/30"
+                                            } 
                                         />
                                     </button>
                                 ))}
@@ -489,12 +510,12 @@ export default function MonkProfileClient() {
                                     value={newReviewComment}
                                     onChange={(e) => setNewReviewComment(e.target.value)}
                                     placeholder={t({ mn: "Таны сэтгэгдэл...", en: "Share your experience..." })}
-                                    className="w-full bg-stone/10 rounded-2xl p-4 text-[14px] outline-none border-2 border-transparent focus:border-gold/30 transition-all min-h-[100px] resize-none"
+                                    className="min-h-[100px] w-full resize-none rounded-2xl border-2 border-transparent bg-[#F2F2F7] p-4 text-[14px] outline-none transition-all focus:border-black/10"
                                 />
                                 <button 
                                     onClick={submitReview}
                                     disabled={submittingReview}
-                                    className="absolute bottom-3 right-3 w-10 h-10 rounded-xl bg-gold text-white flex items-center justify-center shadow-lg shadow-gold/20 active:scale-90 transition-all disabled:opacity-50"
+                                    className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gold text-neutral-900 shadow-sm transition-all active:scale-90 disabled:opacity-50"
                                 >
                                     {submittingReview ? <Loader2 size={20} className="animate-spin" /> : <Send size={20} />}
                                 </button>
@@ -509,25 +530,25 @@ export default function MonkProfileClient() {
 
             {/* ── STICKY BOTTOM BAR ── */}
             <div
-                className="fixed left-0 right-0 px-6 bg-white/80 backdrop-blur-3xl border-t border-stone/20 z-50 flex items-center gap-4 pb-8 pt-4"
-                style={{ bottom: "0px" }} // Usually on mobile we want it above the OS bar, but globals/layout handles safe area
+                className="fixed left-0 right-0 z-50 flex items-center gap-3 border-t border-black/[0.06] bg-cream/92 px-5 pt-3 shadow-[0_-8px_32px_rgba(0,0,0,0.06)] backdrop-blur-2xl"
+                style={{
+                    bottom: "var(--tab-bar-height, 0px)",
+                    paddingBottom: "max(12px, env(safe-area-inset-bottom, 0px))",
+                }}
             >
                 <button 
                     onClick={() => router.push(`/${lang}/messenger?monkId=${monkId}`)}
-                    className="w-16 h-16 rounded-[2.2rem] bg-stone/30 flex items-center justify-center text-ink active:scale-95 transition-transform shrink-0"
+                    className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.35rem] border border-black/[0.06] bg-white text-gold shadow-sm transition-transform active:scale-95"
                 >
-                    <MessageCircle size={28} />
+                    <MessageCircle size={26} strokeWidth={2} />
                 </button>
                 
                 <button
                     onClick={() => handleBook()}
-                    className="flex-1 h-16 bg-ink text-white font-black text-[16px] rounded-[2.2rem] active:scale-95 transition-all shadow-2xl shadow-ink/30 relative overflow-hidden group"
+                    className="cta-button relative flex min-h-[56px] flex-1 gap-2 overflow-hidden rounded-[1.35rem] text-[13px] transition-transform active:scale-[0.98]"
                 >
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-                    <span className="flex items-center justify-center gap-2">
-                        <Calendar size={18} />
-                        {!isSignedIn ? t({ mn: "Нэвтэрч орох", en: "Sign in to Book" }) : t({ mn: "Цаг захиалах", en: "Book Ritual" })}
-                    </span>
+                    <Calendar size={18} strokeWidth={2.2} />
+                    {!isSignedIn ? t({ mn: "Нэвтэрч орох", en: "Sign in to Book" }) : t({ mn: "Цаг захиалах", en: "Book Ritual" })}
                 </button>
             </div>
         </div>

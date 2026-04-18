@@ -166,8 +166,15 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (user) {
-      fetchNotifications();
-      
+      const kick = () => {
+        fetchNotifications();
+      };
+      if (typeof requestIdleCallback !== "undefined") {
+        requestIdleCallback(kick, { timeout: 2000 });
+      } else {
+        setTimeout(kick, 0);
+      }
+
       let pushListener: any = null;
 
       // Register Capacitor PushNotifications listener for mobile
@@ -180,7 +187,9 @@ export const NotificationProvider = ({ children }: { children: React.ReactNode }
           });
         }).then(listener => {
           pushListener = listener;
-        }).catch(err => console.log("Push notifications listener error", err));
+        }).catch(() => {
+          /* non-fatal: push may be unavailable in simulator / web */
+        });
       }
 
       // Consolidate into one 30s polling interval for both notifications and reminders

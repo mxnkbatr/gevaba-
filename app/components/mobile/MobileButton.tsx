@@ -75,9 +75,9 @@ export default function MobileButton({
 
     // Variant classes
     const variantClasses = {
-        primary: 'bg-primary text-white hover:bg-primary/90 active:bg-primary/80 shadow-md',
-        secondary: 'bg-surface-alt text-text-main hover:bg-surface-alt/90 active:bg-surface-alt/80 border border-border',
-        ghost: 'bg-transparent text-text-main hover:bg-surface-alt/50 active:bg-surface-alt',
+        primary: 'bg-gold text-neutral-900 hover:brightness-[1.02] active:brightness-[0.98] shadow-md border border-black/[0.06]',
+        secondary: 'bg-white text-ink hover:bg-black/[0.02] active:bg-black/[0.04] border border-black/[0.06] shadow-sm',
+        ghost: 'bg-transparent text-ink hover:bg-black/[0.03] active:bg-black/[0.05]',
         danger: 'bg-red-500 text-white hover:bg-red-600 active:bg-red-700 shadow-md',
     };
 
@@ -99,7 +99,7 @@ export default function MobileButton({
         ${pressAnimation}
         ${rippleEffect}
         ${disabled || loading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}
-        rounded-full font-semibold
+        group rounded-full font-semibold
         flex items-center justify-center gap-2
         transition-all
         select-none
@@ -110,7 +110,7 @@ export default function MobileButton({
             {/* Android ripple effect */}
             {isAndroid && !disabled && !loading && (
                 <span className="absolute inset-0 overflow-hidden rounded-full">
-                    <span className="absolute inset-0 bg-white/20 transform scale-0 group-active:scale-100 transition-transform duration-300 rounded-full" />
+                    <span className="absolute inset-0 bg-white/20 scale-0 group-active:scale-100 transition-transform duration-300 rounded-full" />
                 </span>
             )}
 

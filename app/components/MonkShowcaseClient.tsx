@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Monk } from "@/database/types";
 import MonkCard from "./MonkCard";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   getCachedMonks,
   cacheMonks,
@@ -28,25 +27,29 @@ export default function MonkShowcaseClient({
   useEffect(() => {
     const refreshMonks = async () => {
       try {
-        // 1. Try to load from cache
         const cached = await getCachedMonks();
         if (cached && cached.length > 0) {
           setMonks(cached);
         }
 
-        // 2. Fetch fresh data in the background
         const res = await fetch("/api/monks");
         if (res.ok) {
           const freshData = await res.json();
           setMonks(freshData);
-          await cacheMonks(freshData); // Use the 15m TTL defined in helper
+          await cacheMonks(freshData);
         }
       } catch (err) {
         console.warn("Background monk refresh failed", err);
       }
     };
 
-    refreshMonks();
+    const run = () => refreshMonks();
+    if (typeof requestIdleCallback !== "undefined") {
+      const id = requestIdleCallback(run, { timeout: 2500 });
+      return () => cancelIdleCallback(id);
+    }
+    const t = setTimeout(run, 1);
+    return () => clearTimeout(t);
   }, []);
 
   const filteredMonks = useMemo<Monk[]>(() => {
@@ -101,7 +104,7 @@ export default function MonkShowcaseClient({
 
   return (
     <div
-      className={hideHeader ? "" : "min-h-[100svh] bg-cream pb-24"}
+      className={hideHeader ? "" : "relative min-h-[100svh] bg-cream pb-24"}
       style={
         hideHeader
           ? {}
@@ -113,7 +116,7 @@ export default function MonkShowcaseClient({
     >
       {/* Header Area */}
       {!hideHeader && (
-        <div className="sticky top-[calc(var(--header-height-mobile)+env(safe-area-inset-top,0px))] bg-cream/80 backdrop-blur-xl z-30 border-b border-stone/30">
+        <div className="sticky top-[calc(var(--header-height-mobile)+env(safe-area-inset-top,0px))] bg-white/85 backdrop-blur-md backdrop-saturate-150 z-30 border-b border-black/[0.06] shadow-[0_1px_0_rgba(0,0,0,0.04)]">
           <LargeHeader
             title={t({ mn: "Багш", en: "Mentors" })}
             highlight={t({ mn: "Нээлттэй", en: "Available" })}
@@ -122,16 +125,17 @@ export default function MonkShowcaseClient({
               en: "Find the right mentor for your journey",
             })}
             right={
-              <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-stone/50 flex items-center justify-center">
-                <Sparkles size={22} className="text-gold" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-black/[0.06] bg-white shadow-sm">
+                <Sparkles size={22} className="text-gold" strokeWidth={1.25} />
               </div>
             }
           />
-          <div className="px-6 pb-4">
-            <div className="relative group">
+          <div className="px-6 pb-5">
+            <div className="relative">
               <Search
-                className="absolute left-4 top-1/2 -translate-y-1/2 text-earth/50 group-focus-within:text-gold transition-colors"
-                size={18}
+                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-earth/45"
+                size={17}
+                strokeWidth={1.35}
               />
               <input
                 type="text"
@@ -141,47 +145,60 @@ export default function MonkShowcaseClient({
                 })}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-stone/20 border border-transparent focus:border-gold/10 focus:bg-white transition-all rounded-2xl py-3.5 pl-11 pr-4 text-[15px] text-ink placeholder-earth/40 outline-none shadow-inner"
+                className="w-full rounded-[20px] border-0 bg-[#F2F2F7] py-3.5 pl-11 pr-4 text-[16px] font-normal text-ink shadow-[0_1px_4px_rgba(0,0,0,0.06)] outline-none transition-shadow placeholder:text-earth/50 focus:shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
               />
             </div>
           </div>
         </div>
       )}
 
-      <div className={hideHeader ? "px-0" : "px-5 pb-10 mt-6"}>
-        <AnimatePresence mode="popLayout" layoutScroll={true}>
-          {filteredMonks.length > 0 ? (
-            <motion.div layout className="flex flex-col">
-              {filteredMonks.map((monk, index) => (
-                <MonkCard
-                  key={monk._id?.toString()}
-                  monk={monk}
-                  index={index}
-                  onClick={() => handleMonkClick(monk._id?.toString() || "")}
-                />
-              ))}
-            </motion.div>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-32 px-10"
-            >
-              <div className="w-20 h-20 rounded-[2.5rem] bg-stone/20 flex items-center justify-center mx-auto mb-6">
-                <Search size={32} className="text-earth/40" />
+      <div className={hideHeader ? "px-0" : "relative z-10 mt-6 px-5 pb-10"}>
+        {filteredMonks.length > 0 ? (
+          <>
+          {!hideHeader && (
+            <div className="mb-5 flex items-end justify-between gap-3">
+              <div>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-earth/50">
+                  {t({ mn: "Удирдамж", en: "Guidance" })}
+                </p>
+                <p className="mt-1 text-lg font-semibold text-ink tracking-tight">
+                  {t({ mn: "Багш нар", en: "Mentors" })}
+                </p>
               </div>
-              <h3 className="text-lg font-black text-ink mb-2">
-                {t({ mn: "Илэрц олдсонгүй", en: "No mentors found" })}
-              </h3>
-              <p className="text-[14px] text-earth/60">
-                {t({
-                  mn: "Та хайлтаа өөрчлөөд үзээрэй.",
-                  en: "Try adjusting your search query.",
-                })}
-              </p>
-            </motion.div>
+              <span className="shrink-0 rounded-full bg-black/[0.05] px-3 py-1 text-[12px] font-semibold tabular-nums text-earth">
+                {filteredMonks.length}
+              </span>
+            </div>
           )}
-        </AnimatePresence>
+          <div className="flex flex-col">
+            {filteredMonks.map((monk, index) => (
+              <MonkCard
+                key={monk._id?.toString()}
+                monk={monk}
+                index={index}
+                onClick={() => handleMonkClick(monk._id?.toString() || "")}
+              />
+            ))}
+          </div>
+          </>
+        ) : (
+          <div
+            className="anim-fade-up mx-auto max-w-md rounded-[20px] border border-black/[0.06] bg-white px-8 py-14 text-center shadow-sm"
+          >
+            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-black/[0.04]">
+              <Search size={28} className="text-earth/45" strokeWidth={1.25} />
+            </div>
+            <h3 className="text-lg font-semibold text-ink tracking-tight">
+              {t({ mn: "Илэрц олдсонгүй", en: "No mentors found" })}
+            </h3>
+            <p className="mt-2 text-[14px] text-earth/65">
+              {t({
+                mn: "Та хайлтаа өөрчлөөд үзээрэй.",
+                en: "Try adjusting your search query.",
+              })}
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

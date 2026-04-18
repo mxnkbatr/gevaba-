@@ -1,28 +1,51 @@
 @import "tailwindcss";
 
 :root {
-    /* === CORE DESIGN SYSTEM (Ethereal Premium for Spiritual Marketplace) === */
-    --ink: #333333; /* High-contrast dark grey (not pure black) */
-    --gold: #FFBF00; /* Golden Amber - primary focal points */
-    --saffron: #8B4513; /* Deep Saffron - accents and text hierarchy */
-    --cream: #F9F8F7; /* Bone White - heavenly gradients */
-    --stone: #FFFFFF; /* Soft Alabaster */
-    --earth: #555555; /* Secondary text */
-    --border: #E0F2FE; /* Morning Sky Blue for subtle glassmorphism/borders */
-    --live: #FFBF00; /* Online indicator mapped to Golden Amber */
-    --teal: #319795; /* Teal accent */
+    /* === Brand: champagne bronze (Apple-adjacent — muted, not taxi yellow) === */
+    --gold-rgb: 191, 164, 106;
+    --ink: #1d1d1f;
+    --gold: #bfa46a;
+    --gold-mid: #d4c29a;
+    --gold-light: #f7f2e8;
+    /* Links / small type on white */
+    --gold-dark: #5a4d35;
+    --gold-muted: rgba(var(--gold-rgb), 0.14);
+    --saffron: #3a3a3c;
+    /* App shell: iOS grouped background (cards stay white) */
+    --cream: #f2f2f7;
+    --stone: #ffffff;
+    /* Secondary surfaces (buttons, grouped rows) */
+    --ios-grouped: #f2f2f7;
+    /* Secondary label (~SF Pro secondary on light surfaces, HIG-readable) */
+    --earth: #48484a;
+    --border: rgba(0, 0, 0, 0.06);
+    /* Apple HIG-style hairline separator */
+    --separator: rgba(60, 60, 67, 0.12);
+    --live: #30d158;
+    --teal: #007aff;
+    --text-mid: #3c3c43;
+    --text-light: #6e6e73;
+    --border-glow: rgba(var(--gold-rgb), 0.22);
 
-    /* === RADIUS === */
-    --radius-sm: 10px;
-    --radius-md: 14px;
-    --radius-lg: 24px; /* Soft and rounded buttons */
-    --radius-xl: 36px;
+    /* === RADIUS (24px cards — HIG-style) === */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 20px;
+    --radius-xl: 24px;
     --radius-pill: 9999px;
 
-    /* === SHADOWS (Ethereal Depth) === */
-    --shadow-card: 0 10px 40px rgba(0, 0, 0, 0.04);
-    --shadow-modal: 0 24px 64px rgba(0, 0, 0, 0.08);
-    --shadow-gold: 0 10px 30px rgba(255, 191, 0, 0.2);
+    /* === SHADOWS: soft, high diffusion — borders optional === */
+    --shadow-card:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 6px 20px rgba(0, 0, 0, 0.06),
+        0 16px 40px rgba(0, 0, 0, 0.04);
+    --shadow-modal:
+        0 8px 40px rgba(0, 0, 0, 0.1),
+        0 32px 64px rgba(0, 0, 0, 0.08);
+    --shadow-gold:
+        0 2px 8px rgba(var(--gold-rgb), 0.12),
+        0 8px 28px rgba(72, 58, 40, 0.08),
+        0 1px 0 rgba(255, 255, 255, 0.65) inset;
 
     /* === SAFE AREA === */
     --sat: env(safe-area-inset-top, 44px);
@@ -36,27 +59,44 @@
 }
 
 .app-card-premium {
-    background: white;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
+    background: var(--stone);
+    border: 0.5px solid var(--separator);
+    border-radius: var(--radius-xl);
     box-shadow: var(--shadow-card);
     overflow: hidden;
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition:
+        transform 0.28s cubic-bezier(0.25, 0.1, 0.25, 1),
+        box-shadow 0.28s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 @theme inline {
     --color-ink: var(--ink);
     --color-gold: var(--gold);
+    --color-gold-mid: var(--gold-mid);
+    --color-gold-light: var(--gold-light);
+    --color-gold-dark: var(--gold-dark);
+    --color-gold-muted: var(--gold-muted);
     --color-saffron: var(--saffron);
     --color-cream: var(--cream);
     --color-stone: var(--stone);
+    --color-ios-grouped: var(--ios-grouped);
     --color-earth: var(--earth);
+    --color-text-mid: var(--text-mid);
+    --color-text-light: var(--text-light);
     --color-border: var(--border);
     --color-live: var(--live);
 
+    /* iOS / VCM-style: system UI first, Inter only as fallback (web + Cyrillic) */
     --font-sans:
-        "Inter", -apple-system, "SF Pro Text", "Helvetica Neue", sans-serif;
-    --font-display: "Playfair Display", "Merriweather", "Georgia", serif;
+        -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+        "Segoe UI", var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+    --font-serif:
+        var(--font-playfair), ui-serif, "Iowan Old Style", "Apple Garamond",
+        Georgia, serif;
+    /* Large titles: prefer SF Pro Display on Apple */
+    --font-display:
+        -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+        "Segoe UI", var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
     --radius-lg: var(--radius-lg);
     --radius-md: var(--radius-md);
@@ -72,11 +112,16 @@ body {
     background-color: var(--cream);
     color: var(--ink);
     font-family: var(--font-sans);
+    letter-spacing: -0.011em;
+    font-feature-settings:
+        "kern" 1,
+        "liga" 1;
     overflow-x: hidden;
-    overscroll-behavior: none; /* No rubber-band */
+    overscroll-behavior: none;
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
 }
 
 /* Base tap highlight and touch action for interactive elements */
@@ -93,43 +138,56 @@ textarea {
 /* --- TYPOGRAPHY (Larger & Clearer) --- */
 .text-display {
     font-family: var(--font-display);
-    font-size: 32px;
-    font-weight: 800;
-    letter-spacing: -0.02em;
-    line-height: 1.1;
+    font-size: 34px;
+    font-weight: 600;
+    letter-spacing: -0.035em;
+    line-height: 1.08;
     color: var(--ink);
+}
+
+/* Online ring behind monk avatars */
+.aura-pulse {
+    background: radial-gradient(
+        circle,
+        rgba(var(--gold-rgb), 0.28) 0%,
+        rgba(var(--gold-rgb), 0.06) 55%,
+        transparent 70%
+    );
+    animation: aura-pulse 3s ease-in-out infinite;
 }
 
 .text-h1 {
     font-size: 24px;
-    font-weight: 800;
-    letter-spacing: -0.015em;
+    font-weight: 600;
+    letter-spacing: -0.02em;
     line-height: 1.2;
 }
 
 .text-h2 {
     font-size: 20px;
-    font-weight: 800;
-    letter-spacing: -0.01em;
+    font-weight: 600;
+    letter-spacing: -0.015em;
 }
 
 .text-body {
-    font-size: 17px; /* Larger for 40+ audience */
+    font-size: 17px;
     font-weight: 400;
-    line-height: 1.6;
+    line-height: 1.47;
+    letter-spacing: -0.011em;
     color: var(--ink);
 }
 
 .text-secondary {
     font-size: 15px;
     color: var(--earth);
-    line-height: 1.5;
+    line-height: 1.47;
+    letter-spacing: -0.009em;
 }
 
 .text-label {
     font-size: 11px;
-    font-weight: 800;
-    letter-spacing: 0.1em;
+    font-weight: 600;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--earth);
 }
@@ -140,10 +198,10 @@ textarea {
     top: 0;
     left: 0;
     right: 0;
-    background: rgba(253, 251, 247, 0.88);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 0.5px solid rgba(28, 20, 16, 0.06);
+    background: rgba(255, 255, 255, 0.86);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 0.5px solid rgba(60, 60, 67, 0.1);
     padding-bottom: 12px;
     padding-left: 16px;
     padding-right: 16px;
@@ -188,10 +246,10 @@ textarea {
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(253, 251, 247, 0.88);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-top: 0.5px solid rgba(28, 20, 16, 0.08);
+    background: rgba(245, 245, 247, 0.82);
+    backdrop-filter: saturate(180%) blur(24px);
+    -webkit-backdrop-filter: saturate(180%) blur(24px);
+    border-top: 0.5px solid rgba(60, 60, 67, 0.12);
     display: flex;
     align-items: flex-start;
     justify-content: space-around;
@@ -226,9 +284,9 @@ textarea {
 }
 
 .tab-icon-wrap.active {
-    background: rgba(217, 119, 6, 0.12);
-    color: var(--gold);
-    transform: scale(1.05);
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--ink);
+    transform: scale(1.04);
 }
 
 .tab-label {
@@ -240,31 +298,16 @@ textarea {
 }
 
 .tab-label.active {
-    color: var(--gold);
+    color: var(--ink);
+    font-weight: 600;
 }
 
 .tab-active-dot {
     width: 4px;
     height: 4px;
     border-radius: 2px;
-    background: var(--gold);
+    background: var(--ink);
     margin-top: 1px;
-}
-
-/* Secondary — subtitle, description */
-.text-secondary {
-    font-size: 13px;
-    color: var(--earth);
-    line-height: 1.5;
-}
-
-/* Label — tag, badge, uppercase label */
-.text-label {
-    font-size: 10px;
-    font-weight: 700;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--earth);
 }
 
 /* Price — мөнгөн дүн */
@@ -291,14 +334,19 @@ textarea {
     width: 100%;
     max-width: 800px;
     min-height: 260px;
-    background: linear-gradient(135deg, #fffdf5 0%, #fdf4e3 100%);
+    background: linear-gradient(
+        160deg,
+        #ffffff 0%,
+        #faf9f7 42%,
+        #f3f1ee 100%
+    );
     border-radius: var(--radius-xl);
     margin: 0 auto;
     overflow: hidden;
     box-shadow: var(--shadow-card);
     display: flex;
     align-items: center;
-    border: 1px solid var(--border);
+    border: 0.5px solid rgba(60, 60, 67, 0.1);
 }
 
 .luminous-content {
@@ -335,12 +383,12 @@ textarea {
 .luminous-title {
     font-family: var(--font-display);
     font-size: 28px;
-    font-weight: 900;
+    font-weight: 600;
     color: var(--ink);
     line-height: 1.15;
     margin: 0;
     max-width: 360px;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
 }
 
 .luminous-subtitle {
@@ -371,17 +419,19 @@ textarea {
 }
 
 .luminous-btn-sm {
-    background: #000000;
+    background: var(--ink);
     color: #ffffff;
     border: none;
-    padding: 16px 36px;
+    padding: 14px 28px;
     border-radius: var(--radius-pill);
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    text-transform: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition:
+        transform 0.2s cubic-bezier(0.25, 0.1, 0.25, 1),
+        opacity 0.2s ease;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
@@ -389,7 +439,8 @@ textarea {
 }
 
 .luminous-btn-sm:active {
-    transform: scale(0.96);
+    transform: scale(0.98);
+    opacity: 0.92;
 }
 
 @media (max-width: 480px) {
@@ -463,14 +514,14 @@ textarea {
     justify-content: center;
     gap: 6px;
     padding: 14px 6px;
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(217, 119, 6, 0.15);
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 0.5px solid var(--separator);
     border-radius: 18px;
     box-shadow:
-        0 2px 8px rgba(28, 20, 16, 0.05),
-        inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        0 2px 8px rgba(0, 0, 0, 0.04),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85);
     text-decoration: none;
     transition:
         transform 0.18s ease,
@@ -516,11 +567,10 @@ textarea {
     background: #fff;
     border-radius: 18px;
     overflow: hidden;
-    box-shadow: 0 4px 20px var(--border-glow);
-    /* soft golden glow effect */
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.06);
     text-decoration: none;
     transition: transform 0.18s ease;
-    border: 1px solid rgba(217, 119, 6, 0.1);
+    border: 0.5px solid var(--separator);
 }
 
 .hs-blog-card:active {
@@ -604,15 +654,15 @@ textarea {
     position: absolute;
     inset: -4px;
     border-radius: 50%;
-    border: 2px solid rgba(217, 119, 6, 0.2);
+    border: 2px solid rgba(var(--gold-rgb), 0.22);
     transition: all 0.3s ease;
 }
 
 .hs-aura-ring.online {
-    border-color: rgba(217, 119, 6, 0.6);
+    border-color: rgba(var(--gold-rgb), 0.55);
     box-shadow:
-        0 0 12px rgba(217, 119, 6, 0.25),
-        0 0 24px rgba(217, 119, 6, 0.1);
+        0 0 12px rgba(var(--gold-rgb), 0.22),
+        0 0 28px rgba(var(--gold-rgb), 0.12);
     animation: aura-pulse 3s ease-in-out infinite;
     will-change: box-shadow, transform;
 }
@@ -621,21 +671,21 @@ textarea {
     0%,
     100% {
         box-shadow:
-            0 0 10px rgba(217, 119, 6, 0.2),
-            0 0 20px rgba(217, 119, 6, 0.08);
+            0 0 10px rgba(var(--gold-rgb), 0.18),
+            0 0 22px rgba(var(--gold-rgb), 0.08);
     }
 
     50% {
         box-shadow:
-            0 0 18px rgba(217, 119, 6, 0.4),
-            0 0 36px rgba(217, 119, 6, 0.15);
+            0 0 18px rgba(var(--gold-rgb), 0.32),
+            0 0 40px rgba(100, 82, 52, 0.1);
     }
 }
 
 /* === SELECTION & SCROLLBAR === */
 ::selection {
-    background: var(--gold);
-    color: #fff;
+    background: rgba(var(--gold-rgb), 0.28);
+    color: var(--ink);
 }
 
 ::-webkit-scrollbar {
@@ -868,21 +918,24 @@ body {
     color: #7f1d1d;
 }
 
-/* === SECTION LABEL === */
+/* === SECTION LABEL (SF secondary / footnote style) === */
 .section-label {
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--gold);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    color: var(--text-light);
     margin-bottom: 4px;
 }
 
 /* === CARD VARIANTS === */
 .card-white {
-    background: #fff;
+    background: var(--stone);
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-card);
+    border: 0.5px solid var(--separator);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.04),
+        0 4px 16px rgba(0, 0, 0, 0.05);
     overflow: hidden;
 }
 
@@ -896,10 +949,10 @@ body {
     position: sticky;
     top: 0;
     z-index: 20;
-    background: rgba(253, 251, 247, 0.92);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-bottom: 0.5px solid rgba(28, 20, 16, 0.06);
+    background: color-mix(in srgb, var(--cream) 82%, transparent);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 0.5px solid var(--separator);
 }
 
 /* === PILL TABS === */
@@ -919,28 +972,40 @@ body {
     font-weight: 700;
     transition: all 0.15s;
     cursor: pointer;
-    border: none;
+    border: 1px solid transparent;
+    box-sizing: border-box;
 }
 
 .pill-tab.active {
-    background: var(--ink);
-    color: #fff;
+    background: #ffffff;
+    color: #1d1d1f;
+    font-weight: 600;
+    border: 0.5px solid var(--separator);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.pill-tab.active::after {
+    display: none;
 }
 
 .pill-tab.inactive {
-    background: var(--stone);
-    color: var(--earth);
+    background: transparent;
+    color: var(--text-light);
+    font-weight: 500;
+    border-color: transparent;
 }
 
 /* === MESSAGE BUBBLES === */
 .bubble-mine {
     background: var(--gold);
-    color: #fff;
+    color: #171717;
     border-radius: 20px 20px 5px 20px;
     padding: 10px 16px;
     max-width: 75%;
     font-size: 14px;
     line-height: 1.5;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(0, 0, 0, 0.06);
 }
 
 .bubble-other {
@@ -987,22 +1052,6 @@ body {
     animation: shimmer 1.4s ease infinite;
 }
 
-/* === AURA PULSE (online indicator) === */
-@keyframes aura-pulse {
-    0%,
-    100% {
-        box-shadow:
-            0 0 10px rgba(217, 119, 6, 0.2),
-            0 0 20px rgba(217, 119, 6, 0.08);
-    }
-
-    50% {
-        box-shadow:
-            0 0 18px rgba(217, 119, 6, 0.4),
-            0 0 36px rgba(217, 119, 6, 0.15);
-    }
-}
-
 /* === APP DESIGN UTILITIES (Mobile-Native Feel) === */
 .app-section {
     padding: 32px 0 16px;
@@ -1012,15 +1061,6 @@ body {
 .app-section-header {
     margin-bottom: 12px;
     padding: 0 20px;
-}
-
-.app-card-premium {
-    background: #fff;
-    border-radius: 32px;
-    border: 0.5px solid rgba(120, 104, 81, 0.08);
-    box-shadow: 0 4px 20px rgba(120, 104, 81, 0.03);
-    overflow: hidden;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .app-carousel {
@@ -1045,4 +1085,275 @@ body {
 
 .hide-scrollbar::-webkit-scrollbar {
     display: none;
+}
+
+/* === Primary actions (Apple-style filled control) === */
+.btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    min-height: 44px;
+    padding: 0 22px;
+    border-radius: 980px;
+    background: linear-gradient(
+        180deg,
+        var(--gold-light) 0%,
+        var(--gold) 45%,
+        var(--gold-dark) 100%
+    );
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    border: none;
+    box-shadow: var(--shadow-gold), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    cursor: pointer;
+    transition:
+        opacity 0.2s ease,
+        transform 0.15s ease,
+        filter 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-primary:hover {
+    filter: brightness(1.03);
+}
+
+.btn-primary:active {
+    transform: scale(0.98);
+}
+
+.btn-primary:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+}
+
+.btn-primary-full {
+    width: 100%;
+}
+
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 22px;
+    border-radius: 980px;
+    background: rgba(120, 120, 128, 0.12);
+    color: var(--ink);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    border: none;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        transform 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.btn-secondary:hover {
+    background: rgba(120, 120, 128, 0.18);
+}
+
+.btn-secondary:active {
+    transform: scale(0.98);
+}
+
+/* === Form fields (sign-in / profile) === */
+.input-label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--earth);
+    margin-bottom: 8px;
+    letter-spacing: -0.01em;
+}
+
+.input {
+    width: 100%;
+    min-height: 48px;
+    padding: 0 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(60, 60, 67, 0.18);
+    background: var(--stone);
+    font-size: 16px;
+    color: var(--ink);
+    outline: none;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.input::placeholder {
+    color: var(--earth);
+    opacity: 0.65;
+}
+
+.input:focus {
+    border-color: rgba(var(--gold-rgb), 0.55);
+    box-shadow: 0 0 0 3px rgba(var(--gold-rgb), 0.12);
+}
+
+/* === Premium gold utilities (satin + subtle shimmer) === */
+@keyframes gold-gradient-flow {
+    0% {
+        background-position: 0% 50%;
+    }
+    50% {
+        background-position: 100% 50%;
+    }
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.text-gold-gradient {
+    background: linear-gradient(
+        118deg,
+        var(--gold-dark) 0%,
+        #9a8358 18%,
+        var(--gold) 40%,
+        #ebe3d4 50%,
+        var(--gold-mid) 58%,
+        #7d6a45 78%,
+        #3d3426 100%
+    );
+    background-size: 240% 240%;
+    animation: gold-gradient-flow 11s ease-in-out infinite;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    will-change: background-position;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .text-gold-gradient {
+        animation: none;
+        background-size: 100% 100%;
+    }
+}
+
+/* Primary gold CTA / hero button — layered highlight */
+.bg-gold-satin {
+    background: linear-gradient(
+        168deg,
+        #fdfcfa 0%,
+        var(--gold-light) 18%,
+        var(--gold-mid) 34%,
+        var(--gold) 52%,
+        #a68b58 72%,
+        var(--gold-dark) 100%
+    );
+    box-shadow:
+        inset 0 2px 1px rgba(255, 255, 255, 0.55),
+        inset 0 -2px 1px rgba(60, 48, 32, 0.1),
+        0 1px 2px rgba(0, 0, 0, 0.05),
+        0 6px 20px rgba(var(--gold-rgb), 0.18),
+        0 0 24px rgba(210, 194, 154, 0.22);
+}
+
+.bg-gold-satin:hover {
+    filter: brightness(1.04);
+}
+
+.bg-gold-satin:active {
+    filter: brightness(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .bg-gold-satin:hover,
+    .bg-gold-satin:active {
+        filter: none;
+    }
+}
+
+.bg-gold-soft {
+    background: linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.98) 0%,
+        var(--gold-muted) 100%
+    );
+}
+
+.ring-gold-subtle {
+    box-shadow: var(--shadow-card);
+}
+
+.monastery-card {
+    border-radius: var(--radius-xl);
+    border: none;
+    background: var(--stone);
+    box-shadow: var(--shadow-card);
+}
+
+.cta-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border-radius: 980px;
+    background: linear-gradient(
+        180deg,
+        var(--gold-light) 0%,
+        var(--gold) 45%,
+        var(--gold-dark) 100%
+    );
+    color: var(--ink);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-transform: none;
+    font-size: 15px;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    box-shadow:
+        0 1px 2px rgba(0, 0, 0, 0.05),
+        0 6px 20px rgba(var(--gold-rgb), 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    transition:
+        transform 0.15s ease,
+        box-shadow 0.2s ease,
+        filter 0.2s ease;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.cta-button:hover:not(:disabled) {
+    filter: brightness(1.02);
+}
+
+.cta-button:active:not(:disabled) {
+    transform: scale(0.98);
+}
+
+.cta-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* === Lightweight entrance animations (replace framer-motion for WebView perf) === */
+@keyframes fade-up {
+    from {
+        opacity: 0;
+        transform: translate3d(0, 12px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: translate3d(0, 0, 0);
+    }
+}
+
+.anim-fade-up {
+    opacity: 0;
+    animation: fade-up 0.45s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+    will-change: transform, opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .anim-fade-up {
+        opacity: 1;
+        animation: none;
+        will-change: auto;
+    }
 }

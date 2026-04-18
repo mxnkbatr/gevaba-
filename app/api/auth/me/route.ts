@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { connectToDatabase } from "@/database/db";
-import { currentUser, clerkClient } from "@clerk/nextjs/server";
+import { currentUser } from "@clerk/nextjs/server";
 import { ObjectId } from "mongodb";
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -96,6 +96,7 @@ export async function GET(request: Request) {
 
         // 2. Sync to Clerk (Crucial so claims are updated)
         try {
+          const { clerkClient } = await import("@clerk/nextjs/server");
           const client = await clerkClient();
           await client.users.updateUser(clerkUser.id, {
             publicMetadata: { role: "admin" }

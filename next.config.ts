@@ -1,8 +1,23 @@
 import type { NextConfig } from "next";
+import bundleAnalyzer from "@next/bundle-analyzer";
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 const nextConfig: NextConfig = {
   /* config options here */
+  /**
+   * Custom `webpack` below (async WebAssembly) matches production (`next build --webpack`).
+   * Default `next dev` in Next 16 uses Turbopack; use `npm run dev` (--webpack) so dev matches build
+   * and this warning stays off: "webpack config and no turbopack config".
+   */
   output: process.env.CAPACITOR_BUILD === 'true' ? 'export' : undefined,
+
+  // Keep dev tooling away from the floating tab bar (bottom-left overlaps UX)
+  devIndicators: {
+    position: "top-right",
+  },
 
   // Allow cross-origin requests from 127.0.0.1 during local development
   allowedDevOrigins: ["http://127.0.0.1", "http://127.0.0.1:3000"],
@@ -10,7 +25,17 @@ const nextConfig: NextConfig = {
   // Performance optimizations
   experimental: {
     // Tree-shake icon libraries and animation libraries
-    optimizePackageImports: ["lucide-react", "framer-motion", "@clerk/nextjs"],
+    optimizePackageImports: [
+      "lucide-react",
+      "framer-motion",
+      "@clerk/nextjs",
+      "react-hot-toast",
+    ],
+    /** Client router cache (seconds): fewer full RSC refetches after prefetch / revisit */
+    staleTimes: {
+      dynamic: 90,
+      static: 300,
+    },
   },
   compiler: {
     // Remove console.log in production for cleaner output
@@ -54,4 +79,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);

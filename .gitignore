@@ -24,8 +24,13 @@
 /build
 
 # misc
+/tmp/
+tmp_fix.js
 .DS_Store
 *.pem
+*.keystore
+*.jks
+release-keystore.*
 
 # debug
 npm-debug.log*

@@ -166,7 +166,7 @@ export default function MonkSchedulePage() {
         className="px-5 pb-4 bg-white/90 backdrop-blur-md border-b border-stone/30 sticky top-0 z-20"
         style={{ paddingTop: "calc(env(safe-area-inset-top, 44px) + 10px)" }}
       >
-        <h1 className="text-[24px] font-black text-ink mb-4">
+        <h1 className="text-[24px] font-semibold text-ink mb-4">
           {t({ mn: "Миний хуваарь", en: "My Schedule" })}
         </h1>
         {/* Tabs */}
@@ -175,7 +175,7 @@ export default function MonkSchedulePage() {
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2 rounded-xl text-[13px] font-black transition-all ${
+              className={`flex-1 py-2 rounded-xl text-[13px] font-semibold transition-all ${
                 activeTab === tab ? "bg-white text-ink shadow-sm" : "text-earth/60"
               }`}
             >
@@ -215,12 +215,12 @@ export default function MonkSchedulePage() {
                         <div>
                           <div className="flex items-center gap-2 mb-1">
                             <Clock size={14} className="text-gold" />
-                            <span className="text-[15px] font-black text-ink">{booking.time}</span>
+                            <span className="text-[15px] font-semibold text-ink">{booking.time}</span>
                           </div>
-                          <p className="text-[16px] font-black text-ink">{booking.clientName}</p>
+                          <p className="text-[16px] font-semibold text-ink">{booking.clientName}</p>
                           <p className="text-[12px] text-earth/60">{booking.serviceName?.[language as "mn" | "en"] || booking.serviceName?.mn}</p>
                         </div>
-                        <span className={`text-[11px] font-black px-3 py-1 rounded-full ${STATUS_COLORS[booking.status]}`}>
+                        <span className={`text-[11px] font-semibold px-3 py-1 rounded-full ${STATUS_COLORS[booking.status]}`}>
                           {booking.status === "pending"   ? t({ mn: "Хүлээгдэж байна", en: "Pending" }) :
                            booking.status === "confirmed" ? t({ mn: "Батлагдсан", en: "Confirmed" }) :
                            booking.status === "completed" ? t({ mn: "Дууссан", en: "Completed" }) :
@@ -239,7 +239,7 @@ export default function MonkSchedulePage() {
                           <button
                             onClick={() => handleStatusChange(booking._id, "confirmed")}
                             disabled={actionLoading === booking._id}
-                            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-emerald-500 text-white rounded-2xl font-black text-[14px] active:scale-95 transition-all"
+                            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-emerald-500 text-white rounded-2xl font-semibold text-[14px] active:scale-95 transition-all"
                           >
                             {actionLoading === booking._id ? <Loader2 size={16} className="animate-spin" /> : <CheckCircle size={16} />}
                             {t({ mn: "Батлах", en: "Confirm" })}
@@ -247,7 +247,7 @@ export default function MonkSchedulePage() {
                           <button
                             onClick={() => handleStatusChange(booking._id, "rejected")}
                             disabled={actionLoading === booking._id}
-                            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-100 text-red-700 border border-red-200 rounded-2xl font-black text-[14px] active:scale-95 transition-all"
+                            className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-red-100 text-red-700 border border-red-200 rounded-2xl font-semibold text-[14px] active:scale-95 transition-all"
                           >
                             <XCircle size={16} />
                             {t({ mn: "Татгалзах", en: "Decline" })}
@@ -270,7 +270,7 @@ export default function MonkSchedulePage() {
                   className="w-10 h-10 rounded-full bg-white shadow-sm border border-stone/30 flex items-center justify-center active:scale-95 transition-all">
                   <ChevronLeft size={20} className="text-ink" />
                 </button>
-                <span className="text-[14px] font-black text-ink">
+                <span className="text-[14px] font-semibold text-ink">
                   {weekStart.toLocaleDateString(language === "mn" ? "mn-MN" : "en-US", { month: "short", day: "numeric" })}
                   {" — "}
                   {addDays(weekStart, 6).toLocaleDateString(language === "mn" ? "mn-MN" : "en-US", { month: "short", day: "numeric" })}
@@ -294,7 +294,7 @@ export default function MonkSchedulePage() {
                       <p className="text-[10px] font-bold text-earth/50 uppercase">
                         {d.toLocaleDateString(language === "mn" ? "mn-MN" : "en-US", { weekday: "short" })}
                       </p>
-                      <p className={`text-[14px] font-black ${isToday ? "text-gold" : "text-ink"}`}>
+                      <p className={`text-[14px] font-semibold ${isToday ? "text-gold" : "text-ink"}`}>
                         {d.getDate()}
                       </p>
                     </div>
@@ -371,7 +371,7 @@ export default function MonkSchedulePage() {
                 <p className="text-[13px] font-bold opacity-80 mb-1 uppercase tracking-widest">
                   {t({ mn: "Энэ сарын орлого", en: "This Month's Earnings" })}
                 </p>
-                <p className="text-[38px] font-black leading-none">
+                <p className="text-[38px] font-semibold leading-none">
                   {monthEarnings.toLocaleString()}₮
                 </p>
                 <p className="text-[13px] opacity-70 mt-2">
@@ -409,14 +409,14 @@ export default function MonkSchedulePage() {
                 ].map(stat => (
                   <div key={stat.label} className="bg-white rounded-3xl p-5 shadow-sm border border-stone/20">
                     <stat.icon size={22} className={`${stat.color} mb-3`} />
-                    <p className="text-[28px] font-black text-ink">{stat.value}</p>
+                    <p className="text-[28px] font-semibold text-ink">{stat.value}</p>
                     <p className="text-[12px] font-bold text-earth/60">{stat.label}</p>
                   </div>
                 ))}
               </div>
 
               {/* Recent completions */}
-              <h2 className="text-[16px] font-black text-ink mb-3">
+              <h2 className="text-[16px] font-semibold text-ink mb-3">
                 {t({ mn: "Дууссан захиалгууд", en: "Completed Sessions" })}
               </h2>
               <div className="space-y-2">
@@ -427,10 +427,10 @@ export default function MonkSchedulePage() {
                   .map(b => (
                     <div key={b._id} className="flex items-center justify-between bg-white rounded-2xl px-5 py-4 border border-stone/20">
                       <div>
-                        <p className="text-[14px] font-black text-ink">{b.clientName}</p>
+                        <p className="text-[14px] font-semibold text-ink">{b.clientName}</p>
                         <p className="text-[12px] text-earth/60">{b.date} · {b.time}</p>
                       </div>
-                      <span className="text-[14px] font-black text-emerald-600">+40,000₮</span>
+                      <span className="text-[14px] font-semibold text-emerald-600">+40,000₮</span>
                     </div>
                   ))}
                 {bookings.filter(b => b.status === "completed").length === 0 && (

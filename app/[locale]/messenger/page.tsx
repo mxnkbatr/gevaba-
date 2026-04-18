@@ -6,9 +6,9 @@ import { useLanguage } from "@/app/contexts/LanguageContext";
 import { Send, ArrowLeft, Search, MessageSquare, Loader2, User, Sparkles } from "lucide-react";
 import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
 import { useRealtimeMessages } from "@/app/hooks/useRealtimeMessages";
 import { LocalizedLink } from "@/app/components/LocalizedLink";
+import { formatBlogPostDate, formatTimeShort } from "@/app/lib/dateUtils";
 
 interface Conversation {
   otherId: string;
@@ -79,91 +79,89 @@ export default function MessengerPage() {
     }
   }, [authLoading, user, router, language]);
 
-  // Fetch Conversations
-  const fetchConversations = async () => {
+  const fetchMessages = React.useCallback(
+    async (otherId: string) => {
+      setMessagesLoading(true);
+      try {
+        const res = await fetch(`/api/messages/${otherId}`);
+        if (res.ok) {
+          const data = await res.json();
+          setMessages(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch messages", error);
+      } finally {
+        setMessagesLoading(false);
+      }
+    },
+    [setMessages],
+  );
+
+  // Conversations + monks list in parallel; deep-link monk loads inline
+  const fetchData = React.useCallback(async () => {
     try {
-      const res = await fetch("/api/conversations");
-      if (res.ok) {
-        const data = await res.json();
+      const [convRes, monkRes] = await Promise.all([
+        fetch("/api/conversations"),
+        fetch("/api/monks"),
+      ]);
+
+      if (convRes.ok) {
+        const data = await convRes.json();
         setConversations(data);
-        
-        if (monkIdFromUrl && !data.find((c: Conversation) => c.otherId === monkIdFromUrl)) {
-           fetchMonkInfo(monkIdFromUrl);
-        } else if (monkIdFromUrl) {
-           const existing = data.find((c: Conversation) => c.otherId === monkIdFromUrl);
-           if (existing) setSelectedConv(existing);
+
+        if (monkIdFromUrl) {
+          const existing = data.find(
+            (c: Conversation) => c.otherId === monkIdFromUrl,
+          );
+          if (existing) {
+            setSelectedConv(existing);
+          } else {
+            try {
+              const mRes = await fetch(`/api/monks/${monkIdFromUrl}`);
+              if (mRes.ok) {
+                const monkData = await mRes.json();
+                setSelectedConv({
+                  otherId: monkIdFromUrl,
+                  otherName:
+                    monkData.name[language] ||
+                    monkData.name.mn ||
+                    monkData.name.en,
+                  otherImage: monkData.image || "/default-monk.jpg",
+                  lastMessage: "",
+                  lastMessageAt: new Date().toISOString(),
+                  unreadCount: 0,
+                  isMonk: true,
+                });
+              }
+            } catch (e) {
+              console.error("Failed to fetch monk info", e);
+            }
+          }
         }
       }
+
+      if (monkRes.ok) {
+        setAllMonks(await monkRes.json());
+      }
     } catch (error) {
-      console.error("Failed to fetch conversations", error);
+      console.error("Failed to fetch messenger data", error);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Fetch All Monks
-  const fetchAllMonks = async () => {
-    try {
-      const res = await fetch("/api/monks");
-      if (res.ok) {
-        const data = await res.json();
-        setAllMonks(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch all monks", error);
-    }
-  };
-
-  const fetchMonkInfo = async (id: string) => {
-    try {
-      const res = await fetch(`/api/monks/${id}`);
-      if (res.ok) {
-        const monkData = await res.json();
-        const tempConv: Conversation = {
-          otherId: id,
-          otherName: monkData.name[language] || monkData.name.mn || monkData.name.en,
-          otherImage: monkData.image || "/default-monk.jpg",
-          lastMessage: "",
-          lastMessageAt: new Date().toISOString(),
-          unreadCount: 0,
-          isMonk: true
-        };
-        setSelectedConv(tempConv);
-      }
-    } catch (error) {
-      console.error("Failed to fetch monk info", error);
-    }
-  };
-
-  // Fetch Messages for selected conversation
-  const fetchMessages = async (otherId: string) => {
-    setMessagesLoading(true);
-    try {
-      const res = await fetch(`/api/messages/${otherId}`);
-      if (res.ok) {
-        const data = await res.json();
-        setMessages(data);
-      }
-    } catch (error) {
-      console.error("Failed to fetch messages", error);
-    } finally {
-      setMessagesLoading(false);
-    }
-  };
+  }, [monkIdFromUrl, language]);
 
   useEffect(() => {
     if (user) {
-      fetchConversations();
-      fetchAllMonks();
+      fetchData();
     }
-  }, [user]);
+  }, [user, fetchData]);
 
   useEffect(() => {
     if (selectedConv) {
-      setMessages([]); // Clear previous conversation messages
+      setMessages([]);
       fetchMessages(selectedConv.otherId);
     }
-  }, [selectedConv]);
+  }, [selectedConv, fetchMessages]);
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -244,11 +242,10 @@ export default function MessengerPage() {
 
   // --- UTILITY: GROUP MESSAGES BY DATE ---
   const groupMessagesByDate = (msgs: Message[]) => {
+    const lk = language === "mn" ? "mn" : "en";
     const groups: { [key: string]: Message[] } = {};
-    msgs.forEach(msg => {
-      const date = new Date(msg.createdAt).toLocaleDateString(language === 'mn' ? 'mn-MN' : 'en-US', {
-        year: 'numeric', month: 'long', day: 'numeric'
-      });
+    msgs.forEach((msg) => {
+      const date = formatBlogPostDate(msg.createdAt, lk);
       if (!groups[date]) groups[date] = [];
       groups[date].push(msg);
     });
@@ -258,7 +255,7 @@ export default function MessengerPage() {
   if (authLoading || (loading && !user)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-cream">
-        <div className="w-10 h-10 rounded-full border-2 border-gold border-t-transparent animate-spin" />
+        <div className="w-10 h-10 rounded-full border-2 border-black/10 border-t-gold animate-spin" />
       </div>
     );
   }
@@ -267,39 +264,41 @@ export default function MessengerPage() {
 
   // --- COMPONENT: CONVERSATION LIST ---
   if (!selectedConv) return (
-    <div className="min-h-[100svh] bg-[#FDFBF7] flex flex-col">
-      {/* Header */}
-      <header className="px-6 border-b border-stone/10 bg-[#FDFBF7]/80 backdrop-blur-xl sticky top-0 z-20"
-        style={{ paddingTop: "calc(20px + env(safe-area-inset-top, 44px))", paddingBottom: 16 }}>
-        <div className="flex items-center justify-between mb-6">
-           <div>
-             <h1 className="text-[28px] font-black text-ink tracking-tight">
+    <div className="relative flex min-h-[100svh] flex-col bg-cream">
+      <header className="sticky top-0 z-20 border-b border-black/[0.06] bg-cream/90 px-5 shadow-[0_1px_0_rgba(0,0,0,0.04)] backdrop-blur-2xl backdrop-saturate-150 sm:px-6"
+        style={{ paddingTop: "calc(16px + env(safe-area-inset-top, 44px))", paddingBottom: 16 }}>
+        <div className="mb-5 flex items-center justify-between gap-4">
+           <div className="min-w-0">
+             <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-earth/50">
+               {t({ mn: "Холбоо", en: "Connect" })}
+             </p>
+             <h1 className="mt-1 font-serif text-[1.65rem] font-semibold leading-tight tracking-tight text-ink">
                {t({ mn: "Мессенжер", en: "Messages" })}
              </h1>
-             <p className="text-[11px] font-bold text-earth/40 uppercase tracking-widest mt-0.5">
-               {conversations.length} {t({ mn: "Яриа", en: "Conversations" })}
+             <p className="mt-1 text-[12px] font-medium text-earth/60">
+               {conversations.length} {t({ mn: "яриа", en: "conversations" })}
              </p>
            </div>
-           <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-stone/10 flex items-center justify-center">
-             <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}>
-               <Sparkles size={24} className="text-gold" />
-             </motion.div>
+           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-black/[0.06] bg-white shadow-sm">
+             <Sparkles size={22} className="text-gold" strokeWidth={1.6} />
            </div>
         </div>
 
         {/* Segmented Control */}
-        <div className="relative flex p-1.5 bg-stone/20 rounded-2xl">
-          <motion.div
-             className="absolute inset-y-1.5 left-1.5 bg-white rounded-xl shadow-sm z-0"
-             animate={{ x: activeTab === "chats" ? "0%" : "calc(100% + 3px)" }}
-             initial={false}
-             transition={{ type: "spring", stiffness: 450, damping: 40 }}
-             style={{ width: "calc(50% - 7px)" }}
+        <div className="relative flex h-11 p-1 rounded-2xl border border-black/[0.06] bg-[#F2F2F7]">
+          <div
+            className="absolute top-1 bottom-1 rounded-[0.65rem] bg-white shadow-sm border border-black/[0.06] transition-[left] duration-300 ease-[cubic-bezier(0.25,0.1,0.25,1)]"
+            style={{
+              width: "calc(50% - 6px)",
+              left: activeTab === "chats" ? "4px" : "calc(50% + 2px)",
+            }}
+            aria-hidden
           />
           {(["chats", "monks"] as const).map(tab => (
             <button key={tab}
+              type="button"
               onClick={() => setActiveTab(tab)}
-              className={`relative z-10 flex-1 py-2.5 text-[14px] font-black transition-colors duration-300 ${
+              className={`relative z-10 flex-1 py-2 text-[14px] font-semibold transition-colors duration-200 ${
                 activeTab === tab ? "text-ink" : "text-earth/50"
               }`}
             >
@@ -309,59 +308,57 @@ export default function MessengerPage() {
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <div className="flex-1 overflow-y-auto px-6 pb-32">
-        {/* Search - Inside scroll to keep header minimal */}
-        <div className="py-6">
-          <div className="relative group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-earth/30 group-focus-within:text-gold transition-colors" size={18} />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder={activeTab === 'chats' ? t({ mn: "Зурвас хайх...", en: "Search messages..." }) : t({ mn: "Багш хайх...", en: "Find a guide..." })}
-              className="w-full bg-stone/10 border-2 border-transparent focus:border-gold/5 focus:bg-white rounded-3xl py-4 pl-12 pr-4 text-[15px] text-ink placeholder:text-earth/30 outline-none transition-all shadow-inner"
-            />
+        <div className="relative z-10 flex-1 overflow-y-auto px-5 pb-32 sm:px-6">
+          <div className="py-5">
+            <div className="group relative">
+              <Search className="absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-earth/35 transition-colors group-focus-within:text-earth/55" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder={activeTab === 'chats' ? t({ mn: "Зурвас хайх...", en: "Search messages..." }) : t({ mn: "Багш хайх...", en: "Find a guide..." })}
+                className="w-full rounded-[20px] border-0 bg-[#F2F2F7] py-3.5 pl-11 pr-4 text-[15px] text-ink shadow-[0_1px_4px_rgba(0,0,0,0.06)] outline-none transition-all placeholder:text-earth/42 focus:shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
+              />
+            </div>
           </div>
-        </div>
 
-        <AnimatePresence mode="wait">
           {loading ? (
-            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4">
+            <div className="space-y-4">
               {[1, 2, 3, 4].map(i => <div key={i} className="h-24 skeleton rounded-[2.5rem]" />)}
-            </motion.div>
+            </div>
           ) : activeTab === "chats" ? (
             filteredConversations.length === 0 ? (
-              <motion.div key="no-chats" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-center py-24 px-10">
-                <div className="w-24 h-24 rounded-[3rem] bg-stone/20 flex items-center justify-center mx-auto mb-8 shadow-inner">
-                  <MessageSquare size={40} className="text-earth/20" />
+              <div className="anim-fade-up mx-auto max-w-md rounded-[20px] border border-black/[0.06] bg-white px-8 py-12 text-center shadow-sm">
+                <div className="mx-auto mb-6 flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-[1.35rem] border border-black/[0.06] bg-[#F2F2F7]">
+                  <MessageSquare size={36} className="text-earth/35" strokeWidth={1.4} />
                 </div>
-                <h3 className="text-[20px] font-black text-ink mb-3">
-                  {t({ mn: "Одоогоор яриа алга", en: "Inner Peace Awaits" })}
+                <h3 className="font-serif text-xl font-semibold text-ink">
+                  {t({ mn: "Одоогоор яриа алга", en: "Inner peace awaits" })}
                 </h3>
-                <p className="text-[15px] text-earth/50 leading-relaxed max-w-[240px] mx-auto">
+                <p className="mx-auto mt-2 max-w-[16rem] text-[14px] leading-relaxed text-earth/60">
                   {t({ mn: "Өөрт тохирох багшийг сонгон сэтгэлийн яриаг эхлүүлээрэй.", en: "Begin a soulful dialogue with an experienced guide today." })}
                 </p>
                 <button 
                   onClick={() => setActiveTab('monks')}
-                  className="mt-8 bg-ink text-white px-8 py-3.5 rounded-full text-[13px] font-black uppercase tracking-widest shadow-xl active:scale-95 transition-transform"
+                  type="button"
+                  className="mt-8 btn-primary min-h-[48px] px-8 normal-case tracking-tight font-semibold transition-transform active:scale-[0.98]"
                 >
-                  {t({ mn: "Багш хайх", en: "Find a Guide" })}
+                  {t({ mn: "Багш хайх", en: "Find a guide" })}
                 </button>
-              </motion.div>
+              </div>
             ) : (
-              <motion.div key="chats" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+              <div className="space-y-3">
                 {filteredConversations.map((conv) => (
                   <button key={conv.otherId} onClick={() => setSelectedConv(conv)}
-                    className="w-full flex items-center gap-5 p-4 bg-white border border-stone/10 rounded-[2rem] text-left active:scale-[0.98] transition-all shadow-[0_2px_10px_rgba(120,104,81,0.05)] hover:shadow-md">
+                    className="w-full flex items-center gap-5 p-4 rounded-[20px] border border-black/[0.06] bg-white text-left shadow-sm transition-all active:scale-[0.98] hover:shadow-md">
                     <div className="relative shrink-0">
                       <div className="w-16 h-16 rounded-[1.8rem] overflow-hidden border-2 border-white shadow-soft">
                         <Image src={conv.otherImage || "/default-monk.jpg"} alt={conv.otherName}
                           width={64} height={64} className="w-full h-full object-cover" />
                       </div>
                       {conv.unreadCount > 0 && (
-                        <div className="absolute -top-1 -right-1 min-w-[24px] h-6 rounded-full bg-gold border-2 border-white flex items-center justify-center px-1.5 shadow-gold">
-                          <span className="text-[10px] font-black text-white">{conv.unreadCount}</span>
+                        <div className="absolute -right-1 -top-1 flex h-6 min-w-[24px] items-center justify-center rounded-full border-2 border-white bg-gold px-1.5 shadow-sm">
+                          <span className="text-[10px] font-black text-neutral-900">{conv.unreadCount}</span>
                         </div>
                       )}
                     </div>
@@ -369,7 +366,7 @@ export default function MessengerPage() {
                       <div className="flex justify-between items-baseline mb-1.5">
                         <span className="text-[16px] font-black text-ink truncate">{conv.otherName}</span>
                         <span className="text-[11px] font-bold text-earth/40 shrink-0 ml-2">
-                          {conv.lastMessageAt ? new Date(conv.lastMessageAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : ""}
+                          {conv.lastMessageAt ? formatTimeShort(conv.lastMessageAt) : ""}
                         </span>
                       </div>
                       <p className="text-[14px] text-earth/60 truncate pr-6 line-clamp-1">
@@ -378,15 +375,15 @@ export default function MessengerPage() {
                     </div>
                   </button>
                 ))}
-              </motion.div>
+              </div>
             )
           ) : (
             // MONKS TAB (Enhanced Cards)
-            <motion.div key="monks" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-4 pt-2">
+            <div className="space-y-4 pt-2">
               {filteredMonks.map(monk => (
                 <button key={monk._id}
                   onClick={() => startChatWithMonk(monk)}
-                  className="w-full flex items-center gap-5 p-5 bg-white border border-stone/10 rounded-[2.5rem] text-left active:scale-[0.98] transition-all shadow-sm hover:shadow-gold/5">
+                  className="w-full flex items-center gap-5 p-5 rounded-[20px] border border-black/[0.06] bg-white text-left shadow-sm transition-all active:scale-[0.98] hover:shadow-md">
                   <div className="w-16 h-16 rounded-3xl overflow-hidden shadow-card border-2 border-stone/5">
                     <Image src={monk.image || "/default-monk.jpg"} alt={monk.name.mn || ""}
                       width={64} height={64} className="w-full h-full object-cover" />
@@ -394,22 +391,21 @@ export default function MessengerPage() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-0.5">
                       <p className="text-[16px] font-black text-ink">{monk.name[language as 'mn' | 'en'] || monk.name.mn}</p>
-                      {monk.isSpecial && <div className="w-1.5 h-1.5 rounded-full bg-gold" />}
+                      {monk.isSpecial && <div className="h-1.5 w-1.5 rounded-full bg-gold" />}
                     </div>
-                    <p className="text-[11px] font-bold text-gold uppercase tracking-[0.15em] opacity-80 mb-1">{monk.title?.[language as 'mn' | 'en'] || monk.title?.mn}</p>
+                    <p className="mb-1 text-[11px] font-bold uppercase tracking-[0.15em] text-earth/50">{monk.title?.[language as 'mn' | 'en'] || monk.title?.mn}</p>
                     <div className="flex items-center gap-1.5">
                        <p className="text-[11px] font-black text-earth/30 uppercase tracking-widest">{t({ mn: "Яг одоо боломжтой", en: "Available now" })}</p>
                     </div>
                   </div>
-                  <div className="w-10 h-10 rounded-2xl bg-stone/10 flex items-center justify-center">
-                    <Send size={18} className="text-gold" />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-black/[0.06] bg-gold text-neutral-900 shadow-sm">
+                    <Send size={17} strokeWidth={2.2} />
                   </div>
                 </button>
               ))}
-            </motion.div>
+            </div>
           )}
-        </AnimatePresence>
-      </div>
+        </div>
     </div>
   );
 
@@ -417,24 +413,23 @@ export default function MessengerPage() {
   const groupedMessages = groupMessagesByDate(messages);
 
   return (
-    <div className="min-h-[100svh] bg-[#FDFBF7] flex flex-col">
-      {/* Premium Chat Header */}
-      <header className="px-5 bg-white/90 backdrop-blur-3xl border-b border-stone/10 flex items-center gap-4 sticky top-0 z-50 shadow-sm"
-        style={{ paddingTop: "calc(12px + env(safe-area-inset-top, 44px))", paddingBottom: 16 }}>
-        <button onClick={() => setSelectedConv(null)}
-          className="w-12 h-12 rounded-full bg-stone/20 active:bg-stone/30 flex items-center justify-center shrink-0 transition-colors">
-          <ArrowLeft size={24} className="text-ink" />
+    <div className="relative flex min-h-[100svh] flex-col bg-cream">
+      <header className="sticky top-0 z-50 flex items-center gap-3 border-b border-black/[0.06] bg-cream/92 px-4 shadow-[0_1px_0_rgba(0,0,0,0.04)] backdrop-blur-2xl backdrop-saturate-150 sm:gap-4 sm:px-5"
+        style={{ paddingTop: "calc(10px + env(safe-area-inset-top, 44px))", paddingBottom: 14 }}>
+        <button type="button" onClick={() => setSelectedConv(null)}
+          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-black/[0.06] bg-white shadow-sm transition-colors active:scale-95 hover:bg-black/[0.03]">
+          <ArrowLeft size={22} className="text-ink" />
         </button>
         <LocalizedLink href={`/monks/${selectedConv.otherId}`} className="flex items-center gap-4 flex-1 min-w-0 active:opacity-70 transition-opacity">
           <div className="relative">
-            <div className="w-12 h-12 rounded-2xl overflow-hidden shadow-soft border-2 border-white">
+            <div className="h-12 w-12 overflow-hidden rounded-2xl border border-black/[0.06] bg-white shadow-sm">
                <Image src={selectedConv.otherImage || "/default-monk.jpg"} alt={selectedConv.otherName}
                 width={48} height={48} className="w-full h-full object-cover" />
             </div>
             <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow-sm" />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[17px] font-black text-ink truncate leading-tight">{selectedConv.otherName}</p>
+            <p className="truncate font-serif text-[17px] font-semibold leading-tight text-ink">{selectedConv.otherName}</p>
             <p className="text-[11px] font-bold text-earth/50 uppercase tracking-widest flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
               {t({ mn: "Онлайн", en: "Guide is present" })}
@@ -445,77 +440,70 @@ export default function MessengerPage() {
 
       {/* Messages Scroll Area */}
       <div 
-        className="flex-1 overflow-y-auto px-6 pt-8 pb-32 space-y-8"
+        className="relative z-10 flex-1 space-y-8 overflow-y-auto px-5 pb-32 pt-6 sm:px-6"
         onScroll={(e) => {
           // Could add logic for scroll-up-to-load-more here
         }}
       >
-        <AnimatePresence mode="popLayout">
-          {messagesLoading ? (
-            <div className="space-y-6">
-              {[1, 2, 3].map(i => <div key={i} className={`h-14 skeleton rounded-[2rem] max-w-[70%] ${i % 2 === 0 ? "ml-auto" : ""}`} />)}
+        {messagesLoading ? (
+          <div className="space-y-6">
+            {[1, 2, 3].map(i => <div key={i} className={`h-14 skeleton rounded-[2rem] max-w-[70%] ${i % 2 === 0 ? "ml-auto" : ""}`} />)}
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="flex flex-col items-center justify-center px-8 py-16 text-center">
+            <div className="mb-6 flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-[1.35rem] border border-black/[0.06] bg-[#F2F2F7]">
+              <Sparkles size={30} className="text-gold/80" strokeWidth={1.4} />
             </div>
-          ) : messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 px-10 text-center">
-              <div className="w-20 h-20 rounded-[3rem] bg-stone/20 flex items-center justify-center mb-8">
-                <motion.div animate={{ scale: [1, 1.2, 1] }} transition={{ repeat: Infinity, duration: 3 }}>
-                  <Sparkles size={34} className="text-gold/30" />
-                </motion.div>
+            <p className="max-w-[14rem] font-serif text-[15px] font-medium leading-relaxed text-earth/55">
+              {t({ mn: "Сэтгэлийн гүнээс ярилцаарай", en: "A quiet space for honest conversation." })}
+            </p>
+          </div>
+        ) : (
+          Object.entries(groupedMessages).map(([date, dateMsgs]) => (
+            <div key={date} className="space-y-6">
+              {/* Date Separator */}
+              <div className="flex justify-center my-10">
+                <span className="rounded-full border border-black/[0.06] bg-white px-4 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-earth/50 shadow-sm">
+                  {date}
+                </span>
               </div>
-              <p className="text-[12px] font-black text-earth/30 uppercase tracking-[0.25em] leading-[2.2] max-w-[220px]">
-                {t({ mn: "Сэтгэлийн гүнээс ярилцаарай", en: "A Dialogue of Souls Begins" })}
-              </p>
-            </div>
-          ) : (
-            Object.entries(groupedMessages).map(([date, dateMsgs]) => (
-              <div key={date} className="space-y-6">
-                {/* Date Separator */}
-                <div className="flex justify-center my-10">
-                  <span className="px-4 py-1.5 bg-stone/20 rounded-full text-[10px] font-black text-earth/40 uppercase tracking-widest">
-                    {date}
-                  </span>
-                </div>
+              
+              {dateMsgs.map((msg, idx) => {
+                const isMine = msg.senderId === user?._id || msg.senderId === user?.id;
+                const prevMsg = dateMsgs[idx - 1];
+                const nextMsg = dateMsgs[idx + 1];
                 
-                {dateMsgs.map((msg, idx) => {
-                  const isMine = msg.senderId === user?._id || msg.senderId === user?.id;
-                  const prevMsg = dateMsgs[idx - 1];
-                  const nextMsg = dateMsgs[idx + 1];
-                  
-                  const isFirstInSequence = !prevMsg || prevMsg.senderId !== msg.senderId;
-                  const isLastInSequence = !nextMsg || nextMsg.senderId !== msg.senderId;
+                const isFirstInSequence = !prevMsg || prevMsg.senderId !== msg.senderId;
+                const isLastInSequence = !nextMsg || nextMsg.senderId !== msg.senderId;
 
-                  return (
-                    <motion.div 
-                      key={msg._id} 
-                      initial={{ opacity: 0, x: isMine ? 20 : -20, scale: 0.95 }}
-                      animate={{ opacity: 1, x: 0, scale: 1 }}
-                      transition={{ duration: 0.3 }}
-                      className={`flex ${isMine ? "justify-end" : "justify-start"} ${isFirstInSequence ? "mt-4" : "mt-1"}`}
-                    >
-                      <div className={`
-                        max-w-[82%] px-5 py-3.5 shadow-[0_2px_12px_rgba(0,0,0,0.03)] text-[15px] leading-[1.6] relative
-                        ${isMine
-                          ? "bg-gradient-to-br from-gold to-[#D97706] text-white"
-                          : "bg-white border border-stone/10 text-ink"}
-                        ${isFirstInSequence && isLastInSequence ? "rounded-[2rem]" :""}
-                        ${isFirstInSequence && !isLastInSequence ? (isMine ? "rounded-[2rem] rounded-br-[0.5rem]" : "rounded-[2rem] rounded-bl-[0.5rem]") : ""}
-                        ${!isFirstInSequence && !isLastInSequence ? (isMine ? "rounded-[2rem] rounded-r-[0.5rem]" : "rounded-[2rem] rounded-l-[0.5rem]") : ""}
-                        ${!isFirstInSequence && isLastInSequence ? (isMine ? "rounded-[2rem] rounded-tr-[0.5rem]" : "rounded-[2rem] rounded-tl-[0.5rem]") : ""}
-                      `}>
-                        {msg.text}
-                        {isLastInSequence && (
-                          <div className={`text-[9px] mt-2 font-bold uppercase tracking-widest opacity-60 ${isMine ? "text-right" : "text-left"}`}>
-                            {new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                          </div>
-                        )}
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            ))
-          )}
-        </AnimatePresence>
+                return (
+                  <div 
+                    key={msg._id} 
+                    className={`flex ${isMine ? "justify-end" : "justify-start"} ${isFirstInSequence ? "mt-4" : "mt-1"} anim-fade-up`}
+                  >
+                    <div className={`
+                      max-w-[82%] px-5 py-3.5 text-[15px] leading-[1.6] relative shadow-sm
+                      ${isMine
+                        ? "bubble-mine !max-w-[82%]"
+                        : "border border-black/[0.06] bg-white text-ink"}
+                      ${isFirstInSequence && isLastInSequence ? "rounded-[2rem]" :""}
+                      ${isFirstInSequence && !isLastInSequence ? (isMine ? "rounded-[2rem] rounded-br-[0.5rem]" : "rounded-[2rem] rounded-bl-[0.5rem]") : ""}
+                      ${!isFirstInSequence && !isLastInSequence ? (isMine ? "rounded-[2rem] rounded-r-[0.5rem]" : "rounded-[2rem] rounded-l-[0.5rem]") : ""}
+                      ${!isFirstInSequence && isLastInSequence ? (isMine ? "rounded-[2rem] rounded-tr-[0.5rem]" : "rounded-[2rem] rounded-tl-[0.5rem]") : ""}
+                    `}>
+                      {msg.text}
+                      {isLastInSequence && (
+                        <div className={`text-[9px] mt-2 font-bold uppercase tracking-widest opacity-60 ${isMine ? "text-right" : "text-left"}`}>
+                          {formatTimeShort(msg.createdAt)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ))
+        )}
         <div ref={messagesEndRef} className="h-10" />
       </div>
 
@@ -524,13 +512,11 @@ export default function MessengerPage() {
         className="fixed left-0 right-0 px-6 z-40 transition-all duration-300"
         style={{ bottom: "calc(var(--tab-bar-height, 83px) + env(safe-area-inset-bottom, 0px) + 20px)" }}
       >
-        <motion.div 
-          initial={{ y: 50, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="bg-white/95 backdrop-blur-2xl border border-stone/20 shadow-[0_15px_40px_rgba(80,70,50,0.15)] rounded-[2.5rem] p-2 flex items-center gap-3"
+        <div 
+          className="flex items-center gap-3 rounded-[2.5rem] border border-black/[0.06] bg-white/95 p-2 shadow-sm backdrop-blur-2xl anim-fade-up"
         >
-          <div className="w-11 h-11 rounded-full bg-stone/10 flex items-center justify-center shrink-0 active:scale-95 transition-transform">
-             <User size={20} className="text-earth/40" />
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/[0.06] bg-[#F2F2F7] transition-transform active:scale-95">
+             <User size={20} className="text-earth/45" />
           </div>
           <input
             type="text"
@@ -544,11 +530,11 @@ export default function MessengerPage() {
             type="submit"
             onClick={(e) => handleSendMessage(e as any)}
             disabled={sending || !newMessage.trim()}
-            className="w-12 h-12 rounded-full bg-gold flex items-center justify-center shrink-0 disabled:opacity-20 active:scale-90 transition-all shadow-gold"
+            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-black/[0.06] bg-gold transition-all active:scale-90 disabled:opacity-25"
           >
-            {sending ? <Loader2 size={22} className="text-white animate-spin" /> : <Send size={22} className="text-white" />}
+            {sending ? <Loader2 size={22} className="animate-spin text-neutral-900" /> : <Send size={22} className="text-neutral-900" />}
           </button>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

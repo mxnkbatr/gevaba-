@@ -74,7 +74,7 @@ export default function CompleteProfilePage() {
             // but a redirect to dashboard usually triggers a re-fetch in dashboard's useEffect
 
             // Force reload the window to ensure context is fresh or just push
-            window.location.href = "/dashboard";
+            window.location.href = `/${language}/dashboard`;
 
         } catch (err: any) {
             console.error(err);
@@ -94,36 +94,40 @@ export default function CompleteProfilePage() {
     };
 
     return (
-        <div className="min-h-screen w-full bg-[#FFFBEB] font-sans flex flex-col justify-center py-12 sm:px-6 lg:px-8">
+        <div className="relative min-h-screen w-full bg-cream font-sans text-ink selection:bg-gold/20 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-[min(45vh,420px)] bg-gradient-to-b from-gold/10 to-transparent blur-2xl" />
 
-            <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
-                <h2 className="text-3xl font-extrabold text-stone-900 font-serif">
+            <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-md text-center mb-8">
+                <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-gold-dark/85">
+                    {t({ mn: "Профайл", en: "Profile" })}
+                </p>
+                <h2 className="text-[1.65rem] font-semibold text-ink font-serif tracking-tight sm:text-3xl">
                     {content.title}
                 </h2>
-                <p className="mt-2 text-sm text-stone-600">
+                <p className="mt-2 text-sm text-earth/70 leading-relaxed">
                     {content.subtitle}
                 </p>
             </div>
 
-            <div className="sm:mx-auto sm:w-full sm:max-w-[480px]">
-                <div className="bg-white py-8 px-4 shadow-xl sm:rounded-2xl sm:px-10 border border-stone-100">
+            <div className="relative z-10 sm:mx-auto sm:w-full sm:max-w-[480px]">
+                <div className="monastery-card bg-white/90 py-8 px-4 shadow-gold backdrop-blur-sm sm:rounded-[1.75rem] sm:px-10 border border-gold/14">
                     <form onSubmit={handleSubmit} className="space-y-6">
 
                         {/* Last Name */}
                         <div>
-                            <label className="block text-sm font-bold text-stone-700 mb-1">
+                            <label className="block text-sm font-semibold text-ink/90 mb-1">
                                 {content.lastName}
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <User className="h-5 w-5 text-stone-400" />
+                                    <User className="h-5 w-5 text-earth/45" />
                                 </div>
                                 <input
                                     type="text"
                                     name="lastName"
                                     value={form.lastName}
                                     onChange={handleChange}
-                                    className="appearance-none block w-full pl-10 pr-3 py-3 border border-stone-300 rounded-lg shadow-sm placeholder-stone-400 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm"
+                                    className="appearance-none block w-full pl-10 pr-3 py-3 rounded-xl border border-gold/20 bg-white/80 text-ink placeholder-earth/40 shadow-sm focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold/40 sm:text-sm"
                                     required
                                 />
                             </div>
@@ -131,19 +135,19 @@ export default function CompleteProfilePage() {
 
                         {/* First Name */}
                         <div>
-                            <label className="block text-sm font-bold text-stone-700 mb-1">
+                            <label className="block text-sm font-semibold text-ink/90 mb-1">
                                 {content.firstName}
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <User className="h-5 w-5 text-stone-400" />
+                                    <User className="h-5 w-5 text-earth/45" />
                                 </div>
                                 <input
                                     type="text"
                                     name="firstName"
                                     value={form.firstName}
                                     onChange={handleChange}
-                                    className="appearance-none block w-full pl-10 pr-3 py-3 border border-stone-300 rounded-lg shadow-sm placeholder-stone-400 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm"
+                                    className="appearance-none block w-full pl-10 pr-3 py-3 rounded-xl border border-gold/20 bg-white/80 text-ink placeholder-earth/40 shadow-sm focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold/40 sm:text-sm"
                                     required
                                 />
                             </div>
@@ -151,19 +155,19 @@ export default function CompleteProfilePage() {
 
                         {/* Date of Birth */}
                         <div>
-                            <label className="block text-sm font-bold text-stone-700 mb-1">
+                            <label className="block text-sm font-semibold text-ink/90 mb-1">
                                 {content.dob}
                             </label>
                             <div className="relative">
                                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Calendar className="h-5 w-5 text-stone-400" />
+                                    <Calendar className="h-5 w-5 text-earth/45" />
                                 </div>
                                 <input
                                     type="date"
                                     name="dateOfBirth"
                                     value={form.dateOfBirth}
                                     onChange={handleChange}
-                                    className="appearance-none block w-full pl-10 pr-3 py-3 border border-stone-300 rounded-lg shadow-sm placeholder-stone-400 focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm"
+                                    className="appearance-none block w-full pl-10 pr-3 py-3 rounded-xl border border-gold/20 bg-white/80 text-ink placeholder-earth/40 shadow-sm focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold/40 sm:text-sm"
                                     required
                                 />
                             </div>
@@ -171,7 +175,7 @@ export default function CompleteProfilePage() {
 
                         {/* Zodiac Year */}
                         <div>
-                            <label className="block text-sm font-bold text-stone-700 mb-1">
+                            <label className="block text-sm font-semibold text-ink/90 mb-1">
                                 {t({ mn: "Жил", en: "Zodiac Year" })}
                             </label>
                             <div className="relative">
@@ -179,7 +183,7 @@ export default function CompleteProfilePage() {
                                     name="zodiacYear"
                                     value={form.zodiacYear}
                                     onChange={handleSelectChange} // Use distinct handler if needed or cast event
-                                    className="block w-full pl-3 pr-10 py-3 border border-stone-300 rounded-lg shadow-sm focus:outline-none focus:ring-amber-500 focus:border-amber-500 sm:text-sm appearance-none bg-white"
+                                    className="block w-full pl-3 pr-10 py-3 rounded-xl border border-gold/20 bg-white/80 text-ink shadow-sm focus:outline-none focus:ring-2 focus:ring-gold/20 focus:border-gold/40 sm:text-sm appearance-none"
                                     required
                                 >
                                     <option value="" disabled>{t({ mn: "Жил сонгох", en: "Select your Year" })}</option>
@@ -206,7 +210,7 @@ export default function CompleteProfilePage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="w-full flex justify-center py-4 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-stone-900 hover:bg-black focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stone-500 disabled:opacity-50 transition-all uppercase tracking-widest"
+                                className="cta-button w-full py-4 px-4 min-h-[52px] disabled:opacity-50"
                             >
                                 {loading ? <Loader2 className="animate-spin" size={20} /> : content.save}
                             </button>

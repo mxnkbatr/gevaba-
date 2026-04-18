@@ -71,7 +71,7 @@ export default function DashboardMonks({
               />
             </div>
             <div>
-              <h1 className="text-[20px] font-black text-ink leading-tight">{monkName}</h1>
+              <h1 className="text-[20px] font-semibold text-ink leading-tight">{monkName}</h1>
               {monkTitle && <p className="text-[12px] font-bold text-gold">{monkTitle}</p>}
             </div>
           </div>
@@ -79,7 +79,7 @@ export default function DashboardMonks({
           <button
             onClick={toggleAvailable}
             disabled={availableToggling}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-black text-[12px] transition-all active:scale-95 border ${
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl font-semibold text-[12px] transition-all active:scale-95 border ${
               isAvailable
                 ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                 : "bg-stone/20 text-earth/60 border-stone/30"
@@ -97,7 +97,7 @@ export default function DashboardMonks({
 
       {/* SCHEDULE MANAGEMENT */}
       <section className="px-5 pt-6 mb-6">
-        <h2 className="text-[15px] font-black text-ink flex items-center gap-2 mb-3">
+        <h2 className="text-[15px] font-semibold text-ink flex items-center gap-2 mb-3">
           <Lock size={16} className="text-gold" />
           {t({ mn: "Хуваарь удирдах", en: "Manage Schedule" })}
         </h2>
@@ -108,7 +108,7 @@ export default function DashboardMonks({
               className="w-9 h-9 rounded-xl bg-stone/20 flex items-center justify-center active:scale-90 transition-all">
               <ChevronLeft size={18} className="text-earth" />
             </button>
-            <span className="text-[13px] font-black text-ink">
+            <span className="text-[13px] font-semibold text-ink">
               {weekStart.toLocaleDateString(locale === "mn" ? "mn-MN" : "en-US", { month: "short", day: "numeric" })}
               {" — "}
               {addDays(weekStart, 6).toLocaleDateString(locale === "mn" ? "mn-MN" : "en-US", { month: "short", day: "numeric" })}
@@ -127,7 +127,7 @@ export default function DashboardMonks({
               return (
                 <div key={ds} className={`text-center py-1 rounded-lg ${isToday ? "bg-gold/10" : ""}`}>
                   <p className="text-[9px] font-bold text-earth/50 uppercase">{DAY_LABELS[i]}</p>
-                  <p className={`text-[12px] font-black ${isToday ? "text-gold" : "text-ink"}`}>{d.getDate()}</p>
+                  <p className={`text-[12px] font-semibold ${isToday ? "text-gold" : "text-ink"}`}>{d.getDate()}</p>
                 </div>
               );
             })}

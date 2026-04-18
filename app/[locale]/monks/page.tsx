@@ -3,6 +3,8 @@ import { connectToDatabase } from "@/database/db";
 import { Monk } from "@/database/types";
 import MonkShowcaseClient from "../../components/MonkShowcaseClient";
 
+export const revalidate = 60;
+
 // --- DATA FETCHING (SERVER SIDE + CACHED) ---
 const getMonks = cache(async () => {
   try {

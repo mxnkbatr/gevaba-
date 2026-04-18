@@ -1,19 +1,30 @@
-import { cache, Suspense } from "react";
-import dynamic from "next/dynamic";
-import Hero from "../components/Hero";
-import HomeSections from "../components/HomeSections";
+import { cache } from "react";
+import HomePage from "../components/HomePage";
 import { connectToDatabase } from "@/database/db";
 import { Monk } from "@/database/types";
 
-const PhilosophySection = dynamic(() => import("../components/Philosophy"));
-const NirvanaComments = dynamic(() => import("../components/NirvanaComments"));
+/** ISR: CDN / edge cache — Mongo-г секунд бүр биш ~60s тутамд шинэчилнэ (CAPACITOR_BUILD export үед үл хэрэгжинэ). */
+export const revalidate = 60;
 
 const getMonks = cache(async () => {
   try {
     const { db } = await connectToDatabase();
     const monks = (await db
       .collection("users")
-      .find({ role: "monk", isAvailable: { $ne: false } })
+      .find(
+        { role: "monk", isAvailable: { $ne: false } },
+        {
+          projection: {
+            _id: 1,
+            name: 1,
+            title: 1,
+            image: 1,
+            isAvailable: 1,
+            isSpecial: 1,
+            monkNumber: 1,
+          },
+        },
+      )
       .toArray()) as unknown as Monk[];
     return monks
       .map((m) => ({ ...m, _id: m._id?.toString() ?? "" }))
@@ -41,7 +52,6 @@ const getBlogs = cache(async () => {
         _id: 1,
         id: 1,
         title: 1,
-        content: 1,
         date: 1,
         cover: 1,
         category: 1,
@@ -77,14 +87,11 @@ export default async function Home({
   const featuredMonks = allMonks.slice(0, 3);
 
   return (
-    <>
-      <Hero blogs={blogs} locale={locale} />
-      <HomeSections
-        locale={locale}
-        blogs={blogs}
-        monks={allMonks}
-        featuredMonks={featuredMonks}
-      />
-    </>
+    <HomePage
+      locale={locale}
+      blogs={blogs}
+      monks={allMonks}
+      featuredMonks={featuredMonks}
+    />
   );
 }

@@ -1,32 +1,31 @@
 // app/layout.tsx
-import { Playfair_Display, Lato } from 'next/font/google'
+import { Playfair_Display, Inter } from 'next/font/google'
 import '@/app/globals.css'
 import { ClerkProvider } from '@clerk/nextjs'
 import { LanguageProvider } from '../contexts/LanguageContext'
 import { ThemeProvider } from 'next-themes'
-import dynamic from 'next/dynamic'
 import { AuthProvider } from '@/contexts/AuthContext'
 import SmoothScroll from '../components/SmoothScroll'
 import Navbar from '../components/Navbar'
 import CapacitorInitWrapper from '../capacitor/CapacitorInitWrapper'
 import { NotificationProvider } from '@/contexts/NotificationContext'
-import { cookies } from 'next/headers'
-import { currentUser } from '@clerk/nextjs/server'
 import OfflineBanner from '../components/OfflineBanner'
-
-const SplashScreen = dynamic(() => import('../components/SplashScreen'))
+import SplashScreenGate from '../components/SplashScreenGate'
 
 const playfair = Playfair_Display({
-  subsets: ['latin'],
+  subsets: ['latin', 'cyrillic'],
+  weight: ['400', '600', '700'],
   variable: '--font-playfair',
   display: 'swap',
+  adjustFontFallback: true,
 })
 
-const lato = Lato({
-  subsets: ['latin'],
-  weight: ['400', '700'],
-  variable: '--font-lato',
+const inter = Inter({
+  subsets: ['latin', 'cyrillic'],
+  weight: ['400', '500', '600', '700'],
+  variable: '--font-inter',
   display: 'swap',
+  adjustFontFallback: true,
 })
 
 export const metadata = {
@@ -74,25 +73,26 @@ export default async function RootLayout({
               <meta name="apple-mobile-web-app-capable" content="yes" />
               <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
               <meta name="mobile-web-app-capable" content="yes" />
-              {/* Theme color for Android status bar to match cream background */}
-              <meta name="theme-color" content="#FDFBF7" />
+              {/* Status bar / PWA tint — VCM-style cool canvas (#F8FAFC) */}
+              <meta name="theme-color" content="#f2f2f7" />
               {/* Preconnects */}
               <link rel="preconnect" href="https://res.cloudinary.com" />
               <link rel="dns-prefetch" href="https://res.cloudinary.com" />
               <link rel="preconnect" href="https://clerk-telemetry.com" />
               <link rel="preconnect" href="https://img.clerk.com" />
             </head>
-            <body className={`${playfair.variable} ${lato.variable} font-sans overflow-x-hidden`}>
+            <body className={`${playfair.variable} ${inter.variable} font-sans overflow-x-hidden antialiased overscroll-none`}>
               <ThemeProvider attribute="class" forcedTheme="light" defaultTheme="light" enableSystem={false}>
                 <OfflineBanner />
                 <CapacitorInitWrapper />
                 <SmoothScroll />
                 <NotificationProvider>
                   <Navbar />
-                  <SplashScreen />
+                  <SplashScreenGate />
                   <div className="premium-scroll w-full h-full">
-                    <main className="w-full relative overflow-x-hidden" style={{
-                      paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 76px)'
+                    <main className="w-full relative overflow-x-hidden bg-cream" style={{
+                      /* Space for floating native-style tab bar + safe area */
+                      paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)'
                     }}>
                       {children}
                     </main>

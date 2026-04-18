@@ -4,10 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { Monk } from "@/database/types";
 import { useLanguage } from "../contexts/LanguageContext";
-import { Heart, Star, ArrowRight } from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
-import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { Star, ArrowRight } from "lucide-react";
 
 interface MonkCardProps {
     monk: Monk;
@@ -16,8 +13,7 @@ interface MonkCardProps {
 }
 
 export default function MonkCard({ monk, index = 0, onClick }: MonkCardProps) {
-    const { t, language: lang } = useLanguage();
-    const { user } = useAuth();
+    const { language: lang } = useLanguage();
     const validLang = (['mn', 'en'].includes(lang) ? lang : 'mn') as 'mn' | 'en';
 
     const name = monk.name?.[validLang] || monk.name?.mn || monk.name?.en || "Unknown";
@@ -33,14 +29,14 @@ export default function MonkCard({ monk, index = 0, onClick }: MonkCardProps) {
         : (validLang === 'en' ? "Spiritual Guide" : "Засалч");
 
     return (
-        <motion.div
+        <div
             onClick={onClick}
-            className="app-card-premium p-4 mb-4 flex gap-4 items-center cursor-pointer active:scale-[0.97] transition-transform"
+            className="app-card-premium group mb-5 flex cursor-pointer items-center gap-4 p-5 transition-all duration-300 active:scale-[0.98] hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.12)]"
         >
             {/* Avatar & Status */}
             <div className="relative w-20 h-20 flex-shrink-0">
                 <div className={`absolute inset-0 rounded-full ${isOnline ? "aura-pulse" : "bg-stone/50"}`} />
-                <div className="relative w-full h-full rounded-full overflow-hidden border-2 border-white shadow-sm z-10">
+                <div className="relative w-full h-full rounded-full overflow-hidden border border-white shadow-md z-10">
                     <Image
                         src={monk.image || "/default-monk.jpg"}
                         alt={name}
@@ -51,9 +47,9 @@ export default function MonkCard({ monk, index = 0, onClick }: MonkCardProps) {
                     />
                 </div>
                 {isOnline && (
-                        <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10">
-                            <span className="w-1.5 h-1.5 bg-gold rounded-full" />
-                            <span className="text-[9px] font-bold text-white uppercase tracking-wider">Online</span>
+                        <div className="absolute left-2.5 top-2.5 flex items-center gap-1.5 rounded-full bg-black/45 px-2 py-0.5 shadow-sm backdrop-blur-md">
+                            <span className="h-1.5 w-1.5 rounded-full bg-[#30d158]" />
+                            <span className="text-[8px] font-semibold uppercase tracking-wider text-white/95">Online</span>
                         </div>
                     )}
             </div>
@@ -61,16 +57,18 @@ export default function MonkCard({ monk, index = 0, onClick }: MonkCardProps) {
             {/* Info Container */}
             <div className="flex-1 min-w-0 pr-2 overflow-hidden">
                 <div className="flex flex-col gap-0.5">
-                    <h3 className="text-base font-black text-ink leading-tight truncate">{name}</h3>
-                    <p className="text-[10px] font-black text-gold uppercase tracking-widest opacity-80 line-clamp-1">{titleText}</p>
+                    <h3 className="text-base font-semibold text-ink leading-tight truncate">{name}</h3>
+                    <p className="line-clamp-1 text-[10px] font-semibold uppercase tracking-widest text-earth/50">{titleText}</p>
                 </div>
 
-                <p className="text-[11px] text-earth/60 mt-1 truncate">{specialty} · {years} жил</p>
+                <p className="text-[11px] text-earth/60 mt-1 truncate">
+                    {specialty} · {years}{validLang === "en" ? ` yrs` : " жил"}
+                </p>
 
                 <div className="flex items-center gap-1.5 mt-2">
                     <div className="flex items-center gap-1">
-                        <Star size={10} className="text-gold fill-gold" />
-                        <span className="text-[11px] font-black text-ink">{rating}</span>
+                        <Star size={10} className="text-gold fill-gold" strokeWidth={0} />
+                        <span className="text-[11px] font-semibold text-ink">{rating}</span>
                         <span className="text-[10px] text-earth/40">({reviews})</span>
                     </div>
                 </div>
@@ -78,11 +76,11 @@ export default function MonkCard({ monk, index = 0, onClick }: MonkCardProps) {
 
             {/* Right: Booking Focus */}
             <div className="flex flex-col items-end shrink-0">
-                <p className="text-sm font-black text-ink mb-2">₮{price}</p>
-                <div className="w-8 h-8 rounded-full bg-gold flex items-center justify-center text-white shadow-sm">
-                    <ArrowRight size={14} />
+                <p className="text-sm font-semibold text-ink mb-2">₮{price}</p>
+                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-black/[0.06] bg-gold text-neutral-900 shadow-sm">
+                    <ArrowRight size={15} strokeWidth={1.75} />
                 </div>
             </div>
-        </motion.div>
+        </div>
     );
 }

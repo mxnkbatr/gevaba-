@@ -20,7 +20,7 @@ export default async function MonkContentPage() {
 
     if (!isSpecialMonk && !isAdmin) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-stone-50">
+            <div className="min-h-screen flex items-center justify-center bg-cream">
                 <div className="text-center">
                     <ShieldAlert className="w-12 h-12 text-red-500 mx-auto mb-4" />
                     <h1 className="text-2xl font-bold text-stone-800">Access Denied</h1>
@@ -45,10 +45,10 @@ export default async function MonkContentPage() {
     }));
 
     return (
-        <div className="min-h-screen bg-stone-50 font-sans">
+        <div className="min-h-screen bg-cream font-sans text-ink">
             <main className="container mx-auto px-4 pt-32 pb-20">
                 <header className="mb-10">
-                    <h1 className="text-3xl font-black font-serif text-stone-800">Monk's Blog Manager</h1>
+                    <h1 className="text-3xl font-semibold font-serif text-ink tracking-tight">Monk's Blog Manager</h1>
                     <p className="text-stone-500">Share your wisdom and daily thoughts with the community.</p>
                 </header>
 

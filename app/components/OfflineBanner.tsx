@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { WifiOff, AlertCircle } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { WifiOff } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 
 /**
@@ -12,10 +11,13 @@ import { useLanguage } from "../contexts/LanguageContext";
 export default function OfflineBanner() {
     const { t } = useLanguage();
     const [isOnline, setIsOnline] = useState(true);
+    const [show, setShow] = useState(false);
 
     useEffect(() => {
         // Initial state
-        setIsOnline(navigator.onLine);
+        const online = navigator.onLine;
+        setIsOnline(online);
+        setShow(!online);
 
         const handleOnline = () => setIsOnline(true);
         const handleOffline = () => setIsOnline(false);
@@ -29,27 +31,35 @@ export default function OfflineBanner() {
         };
     }, []);
 
+    useEffect(() => {
+        if (!isOnline) {
+            setShow(true);
+            return;
+        }
+        // Let the exit animation finish before unmounting.
+        const id = window.setTimeout(() => setShow(false), 220);
+        return () => window.clearTimeout(id);
+    }, [isOnline]);
+
     return (
-        <AnimatePresence>
-            {!isOnline && (
-                <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    className="fixed top-0 left-0 right-0 z-[9999] overflow-hidden pointer-events-none"
-                    style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
-                >
-                    <div className="bg-amber-500 text-white px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xl backdrop-blur-xl">
-                        <WifiOff size={16} className="animate-pulse" />
-                        <span className="text-[12px] font-black tracking-wide uppercase">
-                            {t({ 
-                                mn: "📶 Сүлжээгүй горим — Кэш ашиглаж байна", 
-                                en: "📶 Offline Mode — Using Cached Data" 
-                            })}
-                        </span>
-                    </div>
-                </motion.div>
-            )}
-        </AnimatePresence>
+        show ? (
+            <div
+                className={`fixed top-0 left-0 right-0 z-[9999] overflow-hidden pointer-events-none transition-[max-height,opacity] duration-200 ease-out ${
+                    isOnline ? "opacity-0 max-h-0" : "opacity-100 max-h-20"
+                }`}
+                style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+                aria-hidden={isOnline}
+            >
+                <div className="bg-amber-500 text-white px-4 py-2.5 flex items-center justify-center gap-2 shadow-2xl backdrop-blur-xl">
+                    <WifiOff size={16} className="animate-pulse" />
+                    <span className="text-[12px] font-black tracking-wide uppercase">
+                        {t({
+                            mn: "📶 Сүлжээгүй горим — Кэш ашиглаж байна",
+                            en: "📶 Offline Mode — Using Cached Data",
+                        })}
+                    </span>
+                </div>
+            </div>
+        ) : null
     );
 }

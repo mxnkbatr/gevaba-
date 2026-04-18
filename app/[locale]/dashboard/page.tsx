@@ -311,7 +311,6 @@ export default function DashboardPage() {
         if (!isMonk && !activeRoomToken && bookings.length > 0) {
             const activeBooking = bookings.find(b => b.callStatus === 'active' && b.status === 'confirmed');
             if (activeBooking) {
-                console.log("Force joining active call:", activeBooking._id);
                 joinVideoCall(activeBooking);
             }
         }
@@ -634,12 +633,14 @@ export default function DashboardPage() {
 
     if (isMonk && profile?.monkStatus === 'pending') {
         return (
-            <div className="min-h-screen bg-[#FFFBEB] flex items-center justify-center p-6 font-serif text-[#451a03]">
-                <div className="max-w-md w-full bg-white p-10 rounded-[2.5rem] shadow-2xl border border-[#D97706]/20 text-center">
-                    <Loader2 className="animate-spin mx-auto mb-6 text-amber-600" size={40} />
-                    <h1 className="text-3xl font-bold mb-4 text-[#D97706]">Application Pending</h1>
-                    <p className="text-[#78350F]/70 mb-8">Your application is under review. You will receive an email once approved.</p>
-                    <a href="/" className="inline-block px-8 py-3 bg-[#D97706] text-white rounded-xl font-bold">Return Home</a>
+            <div className="min-h-screen bg-cream flex items-center justify-center p-6 font-serif text-ink">
+                <div className="max-w-md w-full monastery-card bg-white/80 backdrop-blur-sm p-10 rounded-[2.5rem] shadow-gold text-center">
+                    <Loader2 className="animate-spin mx-auto mb-6 text-gold-dark" size={40} />
+                    <h1 className="text-3xl font-bold mb-4 text-gold-dark">Application Pending</h1>
+                    <p className="text-earth/70 mb-8">Your application is under review. You will receive an email once approved.</p>
+                    <Link href={`/${language}`} className="cta-button inline-flex min-h-12 px-8 shadow-gold">
+                        Return Home
+                    </Link>
                 </div>
             </div>
         );
@@ -653,7 +654,7 @@ export default function DashboardPage() {
                 paddingLeft: "env(safe-area-inset-left, 0px)",
                 paddingRight: "env(safe-area-inset-right, 0px)"
             }}>
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_rgba(217,119,6,0.03)_0%,_transparent_50%)] pointer-events-none" />
+                <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,_rgba(201,160,58,0.06)_0%,_transparent_50%)] pointer-events-none" />
 
                 {/* HERO SECTION */}
                 <section className="container mx-auto mb-10 relative z-10">
@@ -683,7 +684,7 @@ export default function DashboardPage() {
 
                         <div className="relative z-10 flex flex-wrap gap-4 items-center justify-center lg:justify-end">
                             {user?.role === 'admin' && (
-                                <Link href="/admin" className="px-6 py-3.5 rounded-full bg-white/10 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white/20 border border-white/10 backdrop-blur-md transition-all flex items-center gap-2">
+                                <Link href={`/${language}/admin`} className="px-6 py-3.5 rounded-full bg-white/10 text-white font-black text-[10px] uppercase tracking-widest hover:bg-white/20 border border-white/10 backdrop-blur-md transition-all flex items-center gap-2">
                                     <ShieldCheck size={16} /> Admin Panel
                                 </Link>
                             )}
@@ -702,13 +703,13 @@ export default function DashboardPage() {
                             </button>
 
                             {isMonk && (
-                                <Link href="/monk/content" className="px-6 py-3.5 rounded-full bg-gold/10 text-gold font-black text-[10px] uppercase tracking-widest hover:bg-gold hover:text-white border border-gold/20 backdrop-blur-md transition-all flex items-center gap-2">
+                                <Link href={`/${language}/monk/content`} className="px-6 py-3.5 rounded-full bg-gold/10 text-gold font-black text-[10px] uppercase tracking-widest hover:bg-gold hover:text-white border border-gold/20 backdrop-blur-md transition-all flex items-center gap-2">
                                     <ScrollText size={16} /> Content
                                 </Link>
                             )}
 
                             {!isMonk && (
-                                <Link href="/monks" className="cta-button h-14 px-8 shadow-gold">
+                                <Link href={`/${language}/monks`} className="cta-button h-14 px-8 shadow-gold">
                                     <Plus size={18} className="mr-2" /> {TEXT.bookBtn}
                                 </Link>
                             )}

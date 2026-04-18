@@ -172,7 +172,6 @@ export default function AdminDashboard() {
         await fetchAdminData();
         setIsServiceModalOpen(false);
         setEditingService(null);
-        console.log(`Service ${id ? 'updated' : 'created'} successfully:`, responseData);
       } else {
         const errorMessage = responseData.message || `Failed to ${id ? 'update' : 'create'} service`;
         alert(`Error: ${errorMessage}`);
@@ -197,7 +196,6 @@ export default function AdminDashboard() {
       if (res.ok && responseData.success) {
         await fetchAdminData();
         setEditingMonk(null);
-        console.log(`Monk ${id} updated successfully:`, responseData);
       } else {
         const errorMessage = responseData.message || "Failed to update monk";
         alert(`Error: ${errorMessage}`);
@@ -222,7 +220,6 @@ export default function AdminDashboard() {
       if (res.ok && responseData.success) {
         await fetchAdminData();
         setEditingUser(null);
-        console.log(`User ${id} updated successfully:`, responseData);
       } else {
         const errorMessage = responseData.message || "Failed to update user";
         alert(`Error: ${errorMessage}`);
@@ -249,7 +246,6 @@ export default function AdminDashboard() {
       if (res.ok && responseData.success) {
         // Only refresh data if the operation was successful
         await fetchAdminData();
-        console.log(`${action} operation completed successfully:`, responseData.data);
       } else {
         // Show error message to user
         const errorMessage = responseData.message || `Failed to ${action} application`;
@@ -276,7 +272,6 @@ export default function AdminDashboard() {
       if (res.ok && responseData.success) {
         // Only refresh data if the operation was successful
         await fetchAdminData();
-        console.log(`User deletion completed successfully:`, responseData);
       } else {
         // Show error message to user
 
@@ -307,7 +302,6 @@ export default function AdminDashboard() {
       if (res.ok && responseData.success) {
         // Only refresh data if the operation was successful
         await fetchAdminData();
-        console.log(`Service ${action} operation completed successfully:`, responseData.data);
       } else {
         // Show error message to user
         const errorMessage = responseData.message || `Failed to ${action} service`;
@@ -333,7 +327,6 @@ export default function AdminDashboard() {
       if (res.ok && responseData.success) {
         // Only refresh data if the operation was successful
         await fetchAdminData();
-        console.log(`Service deletion completed successfully:`, responseData.data);
       } else {
         // Show error message to user
         const errorMessage = responseData.message || "Failed to delete service";
@@ -363,7 +356,6 @@ export default function AdminDashboard() {
       if (res.ok && responseData.success) {
         // Only refresh data if the operation was successful
         await fetchAdminData();
-        console.log(`Booking ${action} operation completed successfully:`, responseData);
       } else {
         // Show error message to user
         const errorMessage = responseData.message || `Failed to ${action} booking`;
@@ -399,7 +391,7 @@ export default function AdminDashboard() {
 
   // Loading State
   if (!isLoaded || loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-[#FFFBEB] dark:bg-[#05051a]">
+    <div className="min-h-screen flex items-center justify-center bg-cream dark:bg-[#05051a]">
       <Loader2 className="animate-spin text-amber-600" size={48} />
     </div>
   );
@@ -407,7 +399,7 @@ export default function AdminDashboard() {
   if (!isAdmin) return null;
 
   return (
-    <div className={`min-h-screen font-sans ${isDark ? "bg-[#05051a] text-white" : "bg-[#FDFBF7] text-[#451a03]"}`}>
+    <div className={`min-h-screen font-sans ${isDark ? "bg-[#05051a] text-white" : "bg-cream text-ink"}`}>
       <main className="container mx-auto px-4 md:px-6 pb-20" style={{ paddingTop: 'calc(var(--header-height-mobile) + env(safe-area-inset-top, 0px))' }}>
 
         {/* HEADER */}
@@ -415,9 +407,9 @@ export default function AdminDashboard() {
           <div className="w-full md:w-auto">
             <div className="flex items-center gap-3 mb-2">
               <ShieldAlert className="text-red-500 w-5 h-5" />
-              <span className="text-[10px] md:text-xs font-black uppercase tracking-[0.3em] opacity-60">Admin System</span>
+              <span className="text-[10px] md:text-xs font-semibold uppercase tracking-[0.3em] opacity-60">Admin System</span>
             </div>
-            <h1 className="text-3xl md:text-4xl font-serif font-black">Удирдлагын самбар</h1>
+            <h1 className="text-3xl md:text-4xl font-serif font-semibold tracking-tight">Удирдлагын самбар</h1>
             <p className="opacity-60 text-sm mt-1">Хэрэглэгч, лам нар болон захиалгуудыг удирдах.</p>
           </div>
           <div className="flex items-center justify-between w-full md:w-auto gap-4 p-3 rounded-2xl bg-black/5 md:bg-transparent dark:bg-white/5 md:dark:bg-transparent">
@@ -432,7 +424,7 @@ export default function AdminDashboard() {
               </button>
               <div className="text-left md:text-right">
                 <p className="text-xs font-bold uppercase">{user?.fullName}</p>
-                <span className="text-red-500 text-[10px] font-black uppercase tracking-tighter">Super Admin</span>
+                <span className="text-red-500 text-[10px] font-semibold uppercase tracking-tighter">Super Admin</span>
               </div>
               <div className="scale-110 md:scale-125"><UserButton /></div>
             </div>
@@ -502,11 +494,11 @@ export default function AdminDashboard() {
                   <div className="flex items-center gap-4 text-center md:text-left flex-col md:flex-row">
                     <div className="p-4 bg-red-500 text-white rounded-2xl shadow-lg shadow-red-900/20"><ShieldAlert size={28} /></div>
                     <div>
-                      <h3 className="font-black text-lg">Лам болох хүсэлтүүд</h3>
+                      <h3 className="font-semibold text-lg">Лам болох хүсэлтүүд</h3>
                       <p className="opacity-70 text-sm">{data.applications.length} хэрэглэгч зөвшөөрөл хүлээж байна.</p>
                     </div>
                   </div>
-                  <button onClick={() => setActiveTab('applications')} className="w-full md:w-auto bg-red-500 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-600 transition-all">
+                  <button onClick={() => setActiveTab('applications')} className="w-full md:w-auto bg-red-500 text-white px-8 py-4 rounded-2xl font-semibold text-xs uppercase tracking-widest hover:bg-red-600 transition-all">
                     Шалгах
                   </button>
                 </div>
@@ -517,7 +509,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center gap-4 text-center md:text-left flex-col md:flex-row">
                   <div className="p-4 bg-orange-600 text-white rounded-2xl shadow-lg shadow-orange-900/20"><ShieldAlert size={28} /></div>
                   <div>
-                    <h3 className="font-black text-lg">Муу Лам - Хуваарь Үүсгэх</h3>
+                    <h3 className="font-semibold text-lg">Муу Лам - Хуваарь Үүсгэх</h3>
                     <p className="opacity-70 text-sm">Сарын 20-нд муу лам нарын хязгаарлалтын хуваарийг автоматаар үүсгэнэ. 50% өдрүүд хаагдах, үлдсэн өдрүүдэд 80% цагийг хаана.</p>
                   </div>
                 </div>
@@ -540,7 +532,7 @@ export default function AdminDashboard() {
                     }
                   }}
                   disabled={generatingBadMonk}
-                  className="w-full md:w-auto bg-orange-600 text-white px-8 py-4 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 whitespace-nowrap"
+                  className="w-full md:w-auto bg-orange-600 text-white px-8 py-4 rounded-2xl font-semibold text-xs uppercase tracking-widest hover:bg-orange-700 disabled:bg-orange-400 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 whitespace-nowrap"
                 >
                   {generatingBadMonk ? <><Loader2 size={16} className="animate-spin" /> Үүсгэж байна...</> : <><RefreshCw size={16} /> Хуваарь Үүсгэх</>}
                 </button>
@@ -557,7 +549,7 @@ export default function AdminDashboard() {
                     <div className="flex items-center gap-4 mb-4">
                       <img src={app.image || "/default-avatar.png"} className="w-14 h-14 rounded-2xl object-cover" alt="applicant" />
                       <div>
-                        <h4 className="font-black text-base">{app.name?.mn || app.name?.en || app.phone}</h4>
+                        <h4 className="font-semibold text-base">{app.name?.mn || app.name?.en || app.phone}</h4>
                         <p className="text-xs opacity-50">{app.title?.mn || app.title?.en}</p>
                       </div>
                     </div>
@@ -566,10 +558,10 @@ export default function AdminDashboard() {
                       <span className="bg-black/5 dark:bg-white/10 px-2 py-1 rounded-md">{app.email || app.phone}</span>
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => handleApplication(app._id, 'approve')} className="flex-1 py-4 bg-green-500 text-white rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 hover:bg-green-600 transition-colors">
+                      <button onClick={() => handleApplication(app._id, 'approve')} className="flex-1 py-4 bg-green-500 text-white rounded-2xl font-semibold text-[10px] uppercase flex items-center justify-center gap-2 hover:bg-green-600 transition-colors">
                         {processingId === app._id ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Зөвшөөрөх
                       </button>
-                      <button onClick={() => handleApplication(app._id, 'reject')} className="flex-1 py-4 bg-red-500/10 text-red-500 rounded-2xl font-black text-[10px] uppercase flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors">
+                      <button onClick={() => handleApplication(app._id, 'reject')} className="flex-1 py-4 bg-red-500/10 text-red-500 rounded-2xl font-semibold text-[10px] uppercase flex items-center justify-center gap-2 hover:bg-red-500/20 transition-colors">
                         <X size={14} /> Татгалзах
                       </button>
                     </div>
@@ -628,7 +620,7 @@ export default function AdminDashboard() {
                   <div key={s.id} className={`p-6 rounded-[2rem] border relative overflow-hidden flex flex-col justify-between ${isDark ? "bg-white/5 border-white/10" : "bg-white border-amber-100"}`}>
                     <div className="mb-4">
                       <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-black text-sm">{s.name?.mn || s.name?.en || s.title?.mn || s.title?.en}</h4>
+                        <h4 className="font-semibold text-sm">{s.name?.mn || s.name?.en || s.title?.mn || s.title?.en}</h4>
                         <StatusBadge status={s.status || 'pending'} />
                       </div>
                       <p className="text-xs opacity-50 mb-1 font-bold">Үнэ: {s.price}₮ • {s.duration}</p>
@@ -699,7 +691,7 @@ export default function AdminDashboard() {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <h4 className="font-black text-sm truncate">{u.name?.mn || u.name?.en || u.phone || "Нэргүй"}</h4>
+                        <h4 className="font-semibold text-sm truncate">{u.name?.mn || u.name?.en || u.phone || "Нэргүй"}</h4>
                         {(u.role === 'monk' || u.monkStatus === 'active') && <span className="bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded uppercase font-bold">Лам</span>}
                         {u.role === 'admin' && <span className="bg-red-500 text-white text-[9px] px-1.5 py-0.5 rounded uppercase font-bold">Админ</span>}
                         {u.showOnHomepage && <span className="bg-blue-500 text-white text-[9px] px-1.5 py-0.5 rounded uppercase font-bold flex items-center gap-1"><LayoutDashboard size={8} /> Нүүр</span>}
@@ -752,7 +744,7 @@ export default function AdminDashboard() {
             >
               <div className="overflow-x-auto rounded-[2rem] border border-black/5 dark:border-white/5">
                 <table className={`w-full text-left text-sm ${isDark ? "bg-white/5" : "bg-white"}`}>
-                  <thead className={`uppercase text-[10px] font-black tracking-wider ${isDark ? "bg-black/20 text-white/50" : "bg-amber-50 text-amber-900/50"}`}>
+                  <thead className={`uppercase text-[10px] font-semibold tracking-wider ${isDark ? "bg-black/20 text-white/50" : "bg-amber-50 text-amber-900/50"}`}>
                     <tr>
                       <th className="p-6">Үйлчилгээ / Лам</th>
                       <th className="p-6">Захиалагч</th>
@@ -895,7 +887,7 @@ function StatCard({ title, value, icon: Icon, color }: { title: string, value: n
       </div>
       <div className="z-10">
         <p className="opacity-50 text-xs font-bold uppercase tracking-wider mb-1">{title}</p>
-        <h3 className="text-3xl font-black font-serif">{value.toLocaleString()}</h3>
+        <h3 className="text-3xl font-semibold font-serif">{value.toLocaleString()}</h3>
       </div>
       {/* Background Decor */}
       <div className={`absolute -right-6 -bottom-6 opacity-10 ${color.replace('bg-', 'text-')} transform rotate-12`}>
@@ -928,7 +920,7 @@ function StatusBadge({ status }: { status?: string }) {
   const label = (status && labels[status]) || status || "Unknown"; // Use Mongolian label or fallback to English key
 
   return (
-    <span className={`${activeStyle} px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider`}>
+    <span className={`${activeStyle} px-2.5 py-1 rounded-lg text-[10px] font-semibold uppercase tracking-wider`}>
       {label}
     </span>
   );

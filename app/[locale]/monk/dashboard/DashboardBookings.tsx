@@ -51,7 +51,7 @@ export default function DashboardBookings({
       {/* TODAY'S SCHEDULE */}
       <section className="mb-6">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[15px] font-black text-ink flex items-center gap-2">
+          <h2 className="text-[15px] font-semibold text-ink flex items-center gap-2">
             <Calendar size={16} className="text-gold" />
             {t({ mn: "Өнөөдрийн хуваарь", en: "Today's Schedule" })}
           </h2>
@@ -77,16 +77,16 @@ export default function DashboardBookings({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className="bg-gold/10 rounded-xl px-3 py-2 text-center shrink-0">
-                      <p className="text-[16px] font-black text-gold leading-none">{b.time}</p>
+                      <p className="text-[16px] font-semibold text-gold leading-none">{b.time}</p>
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[14px] font-black text-ink truncate">{b.clientName}</p>
+                      <p className="text-[14px] font-semibold text-ink truncate">{b.clientName}</p>
                       <p className="text-[11px] text-earth/60 truncate">{svcName(b.serviceName)}</p>
                     </div>
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${STATUS_MAP[b.status]?.color || ""}`}>
+                    <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${STATUS_MAP[b.status]?.color || ""}`}>
                       {STATUS_MAP[b.status]?.label?.[locale] || b.status}
                     </span>
 
@@ -105,7 +105,7 @@ export default function DashboardBookings({
 
                     {b.status === "confirmed" && (
                       <button onClick={() => handleBookingAction(b._id, "completed")} disabled={actionLoading === b._id}
-                        className="px-3 py-1.5 rounded-xl bg-blue-500 text-white text-[11px] font-black active:scale-95 transition-all flex items-center gap-1">
+                        className="px-3 py-1.5 rounded-xl bg-blue-500 text-white text-[11px] font-semibold active:scale-95 transition-all flex items-center gap-1">
                         {actionLoading === b._id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle size={12} />}
                         {t({ mn: "Дуусгах", en: "Complete" })}
                       </button>
@@ -124,11 +124,11 @@ export default function DashboardBookings({
 
       {/* UPCOMING BOOKINGS */}
       <section className="mb-6">
-        <h2 className="text-[15px] font-black text-ink flex items-center gap-2 mb-3">
+        <h2 className="text-[15px] font-semibold text-ink flex items-center gap-2 mb-3">
           <Sparkles size={16} className="text-gold" />
           {t({ mn: "Ирэх 7 хоногийн захиалга", en: "Upcoming Bookings" })}
           {upcomingBookings.length > 0 && (
-            <span className="bg-gold/10 text-gold text-[11px] font-black px-2 py-0.5 rounded-full">{upcomingBookings.length}</span>
+            <span className="bg-gold/10 text-gold text-[11px] font-semibold px-2 py-0.5 rounded-full">{upcomingBookings.length}</span>
           )}
         </h2>
 
@@ -147,13 +147,13 @@ export default function DashboardBookings({
                     <p className="text-[10px] font-bold text-earth/50 uppercase">
                       {bookingDate.toLocaleDateString(locale === "mn" ? "mn-MN" : "en-US", { weekday: "short" })}
                     </p>
-                    <p className="text-[16px] font-black text-ink leading-none">{bookingDate.getDate()}</p>
+                    <p className="text-[16px] font-semibold text-ink leading-none">{bookingDate.getDate()}</p>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[13px] font-black text-ink truncate">{b.clientName}</p>
+                    <p className="text-[13px] font-semibold text-ink truncate">{b.clientName}</p>
                     <p className="text-[11px] text-earth/50">{b.time} · {svcName(b.serviceName)}</p>
                   </div>
-                  <span className={`text-[10px] font-black px-2.5 py-1 rounded-full border ${STATUS_MAP[b.status]?.color || ""}`}>
+                  <span className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border ${STATUS_MAP[b.status]?.color || ""}`}>
                     {STATUS_MAP[b.status]?.label?.[locale] || b.status}
                   </span>
                 </div>

@@ -10,7 +10,12 @@ interface LocalizedLinkProps extends LinkProps {
   style?: React.CSSProperties;
 }
 
-export const LocalizedLink = ({ href, children, ...props }: LocalizedLinkProps) => {
+export const LocalizedLink = ({
+  href,
+  children,
+  prefetch = true,
+  ...props
+}: LocalizedLinkProps) => {
   const { language: lang } = useLanguage();
   
   const hrefString = typeof href === 'string' ? href : href.pathname || '';
@@ -25,7 +30,7 @@ export const LocalizedLink = ({ href, children, ...props }: LocalizedLinkProps) 
   const path = normalizedHref === '/' ? `/${lang}` : `/${lang}${normalizedHref}`;
 
   return (
-    <Link href={path} {...props}>
+    <Link href={path} prefetch={prefetch} {...props}>
       {children}
     </Link>
   );

@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { UserButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import {
@@ -53,40 +52,56 @@ export default function ProfilePage() {
 
   const isMonk = profile?.role === "monk";
 
+  const fetchData = useCallback(async () => {
+    if (!user) return;
+    try {
+      const userId = user.id;
+      
+      // 1. Fetch Profile first (needed to know if monk)
+      let profileData = null;
+      if (user.role === "monk") {
+        const r = await fetch(`/api/monks/${userId}`);
+        if (r.ok) profileData = await r.json();
+      } else {
+        const r = await fetch(`/api/users/${userId}`, { cache: "no-store" });
+        if (r.ok) profileData = await r.json();
+      }
+      
+      if (!profileData && user.authType === "custom") profileData = user;
+      
+      if (profileData) {
+        setProfile(profileData);
+        const isM = profileData.role === "monk";
+        
+        // 2. Parallel fetch bookings and monks
+        const [bRes, mRes] = await Promise.all([
+          fetch(`/api/bookings?${isM ? "monkId" : "userId"}=${profileData._id}`),
+          !isM ? fetch("/api/monks") : Promise.resolve(null)
+        ]);
+
+        if (bRes?.ok) setBookings(await bRes.json());
+        if (mRes?.ok) setAllMonks(await mRes.json());
+      }
+    } catch (e) {
+      console.error("Profile fetch error:", e);
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   useEffect(() => {
-    async function fetchData() {
-      if (!user) return;
-      try {
-        setLoading(true);
-        const userId = user.id;
-        let profileData = null;
-        if (user.role === "monk") {
-          const r = await fetch(`/api/monks/${userId}`);
-          if (r.ok) profileData = await r.json();
-        } else {
-          const r = await fetch(`/api/users/${userId}`, { cache: "no-store" });
-          if (r.ok) profileData = await r.json();
-        }
-        if (!profileData && user.authType === "custom") profileData = user;
-        if (profileData) {
-          setProfile(profileData);
-          const isM = profileData.role === "monk";
-          const bRes = await fetch(`/api/bookings?${isM ? "monkId" : "userId"}=${profileData._id}`);
-          if (bRes.ok) setBookings(await bRes.json());
-          if (!isM) {
-            const mRes = await fetch("/api/monks");
-            if (mRes.ok) setAllMonks(await mRes.json());
-          }
-        }
-      } catch (e) { console.error(e); }
-      finally { setLoading(false); }
-    }
     if (!authLoading && user) {
+      setLoading(true);
       fetchData();
-      const poll = setInterval(fetchData, 8000);
-      return () => clearInterval(poll);
+
+      // Background sync on visibility change (more efficient than interval)
+      const onVis = () => {
+        if (document.visibilityState === "visible") fetchData();
+      };
+      document.addEventListener("visibilitychange", onVis);
+      return () => document.removeEventListener("visibilitychange", onVis);
     }
-  }, [authLoading, user]);
+  }, [authLoading, user, fetchData]);
 
   const { upcomingBookings, historyBookings, acceptedCount, totalEarnings } = useMemo(() => {
     const upcoming: Booking[] = [], history: Booking[] = [];
@@ -120,7 +135,7 @@ export default function ProfilePage() {
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
-    try { await logout(); } catch { window.location.href = "/sign-in"; }
+    try { await logout(); } catch { window.location.href = `/${lang}/sign-in`; }
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,22 +178,22 @@ export default function ProfilePage() {
   // --- RENDER: Guest ---
   if (!authLoading && !user) {
     return (
-      <main className="min-h-[100svh] bg-cream flex flex-col items-center justify-center px-6 page-safe-top page-safe-bottom">
-        <div className="w-full max-w-sm text-center">
-          <div className="w-20 h-20 rounded-[22px] bg-gold/10 flex items-center justify-center mx-auto mb-6">
-            <UserCircle size={40} className="text-gold" />
+      <main className="relative flex min-h-[100svh] flex-col items-center justify-center bg-cream px-6 page-safe-top page-safe-bottom">
+        <div className="relative z-10 w-full max-w-sm rounded-[20px] border border-black/[0.06] bg-white px-8 py-10 text-center shadow-sm">
+          <div className="mx-auto mb-5 flex h-[4.25rem] w-[4.25rem] items-center justify-center rounded-2xl border border-black/[0.06] bg-[#F2F2F7]">
+            <UserCircle size={38} className="text-gold" strokeWidth={1.5} />
           </div>
-          <h1 className="text-[24px] font-black text-ink mb-3">
-            {t({ mn: "Аяллын эхлэл", en: "Start Your Journey" })}
+          <h1 className="font-serif text-2xl font-semibold text-ink">
+            {t({ mn: "Аяллын эхлэл", en: "Start your journey" })}
           </h1>
-          <p className="text-[14px] text-earth leading-relaxed mb-8">
+          <p className="mt-2 text-[14px] leading-relaxed text-earth/70">
             {t({ mn: "Профайл нээснээр засал захиалах, багш нартай шууд холбогдох боломжтой болно.", en: "Sign in to book rituals and connect with mentors." })}
           </p>
-          <Link href={`/${lang}/sign-in`}>
-            <button className="btn-primary btn-primary-full flex items-center justify-center gap-2">
+          <Link href={`/${lang}/sign-in`} className="mt-8 block">
+            <span className="cta-button flex min-h-[50px] w-full items-center justify-center gap-2">
               <LogIn size={18} />
-              {t({ mn: "Нэвтрэх / Бүртгүүлэх", en: "Sign In / Register" })}
-            </button>
+              {t({ mn: "Нэвтрэх / Бүртгүүлэх", en: "Sign in / Register" })}
+            </span>
           </Link>
         </div>
       </main>
@@ -189,7 +204,7 @@ export default function ProfilePage() {
   if (authLoading || loading) {
     return (
       <div className="min-h-[100svh] bg-cream flex items-center justify-center">
-        <div className="w-8 h-8 rounded-full border-2 border-gold border-t-transparent animate-spin" />
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-black/10 border-t-gold" />
       </div>
     );
   }
@@ -197,11 +212,11 @@ export default function ProfilePage() {
   // --- RENDER: Monk Pending ---
   if (isMonk && profile?.monkStatus === "pending") {
     return (
-      <div className="min-h-[100svh] bg-cream flex items-center justify-center px-6">
-        <div className="max-w-sm w-full text-center">
-          <Loader2 className="animate-spin mx-auto mb-4 text-gold" size={36} />
-          <h2 className="text-[20px] font-black text-ink mb-2">Хүсэлт хүлээгдэж байна</h2>
-          <p className="text-[14px] text-earth">Таны хүсэлт хянагдаж байна. Баталгаажсаны дараа имэйл ирнэ.</p>
+      <div className="min-h-[100svh] bg-cream flex items-center justify-center px-6 page-safe-top">
+        <div className="w-full max-w-sm rounded-[20px] border border-black/[0.06] bg-white p-8 text-center shadow-sm">
+          <Loader2 className="mx-auto mb-4 animate-spin text-gold" size={36} />
+          <h2 className="text-[20px] font-semibold text-ink mb-2">Хүсэлт хүлээгдэж байна</h2>
+          <p className="text-[14px] text-earth/80">Таны хүсэлт хянагдаж байна. Баталгаажсаны дараа имэйл ирнэ.</p>
         </div>
       </div>
     );
@@ -211,49 +226,53 @@ export default function ProfilePage() {
   const displayTitle = isMonk ? (profile?.title?.[lk] || "Багш") : (lang === "mn" ? "Эрхэм сүсэгтэн" : "Seeker");
 
   return (
-    <main className="min-h-[100svh] bg-cream page-safe-top page-safe-bottom">
-
+    <main className="relative min-h-[100svh] bg-cream pb-[calc(var(--tab-bar-height,0px)+8px)] page-safe-top page-safe-bottom selection:bg-gold/20">
       {/* ── HERO PROFILE CARD ── */}
-      <section className="px-4 mb-6">
-        <div className="bg-[#1A1713] rounded-[28px] p-6 relative overflow-hidden">
-          {/* Subtle mandala */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-[0.04] pointer-events-none">
-            {[100, 160, 220].map((r, i) => <div key={i} className="absolute rounded-full border border-white" style={{ width: r, height: r }} />)}
-          </div>
-
-          <div className="relative z-10 flex items-center gap-4 mb-5">
+      <section className="relative z-10 mb-6 px-4">
+        <div className="relative overflow-hidden rounded-[28px] border border-black/[0.06] bg-white p-6 shadow-sm">
+          <div className="relative z-10 mb-5 flex items-center gap-4">
             {/* Avatar */}
             <div className="relative shrink-0">
               {user?.authType === "clerk" ? (
                 <div className="scale-[1.6] origin-top-left ml-3 mt-1"><UserButton /></div>
               ) : (
-                <div className="w-14 h-14 rounded-2xl overflow-hidden bg-gold/20 border-2 border-gold/30">
+                <div className="h-14 w-14 overflow-hidden rounded-2xl border border-black/[0.06] bg-[#F2F2F7]">
                   {(profile?.avatar || profile?.image || user?.avatar) ? (
                     <img src={profile?.avatar || profile?.image || user?.avatar} className="w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gold text-xl font-black">
+                    <div className="flex h-full w-full items-center justify-center text-xl font-black text-gold">
                       {displayName?.[0]}
                     </div>
                   )}
                 </div>
               )}
             </div>
-            <div className="flex-1 min-w-0">
-              <h2 className="text-[18px] font-black text-white truncate">{displayName}</h2>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-gold/70 mt-0.5">{displayTitle}</p>
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate font-serif text-[1.15rem] font-semibold text-ink">
+                {displayName}
+              </h2>
+              <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-earth/50">
+                {displayTitle}
+              </p>
             </div>
           </div>
 
           {/* Stats (monk only) */}
           {isMonk && (
-            <div className="grid grid-cols-2 gap-3 mb-5">
-              <div className="bg-white/6 rounded-2xl p-3 text-center">
-                <p className="text-[20px] font-black text-white">{totalEarnings.toLocaleString()}₮</p>
-                <p className="text-[9px] font-bold uppercase tracking-wider text-white/40 mt-0.5">{lang === "mn" ? "Нийт орлого" : "Total Earnings"}</p>
+            <div className="mb-5 grid grid-cols-2 gap-3">
+              <div className="rounded-2xl border border-black/[0.06] bg-[#F8FAFC] p-3 text-center">
+                <p className="text-[20px] font-semibold text-ink">
+                  {totalEarnings.toLocaleString()}₮
+                </p>
+                <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-earth/45">
+                  {lang === "mn" ? "Нийт орлого" : "Total Earnings"}
+                </p>
               </div>
-              <div className="bg-white/6 rounded-2xl p-3 text-center">
-                <p className="text-[20px] font-black text-white">{acceptedCount}</p>
-                <p className="text-[9px] font-bold uppercase tracking-wider text-white/40 mt-0.5">{lang === "mn" ? "Захиалга" : "Bookings"}</p>
+              <div className="rounded-2xl border border-black/[0.06] bg-[#F8FAFC] p-3 text-center">
+                <p className="text-[20px] font-semibold text-ink">{acceptedCount}</p>
+                <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-earth/45">
+                  {lang === "mn" ? "Захиалга" : "Bookings"}
+                </p>
               </div>
             </div>
           )}
@@ -262,7 +281,7 @@ export default function ProfilePage() {
           <div className="flex gap-2">
             <button
               onClick={() => { setEditForm(profile || {}); setIsEditOpen(true); }}
-              className="flex-1 flex items-center justify-center gap-2 bg-white/10 text-white rounded-2xl py-2.5 text-[11px] font-bold border border-white/10 active:scale-95 transition-transform"
+              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-black/[0.06] bg-[#F2F2F7] py-2.5 text-[11px] font-semibold text-ink transition-transform active:scale-95"
             >
               <Edit size={14} />
               {lang === "mn" ? "Засах" : "Edit"}
@@ -280,9 +299,18 @@ export default function ProfilePage() {
       </section>
 
       {/* ── BOOKINGS ── */}
-      <section className="px-4 mb-6">
-        {/* Tabs */}
-        <div className="flex gap-2 mb-4">
+      <section className="relative z-10 mb-6 px-4">
+        <div className="mb-3 flex items-end justify-between gap-3">
+          <div>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-earth/50">
+              {t({ mn: "Захиалга", en: "Bookings" })}
+            </p>
+            <p className="mt-0.5 font-serif text-base font-semibold text-ink">
+              {lang === "mn" ? "Таны хуваарь" : "Your schedule"}
+            </p>
+          </div>
+        </div>
+        <div className="mb-4 flex gap-2">
           {(["upcoming", "history"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`pill-tab ${tab === t ? "active" : "inactive"}`}>
@@ -293,18 +321,22 @@ export default function ProfilePage() {
 
         <div className="space-y-3">
           {(tab === "upcoming" ? upcomingBookings : historyBookings).length === 0 ? (
-            <div className="text-center py-12 opacity-40">
-              <History size={32} className="mx-auto mb-3 text-earth" />
-              <p className="text-[14px] text-earth">{lang === "mn" ? "Захиалга байхгүй" : "No bookings yet"}</p>
+            <div className="rounded-[20px] border border-black/[0.06] bg-white px-6 py-12 text-center shadow-sm">
+              <History size={28} className="mx-auto mb-3 text-earth/35" />
+              <p className="font-serif text-[15px] font-medium text-ink/75">{lang === "mn" ? "Захиалга байхгүй" : "No bookings yet"}</p>
+              <p className="mt-1 text-[13px] text-earth/55">{lang === "mn" ? "Засал захиалж эхлүүлээрэй" : "Book a ritual to see it here"}</p>
             </div>
           ) : (tab === "upcoming" ? upcomingBookings : historyBookings).map(b => (
-            <div key={b._id} className="card-white p-4">
+            <div
+              key={b._id}
+              className="card-white rounded-[1.25rem] border border-black/[0.06] p-4 shadow-sm transition-shadow hover:shadow-md"
+            >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-gold mb-1">
+                  <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-earth/50">
                     {b.serviceName?.[lk] || b.serviceName?.mn || "Үйлчилгээ"}
                   </p>
-                  <p className="text-[15px] font-black text-ink truncate">
+                  <p className="truncate font-serif text-[15px] font-semibold text-ink">
                     {isMonk ? b.clientName : (allMonks.find(m => m._id === b.monkId)?.name?.[lk] || "Багш")}
                   </p>
                   <p className="text-[11px] text-earth mt-1">{b.date} · {b.time}</p>
@@ -319,14 +351,14 @@ export default function ProfilePage() {
                     <div className="flex gap-1.5">
                       <button
                         onClick={() => setActiveChatBooking(b)}
-                        className="w-8 h-8 rounded-xl bg-stone flex items-center justify-center active:scale-90 transition-transform"
+                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-black/[0.06] bg-white shadow-sm transition-transform hover:border-black/[0.1] active:scale-90"
                       >
                         <MessageCircle size={15} className="text-earth" />
                       </button>
                       <button
                         onClick={() => joinVideo(b)}
                         disabled={joiningId === b._id}
-                        className="w-8 h-8 rounded-xl bg-gold flex items-center justify-center active:scale-90 transition-transform disabled:opacity-50"
+                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-black/[0.06] bg-gold shadow-sm transition-transform active:scale-90 disabled:opacity-50"
                       >
                         {joiningId === b._id ? <Loader2 size={14} className="text-white animate-spin" /> : <Video size={14} className="text-white" />}
                       </button>
@@ -340,106 +372,103 @@ export default function ProfilePage() {
       </section>
 
       {/* ── DAILY WISDOM ── */}
-      <section className="px-4 mb-6">
-        <div className="bg-[#1A1713] rounded-[24px] p-5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-gold/5 rounded-full blur-2xl" />
-          <Sun size={24} className="text-gold mb-3" />
-          <h3 className="text-[13px] font-black text-white/80 mb-2 uppercase tracking-wider">
+      <section className="relative z-10 mb-6 px-4">
+        <div className="relative overflow-hidden rounded-[20px] border border-black/[0.06] bg-white p-5 shadow-sm">
+          <Sun size={24} className="mb-3 text-gold" />
+          <h3 className="mb-2 text-[13px] font-black uppercase tracking-wider text-earth/50">
             {lang === "mn" ? "Өдрийн сургаал" : "Daily Wisdom"}
           </h3>
-          <p className="text-[13px] text-white/50 italic leading-relaxed">
+          <p className="text-[13px] italic leading-relaxed text-earth/70">
             "{lang === "mn" ? "Гэгээрэл дотроос ирдэг. Гаднаас бүү хай." : "Wisdom comes from within. Do not seek it without."}"
           </p>
         </div>
       </section>
 
-      {/* ── EDIT PROFILE MODAL ── */}
-      <AnimatePresence>
-        {isEditOpen && (
-          <div className="fixed inset-0 z-[100] flex items-end justify-center bg-ink/50 backdrop-blur-sm">
-            <motion.div
-              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 350, damping: 35 }}
-              className="w-full max-w-lg bg-white rounded-t-[28px] p-6"
-              style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 24px)" }}
-            >
-              <div className="w-10 h-1 bg-border rounded-full mx-auto mb-5" />
-              <div className="flex justify-between items-center mb-5">
-                <h3 className="text-[18px] font-black text-ink">
-                  {lang === "mn" ? "Профайл засах" : "Edit Profile"}
-                </h3>
-                <button onClick={() => setIsEditOpen(false)} className="w-8 h-8 rounded-full bg-stone flex items-center justify-center">
-                  <X size={16} className="text-earth" />
-                </button>
-              </div>
-
-              {/* Avatar upload */}
-              <div className="flex items-center gap-4 mb-5">
-                <div className="relative">
-                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-stone">
-                    <img src={editForm.avatar || profile?.avatar || profile?.image || ""} className="w-full h-full object-cover" />
-                  </div>
-                  <label className="absolute -bottom-1 -right-1 w-6 h-6 bg-gold rounded-full flex items-center justify-center cursor-pointer">
-                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                    <Upload size={11} className="text-white" />
-                  </label>
-                </div>
-                {uploadingImage && <span className="text-[12px] text-earth">Хуулж байна...</span>}
-              </div>
-
-              {/* Phone */}
-              <div className="mb-4">
-                <label className="input-label">{lang === "mn" ? "Утасны дугаар" : "Phone Number"}</label>
-                <div className="relative">
-                  <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-earth" />
-                  <input
-                    className="input pl-10"
-                    value={editForm.phone || ""}
-                    onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
-                    placeholder="+976 9900 0000"
-                  />
-                </div>
-              </div>
-
-              <button onClick={saveProfile} disabled={isSaving} className="btn-primary btn-primary-full flex items-center justify-center gap-2">
-                {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-                {lang === "mn" ? "Хадгалах" : "Save Profile"}
+      {isEditOpen && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-ink/45 backdrop-blur-md">
+          <div
+            className="w-full max-w-lg rounded-t-[28px] border-t border-black/[0.06] bg-cream p-6 shadow-[0_-12px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 ease-out"
+            style={{ 
+              paddingBottom: "max(env(safe-area-inset-bottom, 0px), 24px)",
+              transform: isEditOpen ? "translateY(0)" : "translateY(100%)"
+            }}
+          >
+            <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-black/10" />
+            <div className="flex justify-between items-center mb-5">
+              <h3 className="text-[18px] font-black text-ink">
+                {lang === "mn" ? "Профайл засах" : "Edit Profile"}
+              </h3>
+              <button onClick={() => setIsEditOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-full border border-black/[0.06] bg-white shadow-sm">
+                <X size={16} className="text-earth" />
               </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+            </div>
 
-      {/* ── CHAT MODAL ── */}
-      <AnimatePresence>
-        {activeChatBooking && (
-          <div className="fixed inset-0 z-[100] flex items-end justify-center bg-ink/50 backdrop-blur-sm">
-            <motion.div
-              initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
-              transition={{ type: "spring", stiffness: 350, damping: 35 }}
-              className="w-full max-w-lg bg-white rounded-t-[28px] flex flex-col"
-              style={{ height: "80svh", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0px)" }}
-            >
-              <div className="flex items-center justify-between p-5 border-b border-stone/50">
-                <h3 className="text-[16px] font-black text-ink">
-                  {lang === "mn" ? "Чат" : "Chat"}
-                </h3>
-                <button onClick={() => setActiveChatBooking(null)} className="w-8 h-8 rounded-full bg-stone flex items-center justify-center">
-                  <X size={16} className="text-earth" />
-                </button>
+            {/* Avatar upload */}
+            <div className="flex items-center gap-4 mb-5">
+              <div className="relative">
+                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-stone">
+                  <img src={editForm.avatar || profile?.avatar || profile?.image || ""} className="w-full h-full object-cover" />
+                </div>
+                <label className="absolute -bottom-1 -right-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-gold">
+                  <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                  <Upload size={11} className="text-white" />
+                </label>
               </div>
-              <div className="flex-1 overflow-hidden">
-                <ChatWindow
-                  bookingId={activeChatBooking._id}
-                  currentUserId={user?.id || ""}
-                  currentUserName={profile?.name?.[lk] || user?.fullName || "User"}
-                  isMonk={isMonk}
+              {uploadingImage && <span className="text-[12px] text-earth">Хуулж байна...</span>}
+            </div>
+
+            {/* Phone */}
+            <div className="mb-4">
+              <label className="input-label">{lang === "mn" ? "Утасны дугаар" : "Phone Number"}</label>
+              <div className="relative">
+                <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-earth" />
+                <input
+                  className="input pl-10"
+                  value={editForm.phone || ""}
+                  onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                  placeholder="+976 9900 0000"
                 />
               </div>
-            </motion.div>
+            </div>
+
+            <button onClick={saveProfile} disabled={isSaving} className="cta-button mt-2 flex min-h-[52px] w-full items-center justify-center gap-2">
+              {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+              {lang === "mn" ? "Хадгалах" : "Save Profile"}
+            </button>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
+
+      {/* ── CHAT MODAL ── */}
+      {activeChatBooking && (
+        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-ink/45 backdrop-blur-md">
+          <div
+            className="flex w-full max-w-lg flex-col rounded-t-[28px] border-t border-black/[0.06] bg-cream shadow-[0_-12px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 ease-out"
+            style={{ 
+              height: "80svh", 
+              paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0px)",
+              transform: activeChatBooking ? "translateY(0)" : "translateY(100%)"
+            }}
+          >
+            <div className="flex items-center justify-between border-b border-black/[0.06] p-5">
+              <h3 className="text-[16px] font-black text-ink">
+                {lang === "mn" ? "Чат" : "Chat"}
+              </h3>
+              <button onClick={() => setActiveChatBooking(null)} className="flex h-9 w-9 items-center justify-center rounded-full border border-black/[0.06] bg-white shadow-sm">
+                <X size={16} className="text-earth" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <ChatWindow
+                bookingId={activeChatBooking._id}
+                currentUserId={user?.id || ""}
+                currentUserName={profile?.name?.[lk] || user?.fullName || "User"}
+                isMonk={isMonk}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

@@ -21,24 +21,28 @@ export default async function TermsPage({ params }: Props) {
   const t = (obj: { mn: string; en: string }) => obj[validLang];
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] text-[#451a03] pt-32 pb-20 px-6 font-sans">
-      <div className="container mx-auto max-w-4xl">
-        <div className="flex flex-col items-center text-center space-y-6 mb-16">
-          <div className="w-16 h-16 rounded-2xl bg-amber-500/10 flex items-center justify-center text-amber-600">
-            <FileText size={32} />
+    <div className="relative min-h-screen bg-cream text-ink selection:bg-gold/20">
+      <div className="pointer-events-none absolute -top-24 right-[-20%] h-[min(42vh,380px)] w-[min(88vw,420px)] rounded-full bg-gold/8 blur-[95px]" />
+      <div className="container relative z-10 mx-auto max-w-3xl px-5 pb-[max(3rem,env(safe-area-inset-bottom))] pt-[calc(var(--header-height-mobile,84px)+env(safe-area-inset-top,0px)+1.5rem)] sm:px-6">
+        <div className="mb-12 flex flex-col items-center text-center">
+          <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-gold/18 bg-white/90 shadow-gold">
+            <FileText size={28} className="text-gold-dark" strokeWidth={1.5} />
           </div>
-          <h1 className="text-5xl md:text-7xl font-serif font-black">
+          <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-gold-dark/85">
+            {t({ mn: "Хууль ёс", en: "Legal" })}
+          </p>
+          <h1 className="font-serif text-[2rem] font-semibold leading-tight tracking-tight text-ink sm:text-[2.5rem] md:text-[2.75rem]">
             {t({ mn: "Үйлчилгээний нөхцөл", en: "Terms of Service" })}
           </h1>
-          <p className="text-xl text-[#78350F]/60">
+          <p className="mt-3 max-w-xl text-[15px] leading-relaxed text-earth/65">
             {t({ mn: "Бидний үйлчилгээг ашиглах нөхцөл ба дүрэм.", en: "Rules and terms for using our services." })}
           </p>
         </div>
         
-        <div className="space-y-8 text-lg text-[#78350F]/80 leading-relaxed bg-white p-8 md:p-12 rounded-[2rem] shadow-sm border border-amber-900/10">
+        <div className="monastery-card space-y-10 rounded-[1.75rem] border border-gold/14 bg-white/88 p-8 text-[15px] leading-[1.75] text-earth/80 shadow-gold backdrop-blur-sm md:p-12 md:text-[16px]">
           
           <section>
-            <h2 className="text-2xl font-bold text-[#1C1917] mb-4">
+            <h2 className="mb-3 font-serif text-xl font-semibold text-ink">
               {t({ mn: "1. Танилцуулга", en: "1. Introduction" })}
             </h2>
             <p>
@@ -50,7 +54,7 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-[#1C1917] mb-4">
+            <h2 className="mb-3 font-serif text-xl font-semibold text-ink">
               {t({ mn: "2. Насны хязгаарлалт", en: "2. Eligibility" })}
             </h2>
             <p>
@@ -62,7 +66,7 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-[#1C1917] mb-4">
+            <h2 className="mb-3 font-serif text-xl font-semibold text-ink">
               {t({ mn: "3. Үйлчилгээний чиглэл", en: "3. Services" })}
             </h2>
             <p>
@@ -74,7 +78,7 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-[#1C1917] mb-4">
+            <h2 className="mb-3 font-serif text-xl font-semibold text-ink">
               {t({ mn: "4. Төлбөр хэвийн болон буцаалт", en: "4. Payments & Refunds" })}
             </h2>
             <p>
@@ -86,7 +90,7 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-[#1C1917] mb-4">
+            <h2 className="mb-3 font-serif text-xl font-semibold text-ink">
               {t({ mn: "5. Хэрэглэгчийн ёс зүй", en: "5. User Conduct" })}
             </h2>
             <p>
@@ -98,7 +102,7 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-[#1C1917] mb-4">
+            <h2 className="mb-3 font-serif text-xl font-semibold text-ink">
               {t({ mn: "6. Оюуны өмч", en: "6. Intellectual Property" })}
             </h2>
             <p>
@@ -110,7 +114,7 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-[#1C1917] mb-4">
+            <h2 className="mb-3 font-serif text-xl font-semibold text-ink">
               {t({ mn: "7. Данс цуцлах", en: "7. Termination" })}
             </h2>
             <p>
@@ -122,7 +126,7 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-[#1C1917] mb-4">
+            <h2 className="mb-3 font-serif text-xl font-semibold text-ink">
               {t({ mn: "8. Хууль, дүрэм", en: "8. Governing Law" })}
             </h2>
             <p>
@@ -134,7 +138,7 @@ export default async function TermsPage({ params }: Props) {
           </section>
 
           <section>
-            <h2 className="text-2xl font-bold text-[#1C1917] mb-4">
+            <h2 className="mb-3 font-serif text-xl font-semibold text-ink">
               {t({ mn: "9. Холбоо барих", en: "9. Contact" })}
             </h2>
             <p>
@@ -151,6 +155,6 @@ export default async function TermsPage({ params }: Props) {
   );
 }
 
-
-// CAP_INJECT_PARAMS
-export function generateStaticParams() { return [{ locale: "mn" }, { locale: "en" }]; }
+export function generateStaticParams() {
+  return [{ locale: "mn" }, { locale: "en" }];
+}

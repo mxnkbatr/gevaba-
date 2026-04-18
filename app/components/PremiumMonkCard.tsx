@@ -57,8 +57,8 @@ export default function PremiumMonkCard({ monk, onClick }: PremiumMonkCardProps)
 
         {/* 10% Amber 'Book Now' Button with soft corners */}
         <button
-          className="font-sans px-5 py-2.5 rounded-[24px] bg-[#FFBF00] text-white font-bold text-[14px] shadow-sm transition-transform active:scale-95"
-          style={{ boxShadow: "0 4px 14px rgba(255, 191, 0, 0.3)" }}
+          className="rounded-[24px] bg-gold px-5 py-2.5 font-sans text-[14px] font-bold text-ink shadow-sm transition-transform active:scale-95"
+          style={{ boxShadow: "0 4px 14px rgba(191, 164, 106, 0.22)" }}
         >
           Book Now
         </button>

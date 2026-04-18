@@ -6,6 +6,8 @@ import { ArrowLeft, BookOpen } from "lucide-react";
 import DivineBackground from "@/app/components/DivineBackground";
 import BlogDetailClient from "@/app/components/BlogDetailClient";
 
+export const revalidate = 60;
+
 export function generateStaticParams() {
   return [
     { locale: 'en', id: 'initial' },
@@ -58,12 +60,12 @@ export default async function BlogDetailPage(props: { params: Promise<{ id: stri
         return (
             <div className="min-h-[100svh] bg-cream flex flex-col items-center justify-center p-6 text-center">
                 <DivineBackground />
-                <div className="w-20 h-20 rounded-2xl bg-white/50 border border-stone/30 flex items-center justify-center mb-6 relative z-10">
+                <div className="w-20 h-20 rounded-2xl bg-white/70 border border-gold/20 shadow-gold flex items-center justify-center mb-6 relative z-10">
                     <BookOpen className="text-earth" size={40} />
                 </div>
                 <h1 className="text-4xl font-serif font-black text-ink mb-4 relative z-10">404</h1>
                 <p className="text-earth mb-8 relative z-10 italic">Нийтлэл олдсонгүй.</p>
-                <Link href={`/${lang}/blog`} className="btn-primary flex items-center gap-2 relative z-10">
+                <Link href={`/${lang}/blog`} className="cta-button inline-flex min-h-12 px-8 shadow-gold gap-2 relative z-10">
                     <ArrowLeft size={18} /> Буцах
                 </Link>
             </div>

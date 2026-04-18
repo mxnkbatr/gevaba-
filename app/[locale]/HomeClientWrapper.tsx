@@ -4,8 +4,7 @@ import React, { useState, useCallback, Suspense } from "react";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { usePlatform } from "@/app/capacitor/hooks/usePlatform";
-import Hero from "../components/Hero";
-import HomeSections from "../components/HomeSections";
+import HomePage from "../components/HomePage";
 import MobileScrollView from "../components/mobile/MobileScrollView";
 import { SkeletonMonkList, SkeletonBlogList } from "../components/SkeletonCard";
 import { Monk } from "@/database/types";
@@ -102,8 +101,7 @@ export default function HomeClientWrapper({
         </div>
       ) : (
         <>
-          <Hero blogs={blogs} locale={locale} />
-          <HomeSections
+          <HomePage
             locale={locale}
             blogs={blogs}
             monks={monks as Monk[]}

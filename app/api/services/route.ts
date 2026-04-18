@@ -7,36 +7,8 @@ export async function GET() {
   try {
     const { db } = await connectToDatabase();
 
-    // AUTOMATION: Ensure ALL monks have ALL available services
-    const allServicesInCollection = await db.collection("services").find({}).toArray();
-
-    if (allServicesInCollection.length > 0) {
-      // Map to service reference format with all details
-      const serviceRefs = allServicesInCollection.map((svc: any) => ({
-        id: svc.id || svc._id.toString(),
-        name: svc.name,
-        title: svc.title,
-        type: svc.type,
-        price: svc.price,
-        duration: svc.duration,
-        desc: svc.desc,
-        subtitle: svc.subtitle,
-        image: svc.image,
-        quote: svc.quote,
-        status: 'active'
-      }));
-
-      // Update ALL monks to have exactly these services (not just empty ones)
-      await db.collection("users").updateMany(
-        { role: "monk" },
-        {
-          $set: {
-            services: serviceRefs,
-            updatedAt: new Date()
-          }
-        }
-      );
-    }
+    // Read-only: do not run updateMany here — that was blocking every consumer
+    // (e.g. monk profile) and is already handled when services are created/updated via POST.
 
     // 1. Fetch all services from the 'services' collection
     // These are the universal services available to ALL monks

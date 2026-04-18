@@ -4,9 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0 --webpack",
+    "dev:webpack": "next dev -H 0.0.0.0 --webpack",
+    "dev:turbopack": "next dev -H 0.0.0.0",
     "prebuild": "node scripts/capacitor-dynamic.js remove",
     "postbuild": "node scripts/capacitor-dynamic.js restore",
-    "build:rust": "./build-rust.sh",
+    "build:rust": "node scripts/build-rust.mjs",
     "build": "next build --webpack",
     "ionic:build": "CAPACITOR_BUILD=true npm run build && npx cap sync",
     "build:mobile": "CAPACITOR_BUILD=true npm run build && npx cap sync",
@@ -23,8 +25,8 @@
     "mobile:android": "npx cap open android",
     "mobile:ios": "npx cap open ios",
     "mobile:update": "npm run build:mobile && npx cap copy && npx cap update",
-    "mobile:clean": "rm -rf android/app/build ios/App/build",
-    "analyze": "ANALYZE=true npm run build",
+    "mobile:clean": "node scripts/clean-mobile-builds.mjs",
+    "analyze": "cross-env ANALYZE=true npm run build",
     "postinstall": "patch-package"
   },
   "dependencies": {
@@ -69,7 +71,6 @@
     "react-dom": "19.2.3",
     "react-hot-toast": "^2.6.0",
     "redis": "^5.11.0",
-    "redist": "^0.2.0",
     "resend": "^6.6.0",
     "rust-modules": "file:rust-modules/pkg",
     "svix": "^1.82.0"
@@ -85,6 +86,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
+    "cross-env": "^7.0.3",
     "eslint-config-next": "16.1.1",
     "patch-package": "^8.0.1",
     "tailwindcss": "^4",

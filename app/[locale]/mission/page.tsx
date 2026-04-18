@@ -65,13 +65,13 @@ export default function MissionPage() {
     cardBg: "bg-black/40",
     icon: <Moon size={24} fill="currentColor" className="animate-pulse" />
   } : {
-    bgMain: "bg-[#FFFBEB]",
-    bgSec: "bg-[#FEF3C7]/50",
-    textMain: "text-[#451a03]",
-    textSub: "text-amber-600",
-    accent: "text-[#F59E0B]",
-    border: "border-amber-200",
-    cardBg: "bg-white",
+    bgMain: "bg-cream",
+    bgSec: "bg-white/40",
+    textMain: "text-ink",
+    textSub: "text-gold-dark",
+    accent: "text-gold-dark",
+    border: "border-gold/20",
+    cardBg: "bg-white/88",
     icon: <Sun size={24} className="animate-spin-slow" />
   };
 
@@ -90,7 +90,7 @@ export default function MissionPage() {
     ],
   };
 
-  if (!mounted) return <div className="min-h-screen bg-[#FFFBEB]" />;
+  if (!mounted) return <div className="min-h-screen bg-cream" />;
 
   return (
     <>
@@ -101,7 +101,7 @@ export default function MissionPage() {
       >
         {/* ATMOSPHERE */}
         <motion.div className="fixed inset-0 pointer-events-none z-10 opacity-50 mix-blend-screen blur-3xl" style={{ background: lightBackground }} />
-        <div className="fixed inset-0 pointer-events-none opacity-[0.2] z-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay" />
+        <div className={`fixed inset-0 pointer-events-none z-0 bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] mix-blend-overlay ${isNight ? 'opacity-[0.2]' : 'opacity-[0.055]'}`} />
 
 
         {/* --- SECTION 1: THE GREAT VOW (Hero) --- */}
@@ -210,10 +210,10 @@ export default function MissionPage() {
 
 
         {/* --- SECTION 4: THE VOID QUOTE --- */}
-        <section className={`relative py-40 transition-colors duration-1000 ${isNight ? "bg-black" : "bg-[#451a03]"} text-[#FDE68A]`}>
+        <section className={`relative py-40 transition-colors duration-1000 ${isNight ? "bg-black" : "bg-ink"} text-cream`}>
            <div className="container mx-auto px-6 text-center max-w-5xl">
               <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ duration: 4, repeat: Infinity }} className="mb-12">
-                 <HandHeart className="w-16 h-16 mx-auto text-[#F59E0B]" />
+                 <HandHeart className="w-16 h-16 mx-auto text-gold-light" />
               </motion.div>
               
               <p className="text-3xl md:text-5xl font-serif font-light leading-snug drop-shadow-2xl italic">

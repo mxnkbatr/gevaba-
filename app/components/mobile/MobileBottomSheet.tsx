@@ -115,7 +115,7 @@ export default function MobileBottomSheet({
                         onDrag={(_event, info) => setDragY(info.offset.y)}
                         className={`
               fixed bottom-0 left-0 right-0 z-50
-              bg-surface
+              bg-white
               ${isIOS ? 'rounded-t-3xl' : 'rounded-t-2xl'}
               shadow-2xl
               max-h-[90vh]
@@ -138,18 +138,18 @@ export default function MobileBottomSheet({
                             <div className={`
                 flex items-center justify-between px-6
                 ${isIOS ? 'py-3' : 'py-4'}
-                border-b border-border
+                border-b border-black/[0.06]
               `}>
-                                <h3 className="text-lg font-bold text-text-main">{title}</h3>
+                                <h3 className="text-lg font-bold text-ink">{title}</h3>
                                 <button
                                     onClick={() => {
                                         hapticsMedium();
                                         onClose();
                                     }}
-                                    className="p-2 hover:bg-surface-alt rounded-full transition-colors"
+                                    className="p-2 hover:bg-black/[0.04] rounded-full transition-colors"
                                     aria-label="Close"
                                 >
-                                    <X size={20} className="text-text-muted" />
+                                    <X size={20} className="text-earth/60" />
                                 </button>
                             </div>
                         )}

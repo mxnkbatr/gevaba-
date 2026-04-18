@@ -17,7 +17,7 @@ import {
 import { useLanguage } from "../../contexts/LanguageContext";
 
 export default function ForgotPasswordPage() {
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
     const { isLoaded, signIn, setActive } = useSignIn();
 
     const [identifier, setIdentifier] = useState("");
@@ -85,7 +85,6 @@ export default function ForgotPasswordPage() {
                 await setActive({ session: result.createdSessionId });
                 setStep("success");
             } else {
-                console.log("Result status:", result.status);
                 setError("Unable to complete reset. Please follow the instructions in your email.");
             }
         } catch (err: any) {
@@ -97,25 +96,23 @@ export default function ForgotPasswordPage() {
     };
 
     return (
-        <div className="min-h-screen w-full flex bg-[#FFFBEB] font-serif overflow-hidden relative">
-            {/* Decorative Background */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#F59E0B]/5 rounded-full blur-[100px] pointer-events-none" />
-            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-[#D97706]/5 rounded-full blur-[80px] pointer-events-none" />
+        <div className="min-h-screen w-full flex bg-cream font-serif overflow-hidden relative text-ink">
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gold/10 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gold-muted/20 rounded-full blur-[80px] pointer-events-none" />
 
             <div className="relative z-10 w-full flex items-center justify-center p-6">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="w-full max-w-md bg-white/50 backdrop-blur-md p-8 sm:p-12 rounded-[2.5rem] border border-white/60 shadow-[0_20px_50px_-10px_rgba(69,26,3,0.1)]"
+                    className="w-full max-w-md monastery-card p-8 sm:p-12 rounded-[2.5rem] bg-white/70 backdrop-blur-md shadow-gold"
                 >
-                    {/* Header */}
                     <div className="text-center mb-8">
-                        <Link href="/" className="inline-flex items-center gap-2 text-[#D97706] hover:text-[#B45309] transition-colors mb-6 group">
+                        <Link href={`/${language}`} className="inline-flex items-center gap-2 text-gold-dark hover:text-gold transition-colors mb-6 group">
                             <Flower size={20} className="group-hover:rotate-180 transition-transform duration-700" />
                             <span className="font-bold font-sans uppercase tracking-widest text-xs">Гэвабол</span>
                         </Link>
-                        <h2 className="text-3xl font-bold text-[#451a03] mb-2">{content.title}</h2>
-                        <p className="text-[#78350F]/70 text-sm font-sans leading-relaxed">
+                        <h2 className="text-3xl font-bold text-ink mb-2">{content.title}</h2>
+                        <p className="text-earth/70 text-sm font-sans leading-relaxed">
                             {step === "identify" ? content.subtitleIdentify : step === "verify" ? content.subtitleVerify : ""}
                         </p>
                     </div>
@@ -131,11 +128,11 @@ export default function ForgotPasswordPage() {
                                 className="space-y-6"
                             >
                                 <div>
-                                    <label className="block text-xs font-bold text-[#78350F]/60 uppercase tracking-widest mb-2 px-1">
+                                    <label className="input-label text-[10px] uppercase tracking-widest text-earth/55">
                                         {content.identifierLabel}
                                     </label>
                                     <div className="relative">
-                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D97706]/40">
+                                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/45">
                                             {identifier.includes("@") ? <Mail size={18} /> : <ShieldCheck size={18} />}
                                         </div>
                                         <input
@@ -143,7 +140,7 @@ export default function ForgotPasswordPage() {
                                             required
                                             value={identifier}
                                             onChange={(e) => setIdentifier(e.target.value)}
-                                            className="w-full bg-white/70 border border-[#D97706]/20 rounded-2xl py-4 pl-12 pr-4 text-[#451a03] focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent outline-none transition-all"
+                                            className="input min-h-[52px] rounded-2xl pl-12 bg-white/80 border-gold/20"
                                             placeholder={t({ mn: "Имэйл эсвэл Утас", en: "Email or Phone" })}
                                         />
                                     </div>
@@ -160,21 +157,20 @@ export default function ForgotPasswordPage() {
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     disabled={loading}
-                                    className="relative w-full overflow-hidden rounded-2xl bg-[#451a03] p-5 text-[#FFFBEB] font-bold shadow-xl transition-all hover:bg-[#5f2405] group disabled:opacity-50"
+                                    type="submit"
+                                    className="cta-button w-full min-h-[56px] shadow-gold disabled:opacity-50"
                                 >
-                                    <div className="flex items-center justify-center gap-3">
-                                        {loading ? (
-                                            <>
-                                                <Loader2 size={18} className="animate-spin" />
-                                                <span>{content.loadingText}</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <span>{content.sendBtn}</span>
-                                                <ArrowRight size={18} />
-                                            </>
-                                        )}
-                                    </div>
+                                    {loading ? (
+                                        <>
+                                            <Loader2 size={18} className="animate-spin" />
+                                            <span>{content.loadingText}</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <span>{content.sendBtn}</span>
+                                            <ArrowRight size={18} />
+                                        </>
+                                    )}
                                 </motion.button>
                             </motion.form>
                         )}
@@ -189,34 +185,34 @@ export default function ForgotPasswordPage() {
                                 className="space-y-6"
                             >
                                 <div>
-                                    <label className="block text-xs font-bold text-[#78350F]/60 uppercase tracking-widest mb-2 px-1">
+                                    <label className="input-label text-[10px] uppercase tracking-widest text-earth/55">
                                         {content.codeLabel}
                                     </label>
                                     <div className="relative">
-                                        <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D97706]/40" size={18} />
+                                        <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/45" size={18} />
                                         <input
                                             type="text"
                                             required
                                             value={code}
                                             onChange={(e) => setCode(e.target.value)}
-                                            className="w-full bg-white/70 border border-[#D97706]/20 rounded-2xl py-4 pl-12 pr-4 text-[#451a03] focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent outline-none transition-all"
+                                            className="input min-h-[52px] rounded-2xl pl-12 bg-white/80 border-gold/20"
                                             placeholder="123456"
                                         />
                                     </div>
                                 </div>
 
                                 <div>
-                                    <label className="block text-xs font-bold text-[#78350F]/60 uppercase tracking-widest mb-2 px-1">
+                                    <label className="input-label text-[10px] uppercase tracking-widest text-earth/55">
                                         {content.newPasswordLabel}
                                     </label>
                                     <div className="relative">
-                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D97706]/40" size={18} />
+                                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gold/45" size={18} />
                                         <input
                                             type="password"
                                             required
                                             value={password}
                                             onChange={(e) => setPassword(e.target.value)}
-                                            className="w-full bg-white/70 border border-[#D97706]/20 rounded-2xl py-4 pl-12 pr-4 text-[#451a03] focus:ring-2 focus:ring-[#F59E0B] focus:border-transparent outline-none transition-all"
+                                            className="input min-h-[52px] rounded-2xl pl-12 bg-white/80 border-gold/20"
                                             placeholder="••••••••"
                                         />
                                     </div>
@@ -235,21 +231,19 @@ export default function ForgotPasswordPage() {
                                         whileTap={{ scale: 0.98 }}
                                         disabled={loading}
                                         type="submit"
-                                        className="relative w-full overflow-hidden rounded-2xl bg-[#451a03] p-5 text-[#FFFBEB] font-bold shadow-xl transition-all hover:bg-[#5f2405] group disabled:opacity-50"
+                                        className="cta-button w-full min-h-[56px] shadow-gold disabled:opacity-50"
                                     >
-                                        <div className="flex items-center justify-center gap-3">
-                                            {loading ? (
-                                                <>
-                                                    <Loader2 size={18} className="animate-spin" />
-                                                    <span>{content.loadingText}</span>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <span>{content.resetBtn}</span>
-                                                    <ArrowRight size={18} />
-                                                </>
-                                            )}
-                                        </div>
+                                        {loading ? (
+                                            <>
+                                                <Loader2 size={18} className="animate-spin" />
+                                                <span>{content.loadingText}</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span>{content.resetBtn}</span>
+                                                <ArrowRight size={18} />
+                                            </>
+                                        )}
                                     </motion.button>
 
                                     <div className="text-center">
@@ -257,7 +251,7 @@ export default function ForgotPasswordPage() {
                                             type="button"
                                             onClick={handleIdentify}
                                             disabled={loading}
-                                            className="text-xs font-bold text-[#D97706] hover:underline uppercase tracking-widest disabled:opacity-50"
+                                            className="text-xs font-bold text-gold-dark hover:text-gold hover:underline uppercase tracking-widest disabled:opacity-50"
                                         >
                                             {t({ mn: "Код дахин илгээх", en: "Resend Code" })}
                                         </button>
@@ -274,19 +268,19 @@ export default function ForgotPasswordPage() {
                                 className="text-center py-8"
                             >
                                 <div className="flex justify-center mb-6">
-                                    <div className="bg-green-100 p-4 rounded-full">
-                                        <CheckCircle2 className="text-green-600" size={48} />
+                                    <div className="bg-gold/15 ring-1 ring-gold/25 p-4 rounded-full">
+                                        <CheckCircle2 className="text-gold-dark" size={48} />
                                     </div>
                                 </div>
-                                <h3 className="text-2xl font-bold text-[#451a03] mb-2">{content.successTitle}</h3>
-                                <p className="text-[#78350F]/70 mb-8 font-sans">
+                                <h3 className="text-2xl font-bold text-ink mb-2">{content.successTitle}</h3>
+                                <p className="text-earth/70 mb-8 font-sans">
                                     {content.successMsg}
                                 </p>
-                                <Link href="/profile">
+                                <Link href={`/${language}/dashboard`}>
                                     <motion.button
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
-                                        className="w-full rounded-2xl bg-[#451a03] p-5 text-[#FFFBEB] font-bold shadow-xl transition-all hover:bg-[#5f2405]"
+                                        className="cta-button w-full min-h-[56px] shadow-gold"
                                     >
                                         {t({ mn: "Хяналтын самбар руу очих", en: "Go to Dashboard" })}
                                     </motion.button>
@@ -296,7 +290,7 @@ export default function ForgotPasswordPage() {
                     </AnimatePresence>
 
                     <div className="mt-8 text-center">
-                        <Link href="/login" className="text-sm font-bold text-[#D97706] hover:underline font-sans">
+                        <Link href={`/${language}/sign-in`} className="text-sm font-bold text-gold-dark hover:text-gold hover:underline font-sans">
                             {content.backToLogin}
                         </Link>
                     </div>

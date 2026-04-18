@@ -257,11 +257,11 @@ export default function MonkDashboardPage() {
                   <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center">
                     <MessageCircle size={18} className="text-blue-600" />
                   </div>
-                  <h3 className="text-[14px] font-black text-ink">{t({ mn: "Мессежүүд", en: "Messages" })}</h3>
+                  <h3 className="text-[14px] font-semibold text-ink">{t({ mn: "Мессежүүд", en: "Messages" })}</h3>
                 </div>
                 <div className="flex items-center gap-2">
                   {unreadTotal > 0 && (
-                    <span className="bg-red-500 text-white text-[11px] font-black px-2.5 py-0.5 rounded-full animate-pulse">
+                    <span className="bg-red-500 text-white text-[11px] font-semibold px-2.5 py-0.5 rounded-full animate-pulse">
                       {unreadTotal}
                     </span>
                   )}
@@ -277,11 +277,11 @@ export default function MonkDashboardPage() {
                         {c.otherAvatar && <Image src={c.otherAvatar} alt="" width={36} height={36} className="w-full h-full object-cover" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[13px] font-black text-ink truncate">{c.otherName}</p>
+                        <p className="text-[13px] font-semibold text-ink truncate">{c.otherName}</p>
                         <p className="text-[11px] text-earth/50 truncate">{c.lastMessage || "..."}</p>
                       </div>
                       {(c.unreadCount || 0) > 0 && (
-                        <span className="bg-blue-500 text-white text-[10px] font-black w-5 h-5 rounded-full flex items-center justify-center">{c.unreadCount}</span>
+                        <span className="bg-blue-500 text-white text-[10px] font-semibold w-5 h-5 rounded-full flex items-center justify-center">{c.unreadCount}</span>
                       )}
                     </div>
                   ))}
@@ -298,12 +298,12 @@ export default function MonkDashboardPage() {
           <Link href={`/${lang}/monk/schedule`}
             className="bg-white rounded-3xl p-5 shadow-sm border border-stone/15 active:scale-[0.97] transition-all">
             <Calendar size={22} className="text-gold mb-2" />
-            <p className="text-[13px] font-black text-ink">{t({ mn: "Дэлгэрэнгүй хуваарь", en: "Full Schedule" })}</p>
+            <p className="text-[13px] font-semibold text-ink">{t({ mn: "Дэлгэрэнгүй хуваарь", en: "Full Schedule" })}</p>
           </Link>
           <Link href={`/${lang}/monk/content`}
             className="bg-white rounded-3xl p-5 shadow-sm border border-stone/15 active:scale-[0.97] transition-all">
             <FileText size={22} className="text-gold mb-2" />
-            <p className="text-[13px] font-black text-ink">{t({ mn: "Контент бичих", en: "Write Content" })}</p>
+            <p className="text-[13px] font-semibold text-ink">{t({ mn: "Контент бичих", en: "Write Content" })}</p>
           </Link>
         </section>
       </div>

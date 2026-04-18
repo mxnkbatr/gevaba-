@@ -33,7 +33,7 @@ export default function SplashScreen() {
             const timer = setTimeout(() => {
                 setIsVisible(false)
                 sessionStorage.setItem('splashShown', 'true')
-            }, 2000)
+            }, 900)
 
             return () => clearTimeout(timer)
         }
@@ -48,7 +48,7 @@ export default function SplashScreen() {
                     initial={{ opacity: 1 }}
                     exit={{
                         opacity: 0,
-                        transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] }
+                        transition: { duration: 0.35, ease: [0.22, 1, 0.36, 1] }
                     }}
                     className="fixed inset-0 z-[9999] flex flex-col items-center justify-center overflow-hidden"
                     style={{ backgroundColor: '#1A0F05' }}
