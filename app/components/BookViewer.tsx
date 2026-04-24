@@ -91,7 +91,11 @@ export default function BookViewer({ isOpen, onClose, variant = 'modal' }: BookV
                         {isSidebar ? 'Ritual Book' : 'Digital Ritual Book'}
                     </h2>
                 </div>
-                <button onClick={onClose} className="text-stone-500 hover:text-white transition-colors p-1 flex items-center gap-1 group">
+                <button
+                    onClick={onClose}
+                    aria-label="Close"
+                    className="text-stone-500 hover:text-white transition-colors p-1 flex items-center gap-1 group"
+                >
                     <X size={20} className={isSidebar ? '' : "md:w-6 md:h-6"} />
                     {isSidebar && <span className="text-xs font-bold uppercase tracking-wider group-hover:text-secondary">Back</span>}
                 </button>
@@ -274,6 +278,7 @@ export default function BookViewer({ isOpen, onClose, variant = 'modal' }: BookV
                             {showMobileDetails && (
                                 <button
                                     onClick={() => setShowMobileDetails(false)}
+                                    aria-label="Back"
                                     className="md:hidden p-1 -ml-1 text-stone-400"
                                 >
                                     <ChevronRight className="rotate-180" size={24} />
@@ -282,7 +287,7 @@ export default function BookViewer({ isOpen, onClose, variant = 'modal' }: BookV
                             <BookOpen className="w-5 h-5 md:w-6 md:h-6" />
                             <h2 className="text-sm md:text-xl font-serif font-bold text-stone-200">Digital Ritual Book</h2>
                         </div>
-                        <button onClick={onClose} className="text-stone-500 hover:text-white transition-colors p-1">
+                        <button onClick={onClose} aria-label="Close" className="text-stone-500 hover:text-white transition-colors p-1">
                             <X size={20} className="md:w-6 md:h-6" />
                         </button>
                     </div>

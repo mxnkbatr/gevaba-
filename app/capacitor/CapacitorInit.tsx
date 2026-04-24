@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { usePlatform } from '@/app/capacitor/hooks/usePlatform';
 import { App } from '@capacitor/app';
 import { StatusBar, Style } from '@capacitor/status-bar';
+import { SplashScreen } from '@capacitor/splash-screen';
 import { initPushNotifications } from './plugins/pushNotifications';
 import { useAuth } from '@/contexts/AuthContext';
 import { useRouter } from 'next/navigation';
@@ -19,6 +20,9 @@ export default function CapacitorInit() {
 
     useEffect(() => {
         if (!isNative) return;
+
+        let isCancelled = false;
+        const listenerHandles: Array<{ remove: () => Promise<void> }> = [];
 
         const initialize = async () => {
             // ... (previous status bar logic)
@@ -41,20 +45,24 @@ export default function CapacitorInit() {
 
             // ... (rest of initialize)
             // Handle back button on Android
-            App.addListener('backButton', ({ canGoBack }) => {
+            listenerHandles.push(
+                await App.addListener('backButton', ({ canGoBack }) => {
                 if (!canGoBack) {
                     App.exitApp();
                 } else {
                     window.history.back();
                 }
-            });
+                })
+            );
 
             // Handle app state changes (token refresh when foregrounded)
-            App.addListener('appStateChange', ({ isActive }) => {
+            listenerHandles.push(
+                await App.addListener('appStateChange', ({ isActive }) => {
                 if (isActive) {
-                    console.log('App is foregrounded - triggering token refresh logic');
+                    // Foreground hook: place token refresh logic here if needed.
                 }
-            });
+                })
+            );
 
             const addSafeAreaCSS = () => {
                 const style = document.createElement('style');
@@ -70,15 +78,26 @@ export default function CapacitorInit() {
             };
 
             addSafeAreaCSS();
+
+            // Hide the native splash screen once the first UI has mounted.
+            // This prevents App Store / Play Store reviewers from seeing a "stuck" splash.
+            // Using rAF ensures at least one paint before hiding.
+            try {
+                requestAnimationFrame(() => {
+                    if (isCancelled) return;
+                    void SplashScreen.hide();
+                });
+            } catch (e) {
+                console.warn('SplashScreen.hide() failed:', e);
+            }
         };
 
-        initialize();
+        void initialize();
 
         // Cleanup
         return () => {
-            if (isNative) {
-                App.removeAllListeners();
-            }
+            isCancelled = true;
+            void Promise.allSettled(listenerHandles.map((h) => h.remove()));
         };
     }, [isNative, user, router]);
 

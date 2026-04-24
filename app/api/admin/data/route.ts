@@ -106,6 +106,19 @@ export async function GET(request: Request) {
 
     const allServices = Array.from(servicesMap.values());
 
+    // 6. Shop: Products + Orders (for admin dashboard)
+    const products = await db
+      .collection("products")
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    const orders = await db
+      .collection("orders")
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+
     // 5. Calculate Stats
     const stats = {
       totalUsers: users.length,
@@ -120,6 +133,8 @@ export async function GET(request: Request) {
       users,
       bookings,
       services: allServices,
+      products,
+      orders,
       stats
     });
 

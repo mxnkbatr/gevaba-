@@ -1,6 +1,6 @@
 {
   "name": "tibetan",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev -H 0.0.0.0 --webpack",
@@ -28,6 +28,9 @@
     "mobile:clean": "node scripts/clean-mobile-builds.mjs",
     "analyze": "cross-env ANALYZE=true npm run build",
     "postinstall": "patch-package"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.0",
@@ -61,7 +64,7 @@
     "livekit-server-sdk": "^2.15.0",
     "lucide-react": "^0.562.0",
     "mongodb": "^7.0.0",
-    "next": "16.1.1",
+    "next": "16.1.6",
     "next-cloudinary": "^6.17.5",
     "next-themes": "^0.4.6",
     "nodemailer": "^7.0.12",
@@ -86,7 +89,7 @@
     "@types/react-dom": "^19",
     "cross-env": "^7.0.3",
     "eslint": "^9",
-    "eslint-config-next": "16.1.1",
+    "eslint-config-next": "16.1.6",
     "patch-package": "^8.0.1",
     "tailwindcss": "^4",
     "typescript": "^5"

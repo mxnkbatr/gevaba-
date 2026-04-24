@@ -36,6 +36,13 @@ export type HomeMonkItem = {
   isAvailable?: boolean;
 };
 
+export type HomeFeaturedProduct = {
+  _id: string;
+  name: { mn: string; en: string };
+  price: number;
+  images?: string[];
+};
+
 function monkId(m: HomeMonkItem): string {
   if (m._id == null) return "";
   return typeof m._id === "string" ? m._id : m._id.toString();
@@ -46,6 +53,7 @@ type Props = {
   blogs: HomeBlogItem[];
   monks: HomeMonkItem[];
   featuredMonks: HomeMonkItem[];
+  featuredProducts: HomeFeaturedProduct[];
 };
 
 function pickTitle(
@@ -90,6 +98,7 @@ export default function HomePage({
   blogs,
   monks,
   featuredMonks,
+  featuredProducts,
 }: Props) {
   const { language, t } = useLanguage();
   const lang = language === "mn" ? "mn" : "en";
@@ -159,6 +168,8 @@ export default function HomePage({
       mn: "Нийтлэл удахгүй орно.",
       en: "Stories are on the way.",
     },
+    sectionShop: { mn: "Тахилын дэлгүүр", en: "Sacred Shop" },
+    seeAllShop: { mn: "Бүгдийг үзэх", en: "See all" },
   };
 
   const shortcuts = [
@@ -370,6 +381,65 @@ export default function HomePage({
           </div>
         )}
       </section>
+
+      {/* — Sacred Shop (featured products) — */}
+      {featuredProducts?.length > 0 && (
+        <section className="mb-12 anim-fade-up" style={{ animationDelay: "120ms" }}>
+          <div className="flex items-center justify-between gap-3 mb-4">
+            <h2 className="text-[1.25rem] font-bold text-ink tracking-tight">
+              {t(copy.sectionShop)}
+            </h2>
+            <Link
+              href={`/${locale}/shop`}
+              className="inline-flex items-center gap-0.5 text-[13px] font-semibold text-gold-dark shrink-0"
+            >
+              {t(copy.seeAllShop)} → 
+            </Link>
+          </div>
+
+          <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory hide-scrollbar">
+            {featuredProducts.slice(0, 4).map((p) => {
+              const name = pickTitle(p.name, lang);
+              const img = p.images?.[0] || "";
+              const href = `/${locale}/shop/${p._id}`;
+              return (
+                <Link
+                  key={p._id}
+                  href={href}
+                  className="snap-start shrink-0 w-[168px] rounded-[20px] bg-white overflow-hidden shadow-sm border border-black/[0.05] active:scale-[0.99] transition-transform"
+                >
+                  <div className="relative aspect-square bg-ios-grouped overflow-hidden">
+                    {img ? (
+                      <Image
+                        src={img}
+                        alt={name}
+                        fill
+                        className="object-cover"
+                        sizes="168px"
+                        unoptimized={
+                          img.startsWith("http") && !img.includes("res.cloudinary.com")
+                        }
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-black/15">
+                        <Sparkles className="w-9 h-9" strokeWidth={1.25} />
+                      </div>
+                    )}
+                  </div>
+                  <div className="px-3 py-3">
+                    <p className="text-[13px] font-bold text-ink leading-tight line-clamp-2">
+                      {name}
+                    </p>
+                    <p className="mt-1 text-[13px] font-black text-gold-dark">
+                      ₮{Number(p.price ?? 0).toLocaleString()}
+                    </p>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* — Shortcuts — */}
       <section className="mb-12 anim-fade-up" style={{ animationDelay: "140ms" }}>

@@ -41,6 +41,7 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<"upcoming" | "history">("upcoming");
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [editForm, setEditForm] = useState<any>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -139,6 +140,40 @@ export default function ProfilePage() {
     try { await logout(); } catch { window.location.href = `/${lang}/sign-in`; }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!profile?._id) return;
+    const ok = window.confirm(
+      lang === "mn"
+        ? "Та өөрийн бүртгэл болон холбогдох мэдээллүүдээ бүрмөсөн устгах уу? Энэ үйлдлийг буцаах боломжгүй."
+        : "Delete your account and related data permanently? This cannot be undone.",
+    );
+    if (!ok) return;
+
+    setIsDeletingAccount(true);
+    try {
+      const res = await fetch(`/api/users/${encodeURIComponent(profile._id)}/delete-account`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) {
+        const j = await res.json().catch(() => null);
+        throw new Error(j?.message || "Delete failed");
+      }
+      // After deletion, sign out and return to home.
+      await logout();
+      router.push(`/${lang}`);
+    } catch (e) {
+      console.error("Delete account failed:", e);
+      alert(
+        lang === "mn"
+          ? "Устгал амжилтгүй боллоо. Дахин оролдоно уу."
+          : "Account deletion failed. Please try again.",
+      );
+    } finally {
+      setIsDeletingAccount(false);
+    }
+  };
+
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
     setUploadingImage(true);
@@ -196,6 +231,22 @@ export default function ProfilePage() {
               {t({ mn: "Нэвтрэх / Бүртгүүлэх", en: "Sign in / Register" })}
             </span>
           </Link>
+
+          <div className="mt-6 text-[13px] text-earth">
+            <Link
+              href={`/${lang}/privacy`}
+              className="underline underline-offset-4 hover:text-ink active:opacity-70"
+            >
+              {t({ mn: "Нууцлалын бодлого", en: "Privacy Policy" })}
+            </Link>
+            <span className="mx-2 text-earth/40">·</span>
+            <Link
+              href={`/${lang}/terms`}
+              className="underline underline-offset-4 hover:text-ink active:opacity-70"
+            >
+              {t({ mn: "Үйлчилгээний нөхцөл", en: "Terms of Service" })}
+            </Link>
+          </div>
         </div>
       </main>
     );
@@ -279,7 +330,8 @@ export default function ProfilePage() {
           )}
 
           {/* Actions */}
-          <div className="flex gap-2">
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-2">
             <button
               onClick={() => { setEditForm(profile || {}); setIsEditOpen(true); }}
               className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-black/[0.06] bg-[#F2F2F7] py-2.5 text-[11px] font-semibold text-ink transition-transform active:scale-95"
@@ -294,6 +346,16 @@ export default function ProfilePage() {
             >
               {isSigningOut ? <Loader2 size={14} className="animate-spin" /> : <LogOut size={14} />}
               {lang === "mn" ? "Гарах" : "Sign Out"}
+            </button>
+            </div>
+
+            <button
+              onClick={handleDeleteAccount}
+              disabled={isDeletingAccount}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-600/25 bg-red-600/10 py-3 text-[11px] font-black text-red-700 active:scale-95 transition-transform disabled:opacity-50"
+            >
+              {isDeletingAccount ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
+              {lang === "mn" ? "Бүртгэл устгах" : "Delete account"}
             </button>
           </div>
         </div>

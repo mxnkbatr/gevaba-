@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import * as Ably from "ably";
+import { App } from "@capacitor/app";
+import { Capacitor } from "@capacitor/core";
 
 interface Message {
   _id: string;
@@ -65,7 +67,32 @@ export function useRealtimeMessages(
       }
     });
 
-    return () => cleanup();
+    let appStateHandle: { remove: () => Promise<void> } | null = null;
+    if (Capacitor.isNativePlatform()) {
+      // Reduce background battery/network usage: pause realtime when app is backgrounded.
+      void App.addListener("appStateChange", ({ isActive }) => {
+        if (isActive) {
+          try {
+            client.connect();
+          } catch {
+            // ignore
+          }
+        } else {
+          try {
+            client.connection.close();
+          } catch {
+            // ignore
+          }
+        }
+      }).then((h) => {
+        appStateHandle = h;
+      });
+    }
+
+    return () => {
+      void appStateHandle?.remove();
+      cleanup();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, otherId]);
 

@@ -12,7 +12,9 @@ const config: CapacitorConfig = {
   webDir: 'out',
 
   server: {
-    url: isDev ? 'http://192.168.8.15:3000' : undefined,
+    // Dev-only live reload URL (never shipped in CAPACITOR_BUILD=true release builds).
+    // Prefer configuring via env so it cannot be accidentally committed.
+    url: isDev ? (process.env.CAPACITOR_DEV_SERVER_URL || 'http://localhost:3000') : undefined,
     cleartext: isDev,
     androidScheme: 'https',
     iosScheme: 'https',
@@ -40,7 +42,8 @@ const config: CapacitorConfig = {
 
   plugins: {
     SplashScreen: {
-      launchShowDuration: 1000,
+      // Disable splash screen (show duration 0ms)
+      launchShowDuration: 0,
       launchAutoHide: true,
       backgroundColor: '#F9F8F7',
       androidSplashResourceName: 'splash',

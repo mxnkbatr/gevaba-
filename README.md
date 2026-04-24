@@ -49,3 +49,20 @@ After generating the keystore, modify the following environment variables in you
 - `ANDROID_KEYSTORE_ALIAS`
 - `ANDROID_KEYSTORE_PASSWORD`
 - `ANDROID_KEY_PASSWORD`
+
+## Push Notifications (FCM) setup (required for production)
+
+This app uses **Firebase Cloud Messaging (FCM)** via Capacitor Push Notifications.
+
+### Android
+- Place your Firebase config at `android/app/google-services.json` (this file is intentionally not committed).
+- Ensure `android/app/build.gradle` applies `com.google.gms.google-services` when the file exists (already handled).
+
+### iOS
+- Place your Firebase config at `ios/App/App/GoogleService-Info.plist` (intentionally not committed).
+- Ensure Push Notifications capability + `aps-environment` entitlements are set for the build configuration.
+
+### Server (Firebase Admin)
+Server-side push sending uses environment variables/service account:
+- `FIREBASE_SERVICE_ACCOUNT` (JSON string) and/or `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY`
+

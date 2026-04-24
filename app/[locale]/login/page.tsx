@@ -201,6 +201,21 @@ export default function LoginPage() {
                 {content.eightfoldPath}
               </Link>
             </p>
+            <div className="mt-3">
+              <Link
+                href={`/${language}/privacy`}
+                className="text-[11px] font-sans text-earth/65 hover:text-gold-dark hover:underline font-semibold uppercase tracking-[0.18em] transition-colors"
+              >
+                {t({ mn: "Нууцлалын бодлого", en: "Privacy Policy" })}
+              </Link>
+              <span className="mx-2 text-earth/30">·</span>
+              <Link
+                href={`/${language}/terms`}
+                className="text-[11px] font-sans text-earth/65 hover:text-gold-dark hover:underline font-semibold uppercase tracking-[0.18em] transition-colors"
+              >
+                {t({ mn: "Үйлчилгээний нөхцөл", en: "Terms" })}
+              </Link>
+            </div>
           </div>
 
         </motion.div>

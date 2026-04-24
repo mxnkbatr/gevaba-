@@ -4,7 +4,7 @@ import { jwtVerify } from 'jose';
 
 const locales = ['mn', 'en'];
 const defaultLocale = 'mn';
-const JWT_SECRET = process.env.JWT_SECRET || "your-secret-key-change-this-in-prod";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // CORS headers for mobile app access
 const corsHeaders = {
@@ -27,6 +27,7 @@ function routeNeedsAuthGate(pathWithoutLocale: string): boolean {
 
 async function getCustomTokenData(token: string | undefined): Promise<{ userId: string, role: string } | null> {
   if (!token) return null;
+  if (!JWT_SECRET) return null;
   try {
     const { payload } = await jwtVerify(
       token,

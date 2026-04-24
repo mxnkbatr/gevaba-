@@ -8,39 +8,12 @@ const isNative = Capacitor.isNativePlatform();
 /**
  * Secure storage for sensitive data (tokens, credentials).
  *
- * NOTE: This is a simplified implementation. For production apps requiring
- * the highest security, consider using native modules or platform-specific
- * secure storage solutions.
+ * NOTE: For high security, use a native secure storage plugin (Keychain/Keystore).
  *
  * Current implementation:
- * - Native: Uses Capacitor Preferences with encryption
+ * - Native: Uses Capacitor Preferences (device storage)
  * - Web: Uses sessionStorage (NOT secure, only for development)
  */
-
-// Simple encryption key (in production, use a proper key derivation function)
-const ENCRYPTION_KEY = 'buddha-app-secure-key-2026';
-
-function simpleEncrypt(text: string): string {
-    // Basic XOR encryption (NOT cryptographically secure, just obfuscation)
-    let result = '';
-    for (let i = 0; i < text.length; i++) {
-        result += String.fromCharCode(text.charCodeAt(i) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length));
-    }
-    return btoa(result);
-}
-
-function simpleDecrypt(encrypted: string): string {
-    try {
-        const decoded = atob(encrypted);
-        let result = '';
-        for (let i = 0; i < decoded.length; i++) {
-            result += String.fromCharCode(decoded.charCodeAt(i) ^ ENCRYPTION_KEY.charCodeAt(i % ENCRYPTION_KEY.length));
-        }
-        return result;
-    } catch {
-        return '';
-    }
-}
 
 
 /**
@@ -49,11 +22,9 @@ function simpleDecrypt(encrypted: string): string {
  * @param value - Value to store
  */
 export async function setSecure(key: string, value: string): Promise<void> {
-    const encrypted = simpleEncrypt(value);
-
     if (isNative) {
         try {
-            await Preferences.set({ key: `secure_${key}`, value: encrypted });
+            await Preferences.set({ key: `secure_${key}`, value });
         } catch (error) {
             console.error('Secure storage set failed:', error);
             throw error;
@@ -75,7 +46,7 @@ export async function getSecure(key: string): Promise<string | null> {
         try {
             const result = await Preferences.get({ key: `secure_${key}` });
             if (!result.value) return null;
-            return simpleDecrypt(result.value);
+            return result.value;
         } catch (error) {
             return null;
         }

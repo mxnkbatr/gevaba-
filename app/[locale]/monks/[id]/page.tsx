@@ -40,7 +40,12 @@ export async function generateMetadata(
 
     let product;
     try {
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+        const baseUrl =
+            process.env.NEXT_PUBLIC_APP_URL ||
+            (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '');
+        if (!baseUrl) {
+            throw new Error('NEXT_PUBLIC_APP_URL is required in production to fetch metadata safely over HTTPS.');
+        }
         product = await fetch(`${baseUrl}/api/monks/${id}`, { next: { revalidate: 3600 } }).then((res) => res.json());
     } catch (e) {
         console.error("Metadata fetch error", e);

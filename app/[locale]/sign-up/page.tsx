@@ -315,6 +315,24 @@ export default function SignUpPage() {
               </button>
             </form>
 
+            <div className="pt-4 text-center">
+              <div className="text-[13px] text-earth">
+                <Link
+                  href={`/${language}/privacy`}
+                  className="underline underline-offset-4 hover:text-ink active:opacity-70"
+                >
+                  {t({ mn: "Нууцлалын бодлого", en: "Privacy Policy" })}
+                </Link>
+                <span className="mx-2 text-earth/40">·</span>
+                <Link
+                  href={`/${language}/terms`}
+                  className="underline underline-offset-4 hover:text-ink active:opacity-70"
+                >
+                  {t({ mn: "Үйлчилгээний нөхцөл", en: "Terms of Service" })}
+                </Link>
+              </div>
+            </div>
+
             {!pendingVerification && (
               <div className="mt-8 border-t border-black/[0.08] pt-7 text-center">
                 <p className="text-[15px] text-earth">{content.haveAccount}</p>

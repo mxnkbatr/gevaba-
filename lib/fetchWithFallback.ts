@@ -1,4 +1,6 @@
 import { getItem, setItem } from "@/app/capacitor/storage/offlineStorage";
+import { Capacitor } from "@capacitor/core";
+import { Preferences } from "@capacitor/preferences";
 
 /**
  * Enhanced fetch utility that handles offline caching and fallbacks.
@@ -49,7 +51,10 @@ export async function fetchWithFallback<T>(
 export async function fetchWithSessionCache(url: string, ttlMins: number = 10): Promise<Response> {
     if (typeof window === 'undefined') return fetch(url);
     const cacheKey = `sess_cache_${url}`;
-    const cached = sessionStorage.getItem(cacheKey);
+    const isNative = Capacitor.isNativePlatform();
+    const cached = isNative
+        ? (await Preferences.get({ key: cacheKey })).value
+        : sessionStorage.getItem(cacheKey);
     if (cached) {
         try {
             const { data, timestamp } = JSON.parse(cached);
@@ -60,13 +65,22 @@ export async function fetchWithSessionCache(url: string, ttlMins: number = 10): 
                 });
             }
         } catch (e) {
-            sessionStorage.removeItem(cacheKey);
+            if (isNative) {
+                await Preferences.remove({ key: cacheKey });
+            } else {
+                sessionStorage.removeItem(cacheKey);
+            }
         }
     }
     const req = await fetch(url);
     if (req.ok) {
         req.clone().json().then(data => {
-            sessionStorage.setItem(cacheKey, JSON.stringify({ data, timestamp: Date.now() }));
+            const value = JSON.stringify({ data, timestamp: Date.now() });
+            if (isNative) {
+                void Preferences.set({ key: cacheKey, value });
+            } else {
+                sessionStorage.setItem(cacheKey, value);
+            }
         }).catch(err => console.error('Cache write error:', err));
     }
     return req;

@@ -139,6 +139,13 @@ export default function BookingPage() {
         if (services.length > 0) setSelectedService(services[0]);
       } catch (e) {
         console.error("Failed to load booking data", e);
+        setErrorMsg(
+          t({
+            mn: "Сүлжээний алдаа. Та интернетээ шалгаад дахин оролдоно уу.",
+            en: "Network error. Please check your connection and try again.",
+          }),
+        );
+        setStep("error");
       } finally {
         setLoading(false);
       }

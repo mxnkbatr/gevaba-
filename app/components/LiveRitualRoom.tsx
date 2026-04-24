@@ -10,6 +10,8 @@ import "@livekit/components-styles";
 import BookViewer from "./BookViewer";
 import { X, BookOpen } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
+import { App } from "@capacitor/app";
+import { Capacitor } from "@capacitor/core";
 
 interface Props {
   token: string;
@@ -46,6 +48,20 @@ export default function LiveRitualRoom({ token, serverUrl, roomName, onLeave, is
     return () => clearInterval(timer);
   }, [onLeave, bookingId]);
 
+  React.useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+    let handle: { remove: () => Promise<void> } | null = null;
+    void App.addListener("appStateChange", ({ isActive }) => {
+      // Live audio/video in background is a major battery drain and can violate review expectations.
+      if (!isActive) onLeave();
+    }).then((h) => {
+      handle = h;
+    });
+    return () => {
+      void handle?.remove();
+    };
+  }, [onLeave]);
+
   const formatTime = (seconds: number) => {
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
@@ -75,6 +91,7 @@ export default function LiveRitualRoom({ token, serverUrl, roomName, onLeave, is
           {isMonk && (
             <button
               onClick={() => setIsBookOpen(prev => !prev)}
+              aria-label={isBookOpen ? "Close book" : "Open book"}
               className={`${isBookOpen ? 'bg-amber-600 text-white' : 'bg-amber-500 text-black'} hover:bg-amber-600 px-2 md:px-4 py-1.5 md:py-2 rounded-full font-bold text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1.5 md:gap-2 transition-all shadow-lg shadow-amber-500/20 active:scale-95 whitespace-nowrap`}
             >
               <BookOpen size={14} className="md:w-4 md:h-4" /> Nom
@@ -83,6 +100,7 @@ export default function LiveRitualRoom({ token, serverUrl, roomName, onLeave, is
 
           <button
             onClick={onLeave}
+            aria-label="End session"
             className="bg-red-500/20 hover:bg-red-500/40 text-red-200 px-2 md:px-4 py-1.5 md:py-2 rounded-full border border-red-500/30 backdrop-blur-md flex items-center gap-1.5 md:gap-2 transition-all text-[10px] md:text-xs whitespace-nowrap active:scale-95"
           >
             <X size={14} className="md:w-4 md:h-4" /> End

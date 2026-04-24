@@ -5,11 +5,14 @@ apply plugin: 'com.capacitorjs.app'
 android {
     namespace 'mn.gevabal.buddha'
     compileSdk 35
+    buildToolsVersion "35.0.0"
 
     defaultConfig {
         applicationId 'mn.gevabal.buddha'
         minSdk 23
         targetSdk 35
+        // IMPORTANT (Play Store): increment versionCode for every release upload.
+        // A higher versionCode is required even if versionName stays the same.
         versionCode 1
         versionName '1.0.0'
     }
@@ -37,8 +40,17 @@ android {
         }
         release {
             signingConfig signingConfigs.release
+            // NOTE: Enable R8/ProGuard after verifying all Capacitor plugins & WebView assets.
+            // Keeping minify disabled avoids release-only crashes due to removed/obfuscated classes.
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    // App Bundle (AAB) packaging: avoid language split issues with Capacitor Web assets.
+    bundle {
+        language {
+            enableSplit = false
         }
     }
 

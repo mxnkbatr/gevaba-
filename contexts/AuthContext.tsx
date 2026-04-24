@@ -112,6 +112,15 @@ export const AuthProvider = ({
   const logout = async () => {
     setLoading(true);
     try {
+      // Best-effort: remove the push token from the user record on logout.
+      // The app must work without notifications; token cleanup prevents sending to stale devices.
+      void fetch("/api/users/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fcmToken: null }),
+        credentials: "include",
+      }).catch(() => {});
+
       await Promise.all([
         fetch("/api/auth/logout", { method: "POST" }),
         signOut(),

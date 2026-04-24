@@ -29,6 +29,12 @@ export async function GET(
       let collectionType = "orders";
 
       if (!order) {
+        const shopOrdersCollection = await getCollection("shop_orders");
+        order = await shopOrdersCollection.findOne({ qpayInvoiceId: invoiceId });
+        collectionType = "shop_orders";
+      }
+
+      if (!order) {
         const bookingsCollection = await getCollection("bookings");
         order = await bookingsCollection.findOne({ qpayInvoiceId: invoiceId });
         collectionType = "bookings";
@@ -40,8 +46,10 @@ export async function GET(
           { _id: order._id },
           {
             $set: {
-              status: "confirmed",
-              paidAt: paymentStatus.paidAt,
+              // Shop orders: match ShopOrder schema. Bookings keep their own status semantics.
+              ...(collectionType === "orders" || collectionType === "shop_orders"
+                ? { status: "paid", paymentStatus: "paid" }
+                : { status: "confirmed" }),
               updatedAt: new Date(),
             },
           },
@@ -58,8 +66,8 @@ export async function GET(
             await import("@/lib/adminNotifications");
           await notifyAdminNewOrder(
             order._id.toString(),
-            order.shipping?.fullName || "Хэрэглэгч",
-            order.total || order.totalPrice || 0,
+            order.deliveryInfo?.name || "Хэрэглэгч",
+            order.totalAmount || order.total || order.totalPrice || 0,
           );
         } catch (e) {
           console.error("[QPay Check] Failed to notify admin:", e);

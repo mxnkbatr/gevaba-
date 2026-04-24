@@ -1,7 +1,6 @@
 "use client";
 import React, { Suspense, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useSignIn } from "@clerk/nextjs";
 import { Loader2, Eye, EyeOff, Home } from "lucide-react";
@@ -111,7 +110,13 @@ function SignInPageInner() {
         <div className="mx-auto w-full max-w-[400px] flex-1 flex flex-col">
           <div className="flex flex-col items-center pt-4 pb-8 text-center">
             <div className="mb-6 flex h-[88px] w-[88px] items-center justify-center rounded-[22px] bg-white shadow-[0_8px_24px_rgba(0,0,0,0.08),0_1px_3px_rgba(0,0,0,0.04)]">
-              <Image src="/logo.png" alt="Gevabal" width={64} height={64} className="rounded-[18px] object-cover" />
+              <span
+                className="h-[64px] w-[64px] rounded-[18px] bg-gradient-to-br from-amber-200 to-amber-500 text-amber-950 flex items-center justify-center font-black text-3xl"
+                aria-hidden
+                style={{ fontFamily: "var(--font-display)" }}
+              >
+                G
+              </span>
             </div>
             <h1 className="text-[28px] font-semibold leading-[1.15] tracking-[-0.03em] text-ink">
               {t({ mn: "Нэвтрэх", en: "Sign In" })}
@@ -217,6 +222,22 @@ function SignInPageInner() {
                 )}
               </button>
             </form>
+
+            <div className="pt-4 text-center">
+              <Link
+                href={`/${language}/privacy`}
+                className="text-[13px] text-earth underline underline-offset-4 hover:text-ink active:opacity-70"
+              >
+                {t({ mn: "Нууцлалын бодлого", en: "Privacy Policy" })}
+              </Link>
+              <span className="mx-2 text-earth/40">·</span>
+              <Link
+                href={`/${language}/terms`}
+                className="text-[13px] text-earth underline underline-offset-4 hover:text-ink active:opacity-70"
+              >
+                {t({ mn: "Үйлчилгээний нөхцөл", en: "Terms of Service" })}
+              </Link>
+            </div>
 
             <div className="my-8 flex items-center gap-3">
               <div className="h-px flex-1 bg-black/[0.08]" />

@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { usePathname } from "next/navigation";
 import {
   Home,
   Users,
@@ -11,11 +11,13 @@ import {
   Bell,
   Newspaper,
   Search,
+  ShoppingBag,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
 import { useLanguage } from "../contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNotifications } from "@/contexts/NotificationContext";
+import { useCart } from "@/contexts/CartContext";
 import { usePlatform } from "@/app/capacitor/hooks/usePlatform";
 import { hapticsLight } from "@/app/capacitor/plugins/haptics";
 import { LocalizedLink } from "./LocalizedLink";
@@ -28,6 +30,7 @@ const CONTENT = {
 };
 
 const TAB_ACTIVE = "var(--gold)";
+const SHOW_MESSENGER_NAV = false;
 
 export default function NativeNavbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -38,6 +41,7 @@ export default function NativeNavbar() {
   const { user } = useAuth();
   const { isNative, safeArea } = usePlatform();
   const { unreadCount } = useNotifications();
+  const { totalItems } = useCart();
 
   useEffect(() => setMounted(true), []);
 
@@ -75,11 +79,11 @@ export default function NativeNavbar() {
         }`}
       >
         <Image
-          src="/logo.webp"
-          alt="Logo"
-          width={32}
-          height={32}
-          className="h-full w-full object-cover rounded-full"
+          src="/logo.png"
+          alt="Gevabal"
+          fill
+          sizes="40px"
+          className="object-contain"
           priority
         />
       </div>
@@ -97,13 +101,14 @@ export default function NativeNavbar() {
   const desktopNav = [
     { name: { mn: "Нүүр", en: "Home" }, href: "/" },
     { name: { mn: "Үзмэрч", en: "Exhibitor" }, href: "/monks" },
+    { name: { mn: "Дэлгүүр", en: "Shop" }, href: "/shop" },
     { name: { mn: "Блог", en: "Blog" }, href: "/blog" },
     {
       name: { mn: "Мессенжер", en: "Messenger" },
       href: "/messenger",
       auth: true,
     },
-  ];
+  ].filter((item) => SHOW_MESSENGER_NAV || item.href !== "/messenger");
 
   const mobileNav = [
     {
@@ -125,6 +130,12 @@ export default function NativeNavbar() {
       label: { mn: "Лам нар", en: "Monks" },
     },
     {
+      id: "shop",
+      icon: ShoppingBag,
+      href: "/shop",
+      label: { mn: "Дэлгүүр", en: "Shop" },
+    },
+    {
       id: "messenger",
       icon: MessageSquare,
       href: "/messenger",
@@ -137,7 +148,7 @@ export default function NativeNavbar() {
       href: "/profile",
       label: { mn: "Профайл", en: "Profile" },
     },
-  ];
+  ].filter((item) => SHOW_MESSENGER_NAV || item.id !== "messenger");
 
   const isAuthPage = ["/sign-in", "/sign-up"].some((p) => pathname.includes(p));
   const isFocusedPage = ["/booking/", "/call/"].some((p) =>
@@ -187,6 +198,18 @@ export default function NativeNavbar() {
               aria-label={lang === "mn" ? "Хайх" : "Search"}
             >
               <Search size={20} strokeWidth={1.25} />
+            </LocalizedLink>
+            <LocalizedLink
+              href="/shop"
+              className="relative rounded-full p-2 text-neutral-600 hover:bg-black/[0.04] hover:text-ink transition-colors"
+              aria-label={lang === "mn" ? "Дэлгүүр" : "Shop"}
+            >
+              <ShoppingBag size={20} strokeWidth={1.25} />
+              {mounted && totalItems > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#FF3B30] border-2 border-white flex items-center justify-center text-[10px] font-bold text-white leading-none shadow-sm">
+                  {totalItems > 99 ? "99+" : totalItems}
+                </span>
+              )}
             </LocalizedLink>
             {mounted ? (
               user ? (
@@ -246,6 +269,21 @@ export default function NativeNavbar() {
                 size={isScrolled ? 20 : 22}
                 strokeWidth={1.25}
               />
+            </LocalizedLink>
+            <LocalizedLink
+              href="/shop"
+              className="relative rounded-full p-2.5 text-neutral-600 hover:bg-black/[0.04] hover:text-ink active:scale-95 transition-all"
+              aria-label={lang === "mn" ? "Дэлгүүр" : "Shop"}
+            >
+              <ShoppingBag
+                size={isScrolled ? 20 : 22}
+                strokeWidth={1.25}
+              />
+              {mounted && totalItems > 0 && (
+                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#FF3B30] border-2 border-white flex items-center justify-center text-[10px] font-bold text-white leading-none shadow-sm">
+                  {totalItems > 99 ? "99+" : totalItems}
+                </span>
+              )}
             </LocalizedLink>
             <div className="relative">
               <button
@@ -322,6 +360,11 @@ export default function NativeNavbar() {
                           : "rgba(60, 60, 67, 0.42)",
                       }}
                     />
+                    {item.id === "shop" && mounted && totalItems > 0 && (
+                      <span className="absolute right-0 top-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#FF3B30] border-2 border-white flex items-center justify-center text-[10px] font-bold text-white leading-none shadow-sm">
+                        {totalItems > 99 ? "99+" : totalItems}
+                      </span>
+                    )}
                     {item.id === "messenger" &&
                       user &&
                       unreadCount > 0 && (

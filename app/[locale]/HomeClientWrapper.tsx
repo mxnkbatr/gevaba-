@@ -25,6 +25,7 @@ interface HomeBlog {
 interface HomeClientWrapperProps {
   monks: unknown[];
   blogs: HomeBlog[];
+  featuredProducts?: unknown[];
   locale: "mn" | "en";
 }
 
@@ -41,6 +42,7 @@ interface HomeClientWrapperProps {
 export default function HomeClientWrapper({
   monks,
   blogs,
+  featuredProducts,
   locale,
 }: HomeClientWrapperProps): React.JSX.Element {
   const { isNative } = usePlatform();
@@ -106,6 +108,7 @@ export default function HomeClientWrapper({
             blogs={blogs}
             monks={monks as Monk[]}
             featuredMonks={featuredMonks as Monk[]}
+            featuredProducts={(featuredProducts ?? []) as any[]}
           />
           <Suspense
             fallback={<div className="h-48 skeleton mx-5 my-6 rounded-2xl" />}

@@ -67,6 +67,14 @@ export async function POST(req: NextRequest) {
         let collectionType = "orders";
 
         if (!order) {
+            const shopOrdersCollection = await getCollection("shop_orders");
+            order = await shopOrdersCollection.findOne({
+                _id: new ObjectId(orderId),
+            });
+            collectionType = "shop_orders";
+        }
+
+        if (!order) {
             const bookingsCollection = await getCollection("bookings");
             order = await bookingsCollection.findOne({
                 _id: new ObjectId(orderId),

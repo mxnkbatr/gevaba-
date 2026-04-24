@@ -29,21 +29,25 @@ export async function deductInventory(
     return;
   }
 
-  const ordersCollection = await getCollection("orders");
-
-  // Atomic idempotency check: only set the flag if it isn't already set.
-  // matchedCount === 0  →  flag was already true, so we skip.
-  const guard = await ordersCollection.updateOne(
+  // Support both legacy "orders" and new "shop_orders".
+  // We idempotently set `inventoryDeducted` on whichever collection contains this orderId.
+  let guard = await (await getCollection("shop_orders")).updateOne(
     { _id: orderObjectId, inventoryDeducted: { $ne: true } },
     { $set: { inventoryDeducted: true } },
   );
+  if (guard.matchedCount === 0) {
+    guard = await (await getCollection("orders")).updateOne(
+      { _id: orderObjectId, inventoryDeducted: { $ne: true } },
+      { $set: { inventoryDeducted: true } },
+    );
+  }
 
   if (guard.matchedCount === 0) {
     console.log(`[Inventory] Already deducted for order ${orderId}, skipping.`);
     return;
   }
 
-  const productsCollection = await getCollection("products");
+  const productsCollection = await getCollection("shop_products");
 
   for (const item of items) {
     const productId = item.productId ?? item.id;
@@ -72,13 +76,12 @@ export async function deductInventory(
           },
         );
       } else {
-        // Decrement the top-level product inventory
+        // Decrement the top-level product stock (stock: -1 means unlimited)
         await productsCollection.updateOne(
-          { _id: productObjectId },
+          { _id: productObjectId, stock: { $ne: -1 } },
           {
             $inc: {
-              inventory: -qty,
-              salesCount: qty,
+              stock: -qty,
             },
           },
         );

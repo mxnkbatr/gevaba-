@@ -24,6 +24,13 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<false/>
+	</dict>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -47,15 +54,27 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>WKAppBoundDomains</key>
+	<array>
+		<string>gevabal.mn</string>
+		<string>img.clerk.com</string>
+		<string>res.cloudinary.com</string>
+		<string>images.unsplash.com</string>
+		<string>i.pravatar.cc</string>
+	</array>
 	<key>NSCameraUsageDescription</key>
-	<string>Профайл зураг авахад камер ашиглана</string>
+	<string>Профайл зураг авах, шинэчлэхийн тулд камер ашиглана.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Used for audio during live ritual sessions</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Профайл зурагт галлерейгаас зураг сонгоно</string>
+	<string>Профайл зураг сонгох, шинэчлэхийн тулд зургийн сангаас (Gallery) зураг уншина.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Профайл зургийг галлерейд хадгалахад ашиглана</string>
+	<string>Профайл зургийг төхөөрөмжийн зургийн санд хадгалахад ашиглана.</string>
 	<key>NSUserNotificationUsageDescription</key>
-	<string>Used to receive notifications about upcoming sessions and updates</string>
+	<string>Захиалсан уулзалт, сануулга, шинэчлэлтийн мэдэгдэл илгээхэд ашиглана.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>

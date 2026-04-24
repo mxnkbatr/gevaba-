@@ -131,7 +131,14 @@ export default function ContentManager({ blogs }: ContentManagerProps) {
                         >
                             <div className="p-6 border-b border-stone-100 flex justify-between items-center bg-stone-50/50">
                                 <h3 className="text-xl font-bold text-stone-800 font-serif">{editId ? "Edit Blog Post" : "Compose New Blog"}</h3>
-                                <button type="button" onClick={closeForm} className="text-stone-400 hover:text-stone-600 p-2"><X size={20} /></button>
+                                <button
+                                  type="button"
+                                  onClick={closeForm}
+                                  aria-label="Close"
+                                  className="text-stone-400 hover:text-stone-600 p-2"
+                                >
+                                  <X size={20} />
+                                </button>
                             </div>
 
                             <div className="overflow-y-auto p-8">

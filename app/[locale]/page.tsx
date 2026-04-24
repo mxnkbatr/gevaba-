@@ -74,6 +74,31 @@ const getBlogs = cache(async () => {
   }
 });
 
+const getShopFeatured = cache(async () => {
+  try {
+    const { db } = await connectToDatabase();
+    const products = await db
+      .collection("shop_products")
+      .find({ isFeatured: true, isActive: true })
+      .sort({ updatedAt: -1 })
+      .limit(4)
+      .project({
+        _id: 1,
+        name: 1,
+        price: 1,
+        images: 1,
+      })
+      .toArray();
+
+    return products.map((p: any) => ({
+      ...p,
+      _id: p._id?.toString?.() ?? "",
+    }));
+  } catch {
+    return [];
+  }
+});
+
 export default async function Home({
   params,
 }: {
@@ -82,7 +107,11 @@ export default async function Home({
   const { locale } = await params;
 
   // Parallel Fetch (O(1) sequential wait)
-  const [allMonks, blogs] = await Promise.all([getMonks(), getBlogs()]);
+  const [allMonks, blogs, featuredProducts] = await Promise.all([
+    getMonks(),
+    getBlogs(),
+    getShopFeatured(),
+  ]);
 
   const featuredMonks = allMonks.slice(0, 3);
 
@@ -92,6 +121,7 @@ export default async function Home({
       blogs={blogs}
       monks={allMonks}
       featuredMonks={featuredMonks}
+      featuredProducts={featuredProducts}
     />
   );
 }

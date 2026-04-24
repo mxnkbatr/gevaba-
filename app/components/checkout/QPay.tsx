@@ -194,6 +194,13 @@ export default function QPay({ orderId, amount, onSuccess }: QPayProps) {
       </div>
 
       <div className="p-8 space-y-8">
+        <div className="rounded-2xl border border-white/10 bg-slate-950/40 px-4 py-3 text-center">
+          <p className="text-[11px] font-semibold text-slate-300">
+            Төлбөрийг{" "}
+            <span className="font-black text-white">QPay</span> системээр боловсруулна.
+          </p>
+        </div>
+
         {/* QR Code */}
         <div className="relative group mx-auto w-64 h-64 p-4 bg-white rounded-2xl shadow-xl overflow-hidden">
           <img

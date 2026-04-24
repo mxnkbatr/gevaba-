@@ -45,7 +45,7 @@ export default function BookingDetailModal({ isOpen, booking, user, monk, onClos
                             <div className="hidden md:block">
                                 <div className="p-6 border-b border-stone-100 dark:border-white/10 flex justify-between items-center bg-stone-50 dark:bg-white/5">
                                     <h3 className="text-xl font-bold font-serif">Захиалгын дэлгэрэнгүй</h3>
-                                    <button onClick={onClose} className="p-2 hover:bg-stone-200 dark:hover:bg-white/10 rounded-full transition-colors">
+                                    <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-stone-200 dark:hover:bg-white/10 rounded-full transition-colors">
                                         <X size={20} />
                                     </button>
                                 </div>
@@ -54,7 +54,7 @@ export default function BookingDetailModal({ isOpen, booking, user, monk, onClos
                                 <div className="mx-auto h-1 w-10 rounded-full bg-stone-300 mb-3" />
                                 <div className="px-6 flex items-center justify-between pb-3">
                                     <h3 className="text-lg font-bold font-serif">Захиалгын дэлгэрэнгүй</h3>
-                                    <button onClick={onClose} className="p-2 -mr-2 rounded-full active:opacity-70">
+                                    <button onClick={onClose} aria-label="Close" className="p-2 -mr-2 rounded-full active:opacity-70">
                                         <X size={20} />
                                     </button>
                                 </div>

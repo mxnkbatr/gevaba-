@@ -11,24 +11,26 @@ import { Capacitor } from '@capacitor/core';
 export async function initPushNotifications(userId: string, router: any) {
   if (!Capacitor.isNativePlatform()) return;
   
-  console.log('🔔 Initializing Push Notifications for user:', userId);
+  // Initialize push notifications (native only).
 
-  // 1. Request Permissions
-  const permission = await PushNotifications.requestPermissions();
-  if (permission.receive !== 'granted') {
-    console.warn('🔔 Push Notifications permission denied');
+  // PRODUCTION UX GUIDANCE:
+  // Do NOT show the OS permission prompt on first launch.
+  // Instead, call requestPushPermissionAndRegister() from a user-driven UI moment
+  // (e.g., after booking a session, enabling reminders, or toggling "Notifications" in settings).
+  const current = await PushNotifications.checkPermissions();
+  if (current.receive !== 'granted') {
+    console.warn('🔔 Push Notifications permission not granted yet (skipping register).');
     return;
   }
   
-  // 2. Register with FCM/APNS
+  // 2. Register with FCM/APNS (only when permission already granted)
   await PushNotifications.register();
   
   // 3. LISTENERS
   
   // Token registration
   PushNotifications.addListener('registration', async (token) => {
-    console.log('🔔 Push registration success, token:', token.value);
-    
+    // Registration success; persist token server-side (do not log tokens in production).
     // Update the user profile with the new FCM token
     try {
       await fetch('/api/users/profile', {
@@ -48,14 +50,14 @@ export async function initPushNotifications(userId: string, router: any) {
   
   // Notification received while app is OPEN
   PushNotifications.addListener('pushNotificationReceived', (notification) => {
-    console.log('🔔 Push notification received:', notification);
+    // App is open: optionally show in-app toast / banner.
     // You can implement an in-app toast notification here if desired
     // showInAppNotification(notification);
   });
   
   // Notification ACTION performed (Tapping the notification)
   PushNotifications.addListener('pushNotificationActionPerformed', (action) => {
-    console.log('🔔 Push action performed:', action);
+    // User tapped a notification: deep-link based on payload.
     const data = action.notification.data;
     
     if (data.type === 'booking' && data.bookingId) {
@@ -66,4 +68,19 @@ export async function initPushNotifications(userId: string, router: any) {
       router.push(data.link);
     }
   });
+}
+
+/**
+ * Call this from an explicit user action (recommended for App Store review compliance),
+ * e.g. "Enable reminders" button.
+ */
+export async function requestPushPermissionAndRegister(userId: string): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) return false;
+  const permission = await PushNotifications.requestPermissions();
+  if (permission.receive !== 'granted') return false;
+  await PushNotifications.register();
+  // Token is saved by the 'registration' listener (initPushNotifications) once listeners are set.
+  // If you call this without initPushNotifications running, token will still be generated,
+  // but you should add your own 'registration' listener to persist it.
+  return true;
 }

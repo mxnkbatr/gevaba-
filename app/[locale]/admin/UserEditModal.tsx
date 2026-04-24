@@ -76,7 +76,11 @@ export default function UserEditModal({ user, isOpen, onClose, onSave }: UserEdi
             <h2 className="text-2xl font-black font-serif text-amber-600 dark:text-amber-400">Хэрэглэгч засах</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Мэдээллийг шинэчлэх</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors">
+          <button
+            onClick={onClose}
+            aria-label="Close"
+            className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-full transition-colors"
+          >
             <X size={24} className="text-gray-500 dark:text-gray-400" />
           </button>
         </div>

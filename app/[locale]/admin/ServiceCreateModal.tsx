@@ -178,7 +178,7 @@ export default function ServiceCreateModal({ isOpen, onClose, onSave, initialDat
               {initialData ? "Мэдээллийг шинэчлэх" : "Шинэ үйлчилгээ бүртгэх"}
             </p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <button onClick={onClose} aria-label="Close" className="p-2 hover:bg-gray-100 rounded-full transition-colors">
             <X size={24} className="text-gray-500" />
           </button>
         </div>
@@ -218,7 +218,12 @@ export default function ServiceCreateModal({ isOpen, onClose, onSave, initialDat
                   {formData.image ? (
                     <div className="relative w-full h-40 rounded-xl overflow-hidden border-2 border-amber-500 group">
                       <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
-                      <button type="button" onClick={removeImage} className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors">
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        aria-label="Remove image"
+                        className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full hover:bg-red-600 transition-colors"
+                      >
                         <Trash2 size={16} />
                       </button>
                     </div>

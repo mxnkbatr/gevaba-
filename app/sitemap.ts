@@ -12,7 +12,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Ideally we check if we can fetch.
     // For static generation, this might fail if API isn't up. 
     // We will assume this runs at runtime or revalidates.
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const baseUrl =
+      process.env.NEXT_PUBLIC_APP_URL ||
+      (process.env.NODE_ENV === 'development' ? 'http://localhost:3000' : '');
+    if (!baseUrl) {
+      throw new Error('NEXT_PUBLIC_APP_URL is required in production to generate sitemap safely over HTTPS.');
+    }
     const res = await fetch(`${baseUrl}/api/monks`, { next: { revalidate: 3600 } });
     if (res.ok) {
       monks = await res.json();

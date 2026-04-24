@@ -1,5 +1,3 @@
-import React from "react";
-
 import { FileText } from "lucide-react";
 import type { Metadata } from "next";
 
@@ -155,6 +153,5 @@ export default async function TermsPage({ params }: Props) {
   );
 }
 
-export function generateStaticParams() {
-  return [{ locale: "mn" }, { locale: "en" }];
-}
+// Note: we don't export generateStaticParams here because this app has both
+// dynamic data and Capacitor builds where static params can be handled elsewhere.

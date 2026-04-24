@@ -8,7 +8,7 @@ import {
   ShieldAlert, Users, Calendar, LayoutDashboard,
   Search, Trash2, CheckCircle, XCircle,
   Loader2, UserCog, ScrollText, TrendingUp, Check, X,
-  FileText, Clock, Edit, Plus, RefreshCw, LogOut, Eye
+  FileText, Clock, Edit, Plus, RefreshCw, LogOut, Eye, ShoppingBag
 } from "lucide-react";
 import { formatDate } from "@/app/lib/dateUtils";
 import { useTheme } from "next-themes";
@@ -18,6 +18,7 @@ const BookingDetailModal = dynamic(() => import('./BookingDetailModal'));
 const MonkEditModal = dynamic(() => import('./MonkEditModal'));
 const ServiceCreateModal = dynamic(() => import('./ServiceCreateModal'));
 const UserEditModal = dynamic(() => import('./UserEditModal'));
+const ShopProductModal = dynamic(() => import("./ShopProductModal"));
 import { useAuth } from "@/contexts/AuthContext";
 
 // --- TYPES ---
@@ -83,6 +84,8 @@ interface AdminData {
   bookings: Booking[];
   services: Service[];
   applications: Application[];
+  products?: any[];
+  orders?: any[];
   stats: {
     totalUsers: number;
     totalMonks: number;
@@ -100,7 +103,9 @@ export default function AdminDashboard() {
 
   const [data, setData] = useState<AdminData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"overview" | "users" | "bookings" | "services" | "applications">("overview");
+  const [activeTab, setActiveTab] = useState<
+    "overview" | "users" | "bookings" | "services" | "applications" | "shop"
+  >("overview");
   const [searchTerm, setSearchTerm] = useState("");
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [editingMonk, setEditingMonk] = useState<any>(null);
@@ -139,6 +144,38 @@ export default function AdminDashboard() {
     finally { setLoading(false); }
   };
 
+  // ───────────────────────────────────────────────────────────────────────────
+  // Shop admin state
+  // ───────────────────────────────────────────────────────────────────────────
+  const [shopTab, setShopTab] = useState<"products" | "orders">("products");
+  const [shopProducts, setShopProducts] = useState<any[]>([]);
+  const [shopOrders, setShopOrders] = useState<any[]>([]);
+  const [shopLoading, setShopLoading] = useState(false);
+  const [shopProductModalOpen, setShopProductModalOpen] = useState(false);
+  const [shopProductMode, setShopProductMode] = useState<"create" | "edit">("create");
+  const [shopProductInitial, setShopProductInitial] = useState<any | null>(null);
+  const [shopOrderDetail, setShopOrderDetail] = useState<any | null>(null);
+
+  const refreshShopData = async () => {
+    try {
+      setShopLoading(true);
+      const [pRes, oRes] = await Promise.all([
+        fetch("/api/admin/shop/products", { cache: "no-store" }),
+        fetch("/api/admin/shop/orders", { cache: "no-store" }),
+      ]);
+      const [products, orders] = await Promise.all([
+        pRes.ok ? pRes.json() : [],
+        oRes.ok ? oRes.json() : [],
+      ]);
+      setShopProducts(Array.isArray(products) ? products : []);
+      setShopOrders(Array.isArray(orders) ? orders : []);
+    } catch (e) {
+      console.error("Failed to refresh shop data:", e);
+    } finally {
+      setShopLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (isLoaded) {
       if (!user) { router.push("/sign-in"); return; }
@@ -146,6 +183,64 @@ export default function AdminDashboard() {
       fetchAdminData();
     }
   }, [isLoaded, user, isAdmin, router]);
+
+  useEffect(() => {
+    if (activeTab === "shop") {
+      void refreshShopData();
+    }
+  }, [activeTab]);
+
+  const openCreateShopProduct = () => {
+    setShopProductMode("create");
+    setShopProductInitial(null);
+    setShopProductModalOpen(true);
+  };
+
+  const openEditShopProduct = (p: any) => {
+    setShopProductMode("edit");
+    setShopProductInitial({
+      _id: p._id?.toString?.() ?? p._id,
+      name: p.name ?? { mn: "", en: "" },
+      description: p.description ?? { mn: "", en: "" },
+      price: Number(p.price ?? 0),
+      category: p.category ?? "other",
+      stock: Number(p.stock ?? 0),
+      type: p.type ?? "physical",
+      isFeatured: Boolean(p.isFeatured ?? false),
+      isActive: Boolean(p.isActive ?? true),
+      images: Array.isArray(p.images) ? p.images : [],
+    });
+    setShopProductModalOpen(true);
+  };
+
+  const toggleShopProductActive = async (p: any, next: boolean) => {
+    try {
+      const id = p._id?.toString?.() ?? p._id;
+      const res = await fetch(`/api/shop/products/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: next }),
+      });
+      if (!res.ok) throw new Error("Update failed");
+      await refreshShopData();
+    } catch {
+      alert("Update failed");
+    }
+  };
+
+  const setShopOrderStatus = async (id: string, status: string) => {
+    try {
+      const res = await fetch(`/api/admin/shop/orders/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (!res.ok) throw new Error("Update failed");
+      await refreshShopData();
+    } catch {
+      alert("Update failed");
+    }
+  };
 
   // --- ACTIONS ---
 
@@ -439,6 +534,7 @@ export default function AdminDashboard() {
               { id: "overview", icon: LayoutDashboard, label: "Тойм" },
               { id: "applications", icon: FileText, label: "Хүсэлтүүд" },
               { id: "services", icon: ScrollText, label: "Үйлчилгээ" },
+              { id: "shop", icon: ShoppingBag, label: "🛍️ Дэлгүүр" },
               { id: "users", icon: Users, label: "Хэрэглэгч" },
               { id: "bookings", icon: Calendar, label: "Захиалга" },
             ].map((tab) => (
@@ -820,6 +916,228 @@ export default function AdminDashboard() {
                 </table>
                 {filteredBookings?.length === 0 && <div className="p-10 text-center opacity-50">Захиалга олдсонгүй.</div>}
               </div>
+            </motion.div>
+          )}
+
+          {/* 6. 🛍️ SHOP */}
+          {activeTab === "shop" && (
+            <motion.div
+              key="shop"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
+            >
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setShopTab("products")}
+                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition ${
+                      shopTab === "products"
+                        ? "bg-amber-500 text-white shadow-lg shadow-amber-900/20"
+                        : `${isDark ? "bg-white/5" : "bg-black/5"} opacity-70 hover:opacity-100`
+                    }`}
+                  >
+                    PRODUCTS
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShopTab("orders")}
+                    className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition ${
+                      shopTab === "orders"
+                        ? "bg-amber-500 text-white shadow-lg shadow-amber-900/20"
+                        : `${isDark ? "bg-white/5" : "bg-black/5"} opacity-70 hover:opacity-100`
+                    }`}
+                  >
+                    ORDERS
+                  </button>
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  {shopTab === "products" && (
+                    <button
+                      type="button"
+                      onClick={openCreateShopProduct}
+                      className="bg-amber-500 text-white px-5 py-3 rounded-xl font-bold text-xs uppercase shadow-lg shadow-amber-900/20 hover:bg-amber-600 transition-all flex items-center gap-2"
+                    >
+                      <Plus size={16} /> Бүтээгдэхүүн нэмэх +
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={async () => await refreshShopData()}
+                    className="bg-blue-500 text-white px-5 py-3 rounded-xl font-bold text-xs uppercase shadow-lg shadow-blue-900/20 hover:bg-blue-600 transition-all flex items-center gap-2"
+                  >
+                    <RefreshCw size={16} /> Refresh
+                  </button>
+                </div>
+              </div>
+
+              {/* PRODUCTS TAB */}
+              {shopTab === "products" && (
+                <div className="overflow-x-auto rounded-[2rem] border border-black/5 dark:border-white/5">
+                  <table className={`w-full text-left text-sm ${isDark ? "bg-white/5" : "bg-white"}`}>
+                    <thead className={`uppercase text-[10px] font-semibold tracking-wider ${isDark ? "bg-black/20 text-white/50" : "bg-amber-50 text-amber-900/50"}`}>
+                      <tr>
+                        <th className="p-6">Зураг</th>
+                        <th className="p-6">Нэр (mn)</th>
+                        <th className="p-6">Үнэ</th>
+                        <th className="p-6">Ангилал</th>
+                        <th className="p-6">Нөөц</th>
+                        <th className="p-6">Төлөв</th>
+                        <th className="p-6 text-right">Үйлдэл</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-black/5 dark:divide-white/5">
+                      {(shopProducts ?? []).map((p: any) => {
+                        const id = p._id?.toString?.() ?? p._id;
+                        const img = Array.isArray(p.images) ? p.images[0] : null;
+                        const active = p.isActive !== false;
+                        return (
+                          <tr key={id} className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors">
+                            <td className="p-6">
+                              <div className="h-10 w-10 rounded-xl overflow-hidden bg-black/5">
+                                {img ? <img src={img} alt="p" className="h-full w-full object-cover" /> : null}
+                              </div>
+                            </td>
+                            <td className="p-6 font-semibold">{p.name?.mn || "—"}</td>
+                            <td className="p-6 font-bold">{Number(p.price ?? 0).toLocaleString()}₮</td>
+                            <td className="p-6 text-xs font-bold uppercase opacity-70">{p.category || "other"}</td>
+                            <td className="p-6 text-xs font-bold">{typeof p.stock === "number" ? p.stock : "—"}</td>
+                            <td className="p-6">
+                              {/* switch */}
+                              <button
+                                type="button"
+                                onClick={() => toggleShopProductActive(p, !active)}
+                                className={`h-6 w-11 rounded-full p-0.5 transition-colors ${active ? "bg-emerald-500" : "bg-black/15"}`}
+                                aria-pressed={active}
+                              >
+                                <span className={`block h-5 w-5 rounded-full bg-white shadow transition-transform ${active ? "translate-x-5" : "translate-x-0"}`} />
+                              </button>
+                            </td>
+                            <td className="p-6 text-right">
+                              <button
+                                type="button"
+                                onClick={() => openEditShopProduct(p)}
+                                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-500/10 text-blue-600 font-bold text-[10px] uppercase hover:bg-blue-500/20 transition"
+                              >
+                                <Edit size={14} /> Edit
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {(shopProducts ?? []).length === 0 && (
+                        <tr>
+                          <td colSpan={7} className="p-10 text-center opacity-50">
+                            Бүтээгдэхүүн олдсонгүй.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* ORDERS TAB */}
+              {shopTab === "orders" && (
+                <div className="overflow-x-auto rounded-[2rem] border border-black/5 dark:border-white/5">
+                  <table className={`w-full text-left text-sm ${isDark ? "bg-white/5" : "bg-white"}`}>
+                    <thead className={`uppercase text-[10px] font-semibold tracking-wider ${isDark ? "bg-black/20 text-white/50" : "bg-amber-50 text-amber-900/50"}`}>
+                      <tr>
+                        <th className="p-6">Захиалгын дугаар</th>
+                        <th className="p-6">Огноо</th>
+                        <th className="p-6">И-мэйл</th>
+                        <th className="p-6">Нийт</th>
+                        <th className="p-6">Төлөв</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-black/5 dark:divide-white/5">
+                      {(shopOrders ?? []).map((o: any) => {
+                        const id = o._id?.toString?.() ?? o._id;
+                        return (
+                          <tr
+                            key={id}
+                            className="hover:bg-black/5 dark:hover:bg-white/5 transition-colors cursor-pointer"
+                            onClick={() => setShopOrderDetail(o)}
+                          >
+                            <td className="p-6 font-mono text-xs">#{String(id).slice(-6)}</td>
+                            <td className="p-6 text-xs opacity-70">{o.createdAt ? formatDate(o.createdAt, "mn") : ""}</td>
+                            <td className="p-6 text-xs font-semibold">{o.userEmail || "—"}</td>
+                            <td className="p-6 font-bold">{Number(o.totalAmount ?? 0).toLocaleString()}₮</td>
+                            <td className="p-6">
+                              <select
+                                value={String(o.status ?? "pending")}
+                                onClick={(e) => e.stopPropagation()}
+                                onChange={(e) => setShopOrderStatus(id, e.target.value)}
+                                className="px-3 py-2 rounded-xl border border-black/10 bg-white text-xs font-bold uppercase"
+                              >
+                                {["pending","paid","processing","shipped","delivered","cancelled"].map((s) => (
+                                  <option key={s} value={s}>
+                                    {s}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                      {(shopOrders ?? []).length === 0 && (
+                        <tr>
+                          <td colSpan={5} className="p-10 text-center opacity-50">
+                            Захиалга олдсонгүй.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              {/* Delivery modal */}
+              {shopOrderDetail && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                  <div className="bg-white w-full max-w-lg rounded-3xl shadow-2xl overflow-hidden">
+                    <div className="p-5 border-b border-black/5 flex items-center justify-between">
+                      <div>
+                        <p className="text-xs font-bold uppercase opacity-60">Delivery</p>
+                        <p className="text-lg font-black font-mono">#{String(shopOrderDetail._id).slice(-6)}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShopOrderDetail(null)}
+                        className="h-10 w-10 rounded-2xl bg-black/5 flex items-center justify-center"
+                        aria-label="Close"
+                      >
+                        <X size={18} />
+                      </button>
+                    </div>
+                    <div className="p-6 space-y-2">
+                      {shopOrderDetail?.deliveryInfo ? (
+                        <>
+                          <p className="text-sm"><span className="font-bold">Нэр:</span> {shopOrderDetail.deliveryInfo.name}</p>
+                          <p className="text-sm"><span className="font-bold">Утас:</span> {shopOrderDetail.deliveryInfo.phone}</p>
+                          <p className="text-sm"><span className="font-bold">Дүүрэг:</span> {shopOrderDetail.deliveryInfo.district}</p>
+                          <p className="text-sm whitespace-pre-line"><span className="font-bold">Хаяг:</span> {shopOrderDetail.deliveryInfo.address}</p>
+                          {shopOrderDetail.deliveryInfo.note ? (
+                            <p className="text-sm whitespace-pre-line"><span className="font-bold">Тэмдэглэл:</span> {shopOrderDetail.deliveryInfo.note}</p>
+                          ) : null}
+                        </>
+                      ) : (
+                        <p className="text-sm opacity-60">Дижитал захиалга / хүргэлтгүй.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <ShopProductModal
+                isOpen={shopProductModalOpen}
+                mode={shopProductMode}
+                initialData={shopProductInitial ?? undefined}
+                onClose={() => setShopProductModalOpen(false)}
+                onSaved={refreshShopData}
+              />
             </motion.div>
           )}
 

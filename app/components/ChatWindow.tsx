@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Send, Loader2, MessageSquare, Clock } from "lucide-react";
 import * as Ably from "ably";
+import { App } from "@capacitor/app";
+import { Capacitor } from "@capacitor/core";
 
 interface Message {
   _id: string;
@@ -61,6 +63,7 @@ export default function ChatWindow({
   // Fetch initial messages + subscribe to Ably for real-time updates
   useEffect(() => {
     let isMounted = true;
+    let appStateHandle: { remove: () => Promise<void> } | null = null;
 
     // 1. Load existing messages via HTTP
     const fetchMessages = async () => {
@@ -101,8 +104,30 @@ export default function ChatWindow({
       });
     });
 
+    if (Capacitor.isNativePlatform()) {
+      // Reduce background battery/network usage: pause realtime when app is backgrounded.
+      void App.addListener("appStateChange", ({ isActive }) => {
+        if (isActive) {
+          try {
+            client.connect();
+          } catch {
+            // ignore
+          }
+        } else {
+          try {
+            client.connection.close();
+          } catch {
+            // ignore
+          }
+        }
+      }).then((h) => {
+        appStateHandle = h;
+      });
+    }
+
     return () => {
       isMounted = false;
+      void appStateHandle?.remove();
       channel.unsubscribe();
       client.close();
       ablyClientRef.current = null;

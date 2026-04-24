@@ -85,9 +85,15 @@ export async function PATCH(request: Request) {
     const updateSet: any = { updatedAt: new Date() };
     const updatePush: any = {};
 
-    if (fcmToken) {
+    // PUSH TOKEN MANAGEMENT:
+    // - `fcmToken` string: add/update token and add to legacy fcmTokens array
+    // - `fcmToken: null`: remove legacy token fields on logout / device opt-out
+    if (typeof fcmToken === "string" && fcmToken) {
       updateSet.fcmToken = fcmToken;
       updatePush.fcmTokens = fcmToken;
+    }
+    if (fcmToken === null) {
+      updateSet.fcmToken = null;
     }
 
     if (offlineMode !== undefined) {
@@ -97,6 +103,9 @@ export async function PATCH(request: Request) {
     const updateDoc: any = { $set: updateSet };
     if (Object.keys(updatePush).length > 0) {
       updateDoc.$addToSet = updatePush;
+    }
+    if (fcmToken === null) {
+      updateDoc.$unset = { fcmToken: "", fcmTokens: "" };
     }
 
     await db.collection("users").updateOne(

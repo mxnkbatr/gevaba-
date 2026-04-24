@@ -12,3 +12,17 @@
 -keep class com.facebook.react.turbomodule.** { *; }
 
 # Add any project specific keep options here:
+
+# Capacitor (reflection / plugin registration)
+-keep class com.getcapacitor.** { *; }
+-dontwarn com.getcapacitor.**
+
+# Firebase / Google Play services (if google-services.json is present)
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
+-keep class com.google.android.gms.** { *; }
+-dontwarn com.google.android.gms.**
+
+# MongoDB Java driver (only if ever added on Android side)
+-dontwarn org.mongodb.**
+-keep class org.mongodb.** { *; }

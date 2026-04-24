@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Plus, Trash2, Save, Loader2, ImageIcon, X, CheckCircle, ArrowRight } from "lucide-react";
 import { useLanguage } from "../../../contexts/LanguageContext"; // Ensure this import exists
@@ -302,6 +303,22 @@ export default function MonkOnboarding() {
           <p className="text-earth/70">{TEXT.headerDesc}</p>
         </header>
 
+        <div className="mb-4 text-center text-[12px] text-earth/70 font-sans">
+          <Link
+            href={`/${language}/privacy`}
+            className="underline underline-offset-4 hover:text-ink active:opacity-70"
+          >
+            {language === "mn" ? "Нууцлалын бодлого" : "Privacy Policy"}
+          </Link>
+          <span className="mx-2 text-earth/40">·</span>
+          <Link
+            href={`/${language}/terms`}
+            className="underline underline-offset-4 hover:text-ink active:opacity-70"
+          >
+            {language === "mn" ? "Үйлчилгээний нөхцөл" : "Terms of Service"}
+          </Link>
+        </div>
+
         <form onSubmit={handleSubmit} className="monastery-card space-y-8 bg-white/88 p-8 rounded-[1.75rem] border border-gold/14 shadow-gold backdrop-blur-sm">
            
            {/* 1. Basic Info */}
@@ -325,7 +342,14 @@ export default function MonkOnboarding() {
                 {formData.image ? (
                     <div className="relative w-full h-40 rounded-xl overflow-hidden border-2 border-gold-dark/35 group">
                         <img src={formData.image} alt="Preview" className="w-full h-full object-cover" />
-                        <button type="button" onClick={removeImage} className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"><X size={16} /></button>
+                        <button
+                          type="button"
+                          onClick={removeImage}
+                          aria-label={language === "mn" ? "Зургийг устгах" : "Remove image"}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full"
+                        >
+                          <X size={16} />
+                        </button>
                     </div>
                 ) : (
                     <div className="relative w-full h-40 rounded-xl border-2 border-dashed border-gold/35 bg-white flex flex-col items-center justify-center">

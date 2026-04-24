@@ -198,4 +198,59 @@ export interface Review {
   comment: string;
   bookingId?: string | ObjectId; // Optional link to a specific booking
   createdAt: Date;
-}
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shop (Products / Orders)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type ShopCategory =
+  | "sutra" // Ном судар
+  | "incense" // Хүж
+  | "statue" // Бурхан
+  | "mala" // Эрих
+  | "ritual" // Тахилын зүйл
+  | "blessing" // Адислал (digital)
+  | "other";
+
+export interface ShopProduct {
+  _id?: ObjectId | string;
+  name: { mn: string; en: string };
+  description: { mn: string; en: string };
+  price: number; // MNT
+  images: string[]; // Cloudinary URLs
+  category: ShopCategory;
+  stock: number; // -1 = unlimited
+  isActive: boolean;
+  isFeatured: boolean;
+  type: "physical" | "digital";
+  tags?: string[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface ShopOrder {
+  _id?: ObjectId | string;
+  userId: string;
+  userEmail?: string;
+  items: {
+    productId: string;
+    name: { mn: string; en: string };
+    price: number;
+    quantity: number;
+    image?: string;
+  }[];
+  totalAmount: number;
+  status: "pending" | "paid" | "processing" | "shipped" | "delivered" | "cancelled";
+  paymentStatus: "pending" | "paid" | "failed";
+  qpayInvoiceId?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  deliveryInfo?: {
+    name: string;
+    phone: string;
+    address: string;
+    district: string;
+    note?: string;
+  };
+}

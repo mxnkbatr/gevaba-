@@ -1,6 +1,26 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { Preferences } from '@capacitor/preferences';
+
+const isNative = Capacitor.isNativePlatform();
+
+async function getStored(key: string): Promise<string | null> {
+    if (isNative) {
+        const r = await Preferences.get({ key });
+        return r.value ?? null;
+    }
+    return localStorage.getItem(key);
+}
+
+async function setStored(key: string, value: string): Promise<void> {
+    if (isNative) {
+        await Preferences.set({ key, value });
+        return;
+    }
+    localStorage.setItem(key, value);
+}
 
 interface AccessibilityContextType {
     elderMode: boolean;
@@ -21,20 +41,27 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     const [highContrast, setHighContrast] = useState(false);
     const [reduceMotion, setReduceMotion] = useState(false);
 
-    // Load preferences from localStorage
+    // Load preferences from device storage (Preferences on native, localStorage on web)
     useEffect(() => {
-        const savedElderMode = localStorage.getItem('elderMode') === 'true';
-        const savedFontSize = (localStorage.getItem('fontSize') || 'normal') as 'normal' | 'large' | 'xlarge';
-        const savedHighContrast = localStorage.getItem('highContrast') === 'true';
-        const savedReduceMotion = localStorage.getItem('reduceMotion') === 'true';
+        let cancelled = false;
+        void (async () => {
+            const savedElderMode = (await getStored('elderMode')) === 'true';
+            const savedFontSize = ((await getStored('fontSize')) || 'normal') as 'normal' | 'large' | 'xlarge';
+            const savedHighContrast = (await getStored('highContrast')) === 'true';
+            const savedReduceMotion = (await getStored('reduceMotion')) === 'true';
 
-        setElderMode(savedElderMode);
-        setFontSize(savedFontSize);
-        setHighContrast(savedHighContrast);
-        setReduceMotion(savedReduceMotion);
+            if (cancelled) return;
+            setElderMode(savedElderMode);
+            setFontSize(savedFontSize);
+            setHighContrast(savedHighContrast);
+            setReduceMotion(savedReduceMotion);
 
-        // Apply classes to body
-        updateBodyClasses(savedElderMode, savedFontSize, savedHighContrast, savedReduceMotion);
+            // Apply classes to body
+            updateBodyClasses(savedElderMode, savedFontSize, savedHighContrast, savedReduceMotion);
+        })();
+        return () => {
+            cancelled = true;
+        };
     }, []);
 
     const updateBodyClasses = (
@@ -55,27 +82,27 @@ export function AccessibilityProvider({ children }: { children: ReactNode }) {
     const toggleElderMode = () => {
         const newValue = !elderMode;
         setElderMode(newValue);
-        localStorage.setItem('elderMode', String(newValue));
+        void setStored('elderMode', String(newValue));
         updateBodyClasses(newValue, fontSize, highContrast, reduceMotion);
     };
 
     const handleSetFontSize = (size: 'normal' | 'large' | 'xlarge') => {
         setFontSize(size);
-        localStorage.setItem('fontSize', size);
+        void setStored('fontSize', size);
         updateBodyClasses(elderMode, size, highContrast, reduceMotion);
     };
 
     const toggleHighContrast = () => {
         const newValue = !highContrast;
         setHighContrast(newValue);
-        localStorage.setItem('highContrast', String(newValue));
+        void setStored('highContrast', String(newValue));
         updateBodyClasses(elderMode, fontSize, newValue, reduceMotion);
     };
 
     const toggleReduceMotion = () => {
         const newValue = !reduceMotion;
         setReduceMotion(newValue);
-        localStorage.setItem('reduceMotion', String(newValue));
+        void setStored('reduceMotion', String(newValue));
         updateBodyClasses(elderMode, fontSize, highContrast, newValue);
     };
 
