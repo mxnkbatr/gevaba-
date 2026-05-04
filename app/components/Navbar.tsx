@@ -7,7 +7,7 @@ import {
   Home,
   Users,
   MessageSquare,
-  UserCircle,
+  User,
   Bell,
   Newspaper,
   Search,
@@ -29,9 +29,6 @@ const CONTENT = {
   profile: { mn: "Профайл", en: "Profile" },
 };
 
-const TAB_ACTIVE = "var(--gold)";
-const SHOW_MESSENGER_NAV = false;
-
 export default function NativeNavbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -51,7 +48,7 @@ export default function NativeNavbar() {
       if (raf) return;
       raf = window.requestAnimationFrame(() => {
         raf = 0;
-        setIsScrolled(window.scrollY > 10);
+        setIsScrolled(window.scrollY > 8);
       });
     };
 
@@ -74,24 +71,25 @@ export default function NativeNavbar() {
   const Logo = ({ className = "" }) => (
     <div className={`flex items-center gap-2 ${className}`}>
       <div
-        className={`relative shrink-0 rounded-full border border-black/[0.08] bg-white shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex items-center justify-center overflow-hidden transition-all duration-300 ${
-          isScrolled ? "h-8 w-8 p-0.5" : "h-10 w-10 p-1"
-        }`}
+        className="relative shrink-0 rounded-full bg-white flex items-center justify-center overflow-hidden"
+        style={{ width: "36px", height: "36px", boxShadow: "var(--depth-1)", padding: "2px" }}
       >
         <Image
           src="/logo.png"
           alt="Gevabal"
           fill
-          sizes="40px"
+          sizes="36px"
           className="object-contain"
           priority
         />
       </div>
       <span
-        className={`font-semibold leading-none tracking-tight text-ink transition-all duration-300 ${
-          isScrolled ? "text-base" : "text-lg"
-        }`}
-        style={{ fontFamily: "var(--font-display)" }}
+        className="font-semibold leading-none tracking-tight text-ink"
+        style={{
+          fontFamily: "var(--font-display)",
+          fontSize: isScrolled ? "16px" : "17px",
+          transition: "font-size 0.2s var(--ease-out)"
+        }}
       >
         {CONTENT.logo[lang]}
       </span>
@@ -100,15 +98,10 @@ export default function NativeNavbar() {
 
   const desktopNav = [
     { name: { mn: "Нүүр", en: "Home" }, href: "/" },
-    { name: { mn: "Үзмэрч", en: "Exhibitor" }, href: "/monks" },
+    { name: { mn: "Лам нар", en: "Monks" }, href: "/monks" },
     { name: { mn: "Дэлгүүр", en: "Shop" }, href: "/shop" },
     { name: { mn: "Блог", en: "Blog" }, href: "/blog" },
-    {
-      name: { mn: "Мессенжер", en: "Messenger" },
-      href: "/messenger",
-      auth: true,
-    },
-  ].filter((item) => SHOW_MESSENGER_NAV || item.href !== "/messenger");
+  ];
 
   const mobileNav = [
     {
@@ -136,19 +129,12 @@ export default function NativeNavbar() {
       label: { mn: "Дэлгүүр", en: "Shop" },
     },
     {
-      id: "messenger",
-      icon: MessageSquare,
-      href: "/messenger",
-      label: { mn: "Мессеж", en: "Messages" },
-      auth: true,
-    },
-    {
       id: "profile",
-      icon: UserCircle,
+      icon: User,
       href: "/profile",
       label: { mn: "Профайл", en: "Profile" },
     },
-  ].filter((item) => SHOW_MESSENGER_NAV || item.id !== "messenger");
+  ];
 
   const isAuthPage = ["/sign-in", "/sign-up"].some((p) => pathname.includes(p));
   const isFocusedPage = ["/booking/", "/call/"].some((p) =>
@@ -172,18 +158,14 @@ export default function NativeNavbar() {
           <div className="flex items-center gap-0.5 rounded-full bg-black/[0.04] p-1">
             {desktopNav.map((item) => {
               const isActive = getIsActive(item.href);
-              const nextParam = encodeURIComponent(item.href);
-              const targetHref =
-                item.auth && !user ? `/sign-in?next=${nextParam}` : item.href;
               return (
                 <LocalizedLink
                   key={item.href}
-                  href={targetHref}
+                  href={item.href}
                   className={`relative rounded-full px-5 py-2 text-[13px] font-semibold tracking-tight transition-all
-                    ${
-                      isActive
-                        ? "bg-white text-ink shadow-[0_1px_3px_rgba(0,0,0,0.08)] ring-1 ring-black/[0.06]"
-                        : "text-earth hover:bg-white/80 hover:text-ink"
+                    ${isActive
+                      ? "bg-white text-ink shadow-[0_1px_3px_rgba(0,0,0,0.08)] ring-1 ring-black/[0.06]"
+                      : "text-earth hover:bg-white/80 hover:text-ink"
                     }`}
                 >
                   {item.name[lang]}
@@ -195,14 +177,12 @@ export default function NativeNavbar() {
             <LocalizedLink
               href="/monks"
               className="rounded-full p-2 text-neutral-600 hover:bg-black/[0.04] hover:text-ink transition-colors"
-              aria-label={lang === "mn" ? "Хайх" : "Search"}
             >
               <Search size={20} strokeWidth={1.25} />
             </LocalizedLink>
             <LocalizedLink
               href="/shop"
               className="relative rounded-full p-2 text-neutral-600 hover:bg-black/[0.04] hover:text-ink transition-colors"
-              aria-label={lang === "mn" ? "Дэлгүүр" : "Shop"}
             >
               <ShoppingBag size={20} strokeWidth={1.25} />
               {mounted && totalItems > 0 && (
@@ -236,156 +216,154 @@ export default function NativeNavbar() {
         </nav>
       </header>
 
-      {/* ── MOBILE TOP HEADER (VCM-style: white + actions) ── */}
+      {/* ── MOBILE TOP HEADER (Apple HIG) ── */}
       {!isAuthPage && !isMessengerPage && (
         <header
-          className={`md:hidden fixed top-0 left-0 right-0 z-40 flex items-center justify-between px-4 sm:px-5 py-2 transition-[background,box-shadow,border-color] duration-300 border-b border-transparent ${
-            isScrolled
-              ? "bg-white/65 [backdrop-filter:saturate(180%)_blur(20px)] [-webkit-backdrop-filter:saturate(180%)_blur(20px)] shadow-[0_1px_0_rgba(0,0,0,0.04),0_8px_24px_-12px_rgba(15,23,42,0.08)] border-black/[0.06]"
-              : "bg-white/50 [backdrop-filter:saturate(160%)_blur(16px)] [-webkit-backdrop-filter:saturate(160%)_blur(16px)]"
-          }`}
+          className="md:hidden mobile-header"
           style={{
-            height: `calc(52px + env(safe-area-inset-top, 44px))`,
-            paddingTop: isNative
-              ? `${Math.max(safeArea.top, 16)}px`
-              : "env(safe-area-inset-top, 44px)",
+            backgroundColor: isScrolled ? "rgba(242,242,247,0.94)" : "transparent",
+            backdropFilter: isScrolled ? "saturate(200%) blur(28px)" : "none",
+            WebkitBackdropFilter: isScrolled ? "saturate(200%) blur(28px)" : "none",
+            borderBottom: isScrolled ? "0.5px solid rgba(60,60,67,0.12)" : "0.5px solid transparent",
+            paddingLeft: "16px",
+            paddingRight: "16px",
+            paddingBottom: "8px"
           }}
         >
-          <LocalizedLink
-            href="/"
-            aria-label="Home"
-            className="active:opacity-70 transition-opacity min-w-0 shrink"
-          >
-            <Logo />
-          </LocalizedLink>
+          <div className="flex items-center justify-between h-[44px]">
+            <LocalizedLink
+              href="/"
+              aria-label="Home"
+              className="active:opacity-70 transition-opacity min-w-0 shrink"
+              onClick={() => { if (isNative) hapticsLight() }}
+            >
+              <Logo />
+            </LocalizedLink>
 
-          <div className="flex items-center gap-0.5 shrink-0">
-            <LocalizedLink
-              href="/monks"
-              className="rounded-full p-2.5 text-neutral-600 hover:bg-black/[0.04] hover:text-ink active:scale-95 transition-all"
-              aria-label={lang === "mn" ? "Хайх" : "Search"}
-            >
-              <Search
-                size={isScrolled ? 20 : 22}
-                strokeWidth={1.25}
-              />
-            </LocalizedLink>
-            <LocalizedLink
-              href="/shop"
-              className="relative rounded-full p-2.5 text-neutral-600 hover:bg-black/[0.04] hover:text-ink active:scale-95 transition-all"
-              aria-label={lang === "mn" ? "Дэлгүүр" : "Shop"}
-            >
-              <ShoppingBag
-                size={isScrolled ? 20 : 22}
-                strokeWidth={1.25}
-              />
-              {mounted && totalItems > 0 && (
-                <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#FF3B30] border-2 border-white flex items-center justify-center text-[10px] font-bold text-white leading-none shadow-sm">
-                  {totalItems > 99 ? "99+" : totalItems}
-                </span>
-              )}
-            </LocalizedLink>
-            <div className="relative">
-              <button
-                type="button"
-                className="relative rounded-full p-2.5 text-neutral-700 hover:bg-black/[0.04] transition-colors"
-                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                aria-label={
-                  lang === "mn" ? "Мэдэгдэл" : "Notifications"
-                }
+            <div className="flex items-center gap-2 shrink-0">
+              <LocalizedLink
+                href="/shop"
+                className="btn-icon relative"
+                style={{ width: "36px", height: "36px" }}
+                onClick={() => { if (isNative) hapticsLight() }}
               >
-                <Bell
-                  size={isScrolled ? 24 : 26}
-                  strokeWidth={1.25}
-                  className="text-neutral-800"
+                <ShoppingBag
+                  size={18}
+                  strokeWidth={1.5}
+                  color="var(--ink)"
                 />
-                {mounted && unreadCount > 0 && (
-                  <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 rounded-full bg-[#FF3B30] border-2 border-white flex items-center justify-center text-[10px] font-bold text-white leading-none shadow-sm">
-                    {unreadCount > 99 ? "99+" : unreadCount}
+                {mounted && totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-sys-red flex items-center justify-center text-[9px] font-bold text-white leading-none shadow-sm border border-white">
+                    {totalItems > 99 ? "99+" : totalItems}
                   </span>
                 )}
-              </button>
-              <NotificationDropdown
-                isOpen={isDropdownOpen}
-                onClose={() => setIsDropdownOpen(false)}
-              />
+              </LocalizedLink>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  className="btn-icon relative"
+                  style={{ width: "36px", height: "36px" }}
+                  onClick={() => {
+                    if (isNative) hapticsLight();
+                    setIsDropdownOpen(!isDropdownOpen);
+                  }}
+                >
+                  <Bell
+                    size={18}
+                    strokeWidth={1.5}
+                    color="var(--ink)"
+                  />
+                  {mounted && unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-sys-red border border-white flex items-center justify-center text-[9px] font-bold text-white leading-none shadow-sm">
+                      {unreadCount > 99 ? "99+" : unreadCount}
+                    </span>
+                  )}
+                </button>
+                <NotificationDropdown
+                  isOpen={isDropdownOpen}
+                  onClose={() => setIsDropdownOpen(false)}
+                />
+              </div>
+
+              {mounted && user && (
+                <div className="flex items-center justify-center shrink-0" style={{ width: "36px", height: "36px" }}>
+                  <UserButton afterSignOutUrl="/" />
+                </div>
+              )}
             </div>
           </div>
         </header>
       )}
 
-      {/* ── MOBILE BOTTOM: floating tab bar (native iOS / Capacitor feel) ── */}
+      {/* ── MOBILE BOTTOM TAB BAR (Apple HIG) ── */}
       {!isAuthPage && (
-        <div
-          className="md:hidden fixed inset-x-0 bottom-0 z-50 flex justify-center px-3 pointer-events-none"
+        <nav
+          className="md:hidden mobile-tab-bar"
           style={{
-            paddingBottom: `max(10px, env(safe-area-inset-bottom, 0px))`,
+            height: "calc(49px + var(--sab))",
+            backgroundColor: "rgba(248,248,250,0.90)",
+            backdropFilter: "saturate(200%) blur(30px)",
+            WebkitBackdropFilter: "saturate(200%) blur(30px)",
+            borderTop: "0.5px solid rgba(60,60,67,0.16)",
+            boxShadow: "0 -1px 0 rgba(60,60,67,0.10)",
+            display: "flex",
+            justifyContent: "space-around"
           }}
+          aria-label={lang === "mn" ? "Үндсэн цэс" : "Main navigation"}
         >
-          <nav
-            className="pointer-events-auto isolate flex w-full max-w-[min(100%,420px)] items-center justify-between gap-0.5 rounded-[26px] border border-black/[0.08] bg-white/78 px-1.5 py-1.5 shadow-[0_12px_40px_rgba(0,0,0,0.1),0_2px_8px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.92)] [backdrop-filter:saturate(180%)_blur(28px)] [-webkit-backdrop-filter:saturate(180%)_blur(28px)]"
-            aria-label={lang === "mn" ? "Үндсэн цэс" : "Main navigation"}
-          >
-            {mobileNav.map((item) => {
-              const isActive = getIsActive(item.href);
-              const nextParam = encodeURIComponent(item.href);
-              const targetHref =
-                item.auth && !user ? `/sign-in?next=${nextParam}` : item.href;
+          {mobileNav.map((item) => {
+            const isActive = getIsActive(item.href);
 
-              const handleTap = async () => {
-                if (isNative) {
-                  await hapticsLight();
-                }
-              };
+            const handleTap = async () => {
+              if (isNative) {
+                await hapticsLight();
+              }
+            };
 
-              return (
-                <LocalizedLink
-                  key={item.id}
-                  href={targetHref}
-                  onClick={handleTap}
-                  className={`relative flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center rounded-[18px] transition-transform duration-200 ease-out active:scale-[0.94] ${
-                    isActive
-                      ? "bg-black/[0.04] shadow-[inset_0_0_0_1px_rgba(60,60,67,0.10)]"
-                      : "active:bg-black/[0.04]"
-                  }`}
+            return (
+              <LocalizedLink
+                key={item.id}
+                href={item.href}
+                onClick={handleTap}
+                className="flex flex-col items-center justify-center min-w-[60px] py-[6px] px-[8px]"
+                style={{ gap: "3px" }}
+              >
+                <div
+                  className="flex items-center justify-center"
+                  style={{
+                    width: "32px",
+                    height: "32px",
+                    borderRadius: "var(--r-md)",
+                    backgroundColor: isActive ? "rgba(191,164,106,0.15)" : "transparent",
+                    transform: isActive ? "scale(1.05)" : "scale(1)",
+                    transition: "all 0.22s var(--spring)"
+                  }}
                 >
-                  <div className="relative flex h-8 w-10 shrink-0 items-center justify-center">
-                    <item.icon
-                      size={24}
-                      strokeWidth={isActive ? 2 : 1.35}
-                      className="transition-colors duration-200"
-                      style={{
-                        color: isActive
-                          ? TAB_ACTIVE
-                          : "rgba(60, 60, 67, 0.42)",
-                      }}
-                    />
-                    {item.id === "shop" && mounted && totalItems > 0 && (
-                      <span className="absolute right-0 top-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-[#FF3B30] border-2 border-white flex items-center justify-center text-[10px] font-bold text-white leading-none shadow-sm">
-                        {totalItems > 99 ? "99+" : totalItems}
-                      </span>
-                    )}
-                    {item.id === "messenger" &&
-                      user &&
-                      unreadCount > 0 && (
-                        <span className="absolute right-0 top-0.5 h-2.5 w-2.5 rounded-full border-2 border-white bg-[#FF3B30] z-10 shadow-sm" />
-                      )}
-                  </div>
-                  <span
-                    className="mt-0.5 max-w-full truncate px-0.5 text-[10px] font-semibold leading-none tracking-tight transition-colors duration-200"
+                  <item.icon
+                    size={24}
+                    strokeWidth={isActive ? 2 : 1.75}
                     style={{
-                      color: isActive
-                        ? TAB_ACTIVE
-                        : "rgba(60, 60, 67, 0.48)",
+                      color: isActive ? "var(--gold)" : "var(--ink-3)",
+                      fill: "none"
                     }}
-                  >
-                    {item.label[lang]}
-                  </span>
-                </LocalizedLink>
-              );
-            })}
-          </nav>
-        </div>
+                  />
+                </div>
+                <span
+                  style={{
+                    fontSize: "10px",
+                    fontWeight: 600,
+                    letterSpacing: "0.02em",
+                    color: isActive ? "var(--gold)" : "var(--ink-3)",
+                    transition: "color 0.22s var(--spring)"
+                  }}
+                >
+                  {item.label[lang]}
+                </span>
+              </LocalizedLink>
+            );
+          })}
+        </nav>
       )}
     </>
   );

@@ -2,11 +2,12 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { ChevronLeft, Minus, Plus, Trash2, ShoppingBag, Sparkles } from "lucide-react";
 import { useLanguage } from "@/app/contexts/LanguageContext";
-import { useShopCart } from "@/app/hooks/useShopCart";
+import { useCart } from "@/app/contexts/CartContext";
 import { LocalizedLink } from "@/app/components/LocalizedLink";
+import { hapticsLight } from "@/app/capacitor/plugins/haptics";
+import { usePlatform } from "@/app/capacitor/hooks/usePlatform";
 
 type Product = {
   _id: string;
@@ -18,13 +19,24 @@ type Product = {
 
 export default function ShopCartPage() {
   const { language: lang, t } = useLanguage();
-  const { items, hydrated, setQuantity, remove, clear } = useShopCart();
+  const { items, updateQuantity, removeFromCart, clearCart, totalItems } = useCart();
   const router = useRouter();
+  const { isNative } = usePlatform();
   const [products, setProducts] = useState<Record<string, Product>>({});
   const [loading, setLoading] = useState(false);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
-    if (!hydrated) return;
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleTap = async () => {
+    if (isNative) await hapticsLight();
+  };
+
+  useEffect(() => {
     if (items.length === 0) return;
     let cancelled = false;
     (async () => {
@@ -43,7 +55,7 @@ export default function ShopCartPage() {
     return () => {
       cancelled = true;
     };
-  }, [items.length, hydrated]);
+  }, [items.length]);
 
   const rows = useMemo(() => {
     return items.map((it) => {
@@ -51,157 +63,153 @@ export default function ShopCartPage() {
       return {
         ...it,
         product: p,
-        title:
-          (lang === "mn" ? p?.name?.mn : p?.name?.en) ??
-          p?.name?.mn ??
-          p?.name?.en ??
-          t({ mn: "Бараа", en: "Product" }),
+        title: (lang === "mn" ? p?.name?.mn : p?.name?.en) ?? p?.name?.mn ?? p?.name?.en ?? t({ mn: "Бараа", en: "Product" }),
         price: Number(p?.price ?? 0),
         lineTotal: Number(p?.price ?? 0) * it.quantity,
       };
     });
   }, [items, products, lang]);
 
-  const total = useMemo(() => rows.reduce((acc, r) => acc + r.lineTotal, 0), [rows]);
+  const totalAmount = useMemo(() => rows.reduce((acc, r) => acc + r.lineTotal, 0), [rows]);
 
   return (
-    <div className="min-h-[100svh] bg-cream px-5 pt-[calc(env(safe-area-inset-top,44px)+88px)] pb-[calc(env(safe-area-inset-bottom,34px)+120px)]">
-      <div className="mx-auto w-full max-w-3xl">
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="rounded-full bg-white px-4 py-2.5 border border-black/[0.06] text-sm font-semibold"
-            aria-label={t({ mn: "Буцах", en: "Back" })}
-          >
-            <span className="inline-flex items-center gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              {t({ mn: "Буцах", en: "Back" })}
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => clear()}
-            className="rounded-full bg-white px-4 py-2.5 border border-black/[0.06] text-sm font-semibold text-earth"
-            aria-label={t({ mn: "Цэвэрлэх", en: "Clear" })}
-            disabled={items.length === 0}
-          >
-            {t({ mn: "Цэвэрлэх", en: "Clear" })}
-          </button>
-        </div>
+    <div className={`page font-sans ${lang === "mn" ? "lang-mn" : ""}`}>
+      
+      {/* — TOP NAVIGATION BAR — */}
+      <div 
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4"
+        style={{ 
+          height: "var(--nav-h)",
+          backgroundColor: "rgba(242,242,247,0.8)",
+          backdropFilter: "blur(20px)",
+          borderBottom: "0.5px solid var(--sep)",
+          transition: "all 0.3s ease"
+        }}
+      >
+        <button 
+          onClick={() => { router.back(); handleTap(); }}
+          className="btn-icon"
+          style={{ width: "36px", height: "36px", background: "transparent", borderRadius: "12px" }}
+        >
+          <ChevronLeft size={24} color="var(--ink)" />
+        </button>
 
-        <div className="app-card-premium p-5 mb-4">
-          <div className="flex items-center gap-2">
-            <div className="h-10 w-10 rounded-2xl bg-white border border-black/[0.06] shadow-[0_1px_3px_rgba(0,0,0,0.06)] flex items-center justify-center">
-              <ShoppingBag className="w-5 h-5 text-amber-700" />
-            </div>
-            <div>
-              <h1 className="text-h2" style={{ fontFamily: "var(--font-display)" }}>
-                {t({ mn: "Сагс", en: "Cart" })}
-              </h1>
-              <p className="text-secondary">
-                {loading
-                  ? t({ mn: "Ачаалж байна...", en: "Loading..." })
-                  : t({ mn: "Төлбөрийг QPay-гаар хийнэ.", en: "Pay with QPay." })}
-              </p>
-            </div>
-          </div>
-        </div>
+        <h1 className="text-[17px] font-bold text-ink">{t({ mn: "Сагс", en: "Cart" })}</h1>
 
-        {items.length === 0 ? (
-          <div className="app-card-premium p-8 text-center">
-            <p className="text-body">
-              {t({ mn: "Таны сагс хоосон байна.", en: "Your cart is empty." })}
+        <button 
+          onClick={() => { clearCart(); handleTap(); }}
+          className="text-[15px] font-semibold text-sys-red px-2"
+          disabled={items.length === 0}
+        >
+          {t({ mn: "Цэвэрлэх", en: "Clear" })}
+        </button>
+      </div>
+
+      <div className="max-w-[480px] mx-auto w-full pb-32">
+        <div className="px-5 pt-6">
+          
+          <div className="flex flex-col gap-1 mb-8">
+            <h1 className="text-[34px] font-bold text-ink leading-tight">
+              {t({ mn: "Сагс", en: "Cart" })}
+            </h1>
+            <p className="text-[15px] text-ink-3">
+              {items.length > 0 
+                ? t({ mn: `${totalItems} бараа байна`, en: `${totalItems} items in cart` })
+                : t({ mn: "Сагс хоосон байна", en: "Your cart is empty" })}
             </p>
-            <div className="mt-4">
-              <LocalizedLink href="/shop">
-                <button type="button" className="btn-primary">
-                  {t({ mn: "Дэлгүүр рүү", en: "Go to shop" })}
-                </button>
+          </div>
+
+          {items.length === 0 ? (
+            <div className="card p-12 flex flex-col items-center justify-center text-center">
+              <div className="w-20 h-20 bg-bg-secondary rounded-full flex items-center justify-center mb-6">
+                <ShoppingBag size={40} className="text-ink-5" />
+              </div>
+              <h3 className="t-headline">{t({ mn: "Сагс хоосон байна", en: "Empty Cart" })}</h3>
+              <p className="t-subhead text-ink-3 mt-2">{t({ mn: "Та дэлгүүрээр зочлон бараа нэмээрэй.", en: "Go to shop and add some items." })}</p>
+              <LocalizedLink href="/shop" onClick={handleTap} className="mt-8">
+                <button className="btn-primary px-8 h-[50px]">{t({ mn: "Дэлгүүр рүү", en: "Back to Shop" })}</button>
               </LocalizedLink>
             </div>
-          </div>
-        ) : (
-          <>
-            <div className="space-y-3">
-              <AnimatePresence>
-                {rows.map((row) => (
-                  <motion.div
-                    key={row.productId}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    className="app-card-premium p-4"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold text-ink line-clamp-2">
-                          {row.title}
-                        </p>
-                        <p className="text-secondary mt-1">
-                          {row.price.toLocaleString()}₮
-                        </p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => remove(row.productId)}
-                        className="h-10 w-10 rounded-2xl bg-white border border-black/[0.06] flex items-center justify-center text-earth"
-                        aria-label={t({ mn: "Устгах", en: "Remove" })}
+          ) : (
+            <div className="flex flex-col gap-4">
+              {rows.map((row) => (
+                <div key={row.productId} className="card p-4 flex flex-col gap-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="min-w-0 flex-1">
+                      <h3 className="text-[16px] font-semibold text-ink line-clamp-2 leading-tight">
+                        {row.title}
+                      </h3>
+                      <p className="text-[14px] font-bold text-gold-dark mt-1">
+                        ₮{row.price.toLocaleString()}
+                      </p>
+                    </div>
+                    <button 
+                      onClick={() => { removeFromCart(row.productId); handleTap(); }}
+                      className="w-10 h-10 rounded-xl bg-sys-red/10 flex items-center justify-center text-sys-red active:scale-90 transition-transform"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-sep">
+                    <div className="flex items-center gap-3 bg-bg-secondary p-1 rounded-2xl border border-sep">
+                      <button 
+                        onClick={() => { updateQuantity(row.productId, row.quantity - 1); handleTap(); }}
+                        className="w-9 h-9 rounded-xl bg-white border border-sep shadow-sm flex items-center justify-center active:scale-90"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Minus size={16} strokeWidth={3} />
+                      </button>
+                      <span className="w-8 text-center font-bold text-[16px]">{row.quantity}</span>
+                      <button 
+                        onClick={() => { updateQuantity(row.productId, row.quantity + 1); handleTap(); }}
+                        className="w-9 h-9 rounded-xl bg-white border border-sep shadow-sm flex items-center justify-center active:scale-90"
+                      >
+                        <Plus size={16} strokeWidth={3} />
                       </button>
                     </div>
-
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setQuantity(row.productId, row.quantity - 1)}
-                          className="h-11 w-11 rounded-2xl bg-white border border-black/[0.06] flex items-center justify-center"
-                          aria-label={t({ mn: "Хасах", en: "Decrease" })}
-                        >
-                          <Minus className="w-4 h-4" />
-                        </button>
-                        <div className="w-12 text-center font-black text-ink">
-                          {row.quantity}
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => setQuantity(row.productId, row.quantity + 1)}
-                          className="h-11 w-11 rounded-2xl bg-white border border-black/[0.06] flex items-center justify-center"
-                          aria-label={t({ mn: "Нэмэх", en: "Increase" })}
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-label">{t({ mn: "Нийт", en: "Total" })}</p>
-                        <p className="text-lg font-black text-ink">
-                          {row.lineTotal.toLocaleString()}₮
-                        </p>
-                      </div>
+                    <div className="text-right">
+                      <span className="text-[12px] font-bold text-ink-3 uppercase block leading-none">{t({ mn: "Нийт", en: "Line Total" })}</span>
+                      <span className="text-[18px] font-black text-ink">₮{row.lineTotal.toLocaleString()}</span>
                     </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
+                  </div>
+                </div>
+              ))}
 
-            <div className="app-card-premium p-5 mt-4">
-              <div className="flex items-center justify-between">
-                <p className="text-secondary font-semibold">{t({ mn: "Нийт дүн", en: "Total" })}</p>
-                <p className="text-2xl font-black text-ink">{total.toLocaleString()}₮</p>
-              </div>
-              <div className="mt-4">
-                <LocalizedLink href="/shop/checkout">
-                  <button type="button" className="btn-primary w-full h-12">
-                    {t({ mn: "Төлөх", en: "Checkout" })}
-                  </button>
-                </LocalizedLink>
+              <div className="card p-5 mt-4 bg-ink text-white overflow-hidden relative">
+                <div className="absolute top-[-20px] right-[-20px] w-40 h-40 bg-white/5 rounded-full blur-3xl pointer-events-none" />
+                <div className="flex items-center justify-between relative z-10">
+                  <div className="flex flex-col">
+                    <span className="text-[13px] font-bold uppercase tracking-widest opacity-60">{t({ mn: "Нийт дүн", en: "Total Amount" })}</span>
+                    <span className="text-[28px] font-black">₮{totalAmount.toLocaleString()}</span>
+                  </div>
+                  <Sparkles size={24} className="text-gold" />
+                </div>
               </div>
             </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
+
+      {/* — BOTTOM CHECKOUT BAR — */}
+      {items.length > 0 && (
+        <div 
+          className="fixed bottom-0 left-0 right-0 z-50 px-6 py-4 pb-[calc(16px+var(--sab))]"
+          style={{ 
+            background: "linear-gradient(to top, white 80%, rgba(255,255,255,0))",
+            backdropFilter: "blur(4px)"
+          }}
+        >
+          <LocalizedLink href="/shop/checkout" onClick={handleTap}>
+            <button 
+              className="w-full max-w-[432px] mx-auto btn-primary h-[54px] text-[17px] font-bold flex items-center justify-center gap-2"
+              style={{ background: "var(--gold)", color: "white", borderRadius: "18px", boxShadow: "var(--depth-gold)" }}
+            >
+              {t({ mn: "Захиалах", en: "Checkout" })}
+              <ChevronLeft size={20} strokeWidth={3} className="rotate-180" />
+            </button>
+          </LocalizedLink>
+        </div>
+      )}
     </div>
   );
 }

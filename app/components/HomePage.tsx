@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import Image from "next/image";
 import {
   Activity,
@@ -16,6 +15,9 @@ import {
 } from "lucide-react";
 import { useLanguage } from "../contexts/LanguageContext";
 import { formatBlogPostDate } from "../lib/dateUtils";
+import { LocalizedLink } from "./LocalizedLink";
+import { hapticsLight } from "@/app/capacitor/plugins/haptics";
+import { usePlatform } from "@/app/capacitor/hooks/usePlatform";
 
 export type HomeBlogItem = {
   _id: string;
@@ -93,6 +95,8 @@ function buildHeroSlides(
   return out;
 }
 
+const BLUR_DATA_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+
 export default function HomePage({
   locale,
   blogs,
@@ -102,6 +106,7 @@ export default function HomePage({
 }: Props) {
   const { language, t } = useLanguage();
   const lang = language === "mn" ? "mn" : "en";
+  const { isNative } = usePlatform();
   const latest = blogs[0];
   const monkCount = monks.length;
 
@@ -113,7 +118,6 @@ export default function HomePage({
   const [heroIndex, setHeroIndex] = useState(0);
   const prevHeroIndexRef = useRef(0);
 
-  /** Only mount hero images for current, neighbors, and previous slide — fewer parallel LCP requests */
   const heroSlideIndicesToRender = useMemo(() => {
     const n = heroSlides.length;
     if (n <= 1) return [0];
@@ -145,21 +149,40 @@ export default function HomePage({
     return () => window.clearInterval(id);
   }, [heroSlides.length]);
 
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      (entries) => entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('anim-visible');
+          obs.unobserve(e.target);
+        }
+      }),
+      { threshold: 0.12, rootMargin: '0px 0px -40px 0px' }
+    );
+    document.querySelectorAll('[data-reveal]').forEach(el => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
+
+  const handleTap = async () => {
+    if (isNative) await hapticsLight();
+  };
+
   const copy = {
-    kicker: { mn: "онлайн засал - зөвлөгөө", en: "ONLINE GUIDANCE & CARE" },
+    kicker: { mn: "ОНЛАЙН ЗАСАЛ · ЗӨВЛӨГӨӨ", en: "ONLINE GUIDANCE & CARE" },
     headline: {
       mn: "Сэтгэл зүй, засал, уламжлал",
       en: "Psychology, healing & tradition",
     },
-    ctaPrimary: { mn: "Багш нар", en: "Teachers" },
+    ctaPrimary: { mn: "• Шууд нэвтрэлт", en: "• Direct access" },
+    ctaSecondary: { mn: "Багш нар →", en: "Teachers →" },
     statsTeachers: { mn: "Багш", en: "Teachers" },
-    statsRating: { mn: "Дундаж үнэлгээ", en: "Avg. rating" },
+    statsRating: { mn: "Үнэлгээ", en: "Rating" },
     statsSessions: { mn: "Засал", en: "Sessions" },
     sectionGuides: { mn: "Онцлох багш", en: "Featured guides" },
     sectionShortcuts: { mn: "Түргэн холбоос", en: "Shortcuts" },
     sectionStory: { mn: "Сүүлийн нийтлэл", en: "Latest story" },
-    seeAll: { mn: "Бүгдийг үзэх", en: "See all" },
-    read: { mn: "Унших", en: "Read" },
+    seeAll: { mn: "Бүгд ›", en: "See all ›" },
+    read: { mn: "Унших →", en: "Read →" },
     emptyGuides: {
       mn: "Удахгүй багш нар нэмэгдэнэ.",
       en: "Teachers will appear here soon.",
@@ -169,29 +192,37 @@ export default function HomePage({
       en: "Stories are on the way.",
     },
     sectionShop: { mn: "Тахилын дэлгүүр", en: "Sacred Shop" },
-    seeAllShop: { mn: "Бүгдийг үзэх", en: "See all" },
+    seeAllShop: { mn: "Бүгд ›", en: "See all ›" },
   };
 
   const shortcuts = [
     {
-      href: `/${locale}/sign-in`,
+      href: `/sign-in`,
       icon: Users,
       label: { mn: "Нэвтрэх", en: "Sign in" },
+      bg: "rgba(0,122,255,0.10)",
+      color: "#007AFF"
     },
     {
-      href: `/${locale}/monks`,
+      href: `/monks`,
       icon: CalendarPlus,
       label: { mn: "Захиалах", en: "Book" },
+      bg: "rgba(191,164,106,0.12)",
+      color: "var(--gold)"
     },
     {
-      href: `/${locale}/messenger`,
+      href: `/messenger`,
       icon: MessageCircle,
       label: { mn: "Мессеж", en: "Messages" },
+      bg: "rgba(88,86,214,0.10)",
+      color: "#5856D6"
     },
     {
-      href: `/${locale}/blog`,
+      href: `/blog`,
       icon: Newspaper,
       label: { mn: "Блог", en: "Blog" },
+      bg: "rgba(255,149,0,0.10)",
+      color: "#FF9500"
     },
   ];
 
@@ -200,334 +231,423 @@ export default function HomePage({
       value: monkCount > 0 ? `${monkCount}+` : "—",
       label: t(copy.statsTeachers),
       Icon: Users,
+      bg: "rgba(175,82,222,0.12)",
+      color: "#AF52DE",
     },
-    { value: "5.0", label: t(copy.statsRating), Icon: Star },
-    { value: "1200+", label: t(copy.statsSessions), Icon: Activity },
+    {
+      value: "5.0",
+      label: t(copy.statsRating),
+      Icon: Star,
+      bg: "rgba(191,164,106,0.12)",
+      color: "var(--gold)",
+    },
+    {
+      value: "1.2к+",
+      label: t(copy.statsSessions),
+      Icon: Activity,
+      bg: "rgba(52,199,89,0.12)",
+      color: "#34C759",
+    },
   ];
 
+  const langClass = lang === "mn" ? "lang-mn" : "";
+
   return (
-    <div className="max-w-lg md:max-w-2xl mx-auto px-5 pb-32 pt-[calc(5.5rem+env(safe-area-inset-top,0px))] md:pt-28 font-sans">
-      {/* — Hero carousel (VCM-style) — */}
-      <header className="mb-8 anim-fade-up">
-        <div className="relative aspect-[16/11] w-full overflow-hidden rounded-[20px] shadow-sm">
-          {heroSlideIndicesToRender.map((i) => {
-            const slide = heroSlides[i];
-            return (
+    <div className={`page font-sans ${langClass}`}>
+      <div className="max-w-[480px] mx-auto w-full pb-[calc(var(--tab-h)+var(--sab)+20px)]">
+
+        {/* — HERO CAROUSEL — */}
+        <div className="mx-4 mb-5 anim-1">
+          <div
+            className="relative w-full overflow-hidden"
+            style={{
+              height: "264px",
+              borderRadius: "var(--r-3xl)",
+              boxShadow: "var(--depth-hero)",
+              clipPath: "border-box"
+            }}
+          >
+            {/* Background layer */}
             <div
-              key={`${slide.key}-${i}`}
-              className={`absolute inset-0 transition-opacity duration-700 ease-out ${
-                i === heroIndex ? "opacity-100 z-0" : "opacity-0 z-0 pointer-events-none"
-              }`}
-              aria-hidden={i !== heroIndex}
-            >
-              {slide.src ? (
-                <Image
-                  src={slide.src}
-                  alt={slide.alt || "Gevabal"}
-                  fill
-                  className="object-cover"
-                  sizes="(max-width:768px) 100vw, 640px"
-                  priority={i === 0 && heroIndex === 0}
-                  fetchPriority={i === heroIndex ? "high" : "low"}
-                  unoptimized={
-                    slide.src.startsWith("http") &&
-                    !slide.src.includes("res.cloudinary.com")
-                  }
-                />
-              ) : (
-                <div
-                  className="absolute inset-0 bg-gradient-to-br from-[#2c2416] via-[#4a3d22] to-[#1a1510]"
-                  aria-hidden
-                />
-              )}
-            </div>
-            );
-          })}
-
-          <div
-            className="absolute inset-0 z-[1] bg-gradient-to-t from-black/75 via-black/25 to-black/10 pointer-events-none"
-            aria-hidden
-          />
-
-          <div className="absolute inset-0 z-[2] flex flex-col justify-end p-5 md:p-6 pointer-events-none">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-white/95 mb-2 drop-shadow-sm">
-              {t(copy.kicker)}
-            </p>
-            <h1 className="text-[1.35rem] md:text-[1.5rem] font-bold leading-snug tracking-[-0.02em] text-white drop-shadow-md max-w-[95%]">
-              {t(copy.headline)}
-            </h1>
-          </div>
-        </div>
-
-        {heroSlides.length > 1 ? (
-          <div
-            className="flex justify-center items-center gap-2 mt-4"
-            role="tablist"
-            aria-label="Hero"
-          >
-            {heroSlides.map((s, i) => (
-              <button
-                key={s.key}
-                type="button"
-                role="tab"
-                aria-selected={i === heroIndex}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  i === heroIndex
-                    ? "w-7 bg-gold shadow-[0_0_12px_rgba(255,230,160,0.85)]"
-                    : "w-2 bg-black/18 hover:bg-black/28"
-                }`}
-                onClick={() => setHeroIndex(i)}
-              />
-            ))}
-          </div>
-        ) : null}
-      </header>
-
-      {/* — Stats grid (VCM main sections) — */}
-      <section className="grid grid-cols-3 gap-3 mb-12 anim-fade-up" style={{ animationDelay: "60ms" }}>
-        {statCells.map((cell) => (
-          <div
-            key={cell.label}
-            className="rounded-[20px] bg-white px-2 pt-4 pb-3 text-center shadow-sm border border-black/[0.04]"
-          >
-            <div className="mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-black/[0.04] text-[#48484a]">
-              <cell.Icon size={20} strokeWidth={1.5} />
-            </div>
-            <div className="text-xl font-bold text-ink tabular-nums tracking-tight leading-none">
-              {cell.value}
-            </div>
-            <div className="mt-1.5 text-[10px] font-medium text-text-light leading-tight px-0.5">
-              {cell.label}
-            </div>
-          </div>
-        ))}
-      </section>
-
-      {/* — Featured monks (compact horizontal carousel) — */}
-      <section className="mb-12 anim-fade-up" style={{ animationDelay: "100ms" }}>
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <h2 className="text-[1.25rem] font-bold text-ink tracking-tight">
-            {t(copy.sectionGuides)}
-          </h2>
-          <Link
-            href={`/${locale}/monks`}
-            className="inline-flex items-center gap-0.5 text-[13px] font-semibold text-gold-dark shrink-0"
-          >
-            {t(copy.seeAll)}
-            <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.5} />
-          </Link>
-        </div>
-
-        {featuredMonks.length === 0 ? (
-          <div className="rounded-[20px] px-5 py-10 text-center bg-ios-grouped border border-black/[0.04] shadow-sm">
-            <Sparkles
-              className="w-7 h-7 text-gold mx-auto mb-2 drop-shadow-[0_0_8px_rgba(255,220,140,0.55)]"
-              strokeWidth={1.5}
+              className="absolute inset-0 z-0"
+              style={{ background: "linear-gradient(145deg, #0C0B0E 0%, #1A1208 45%, #241A0E 80%, #0E0C08 100%)" }}
             />
-            <p className="text-sm text-text-mid">{t(copy.emptyGuides)}</p>
-            <Link
-              href={`/${locale}/monks`}
-              className="inline-flex mt-4 text-sm font-semibold text-ink underline-offset-4 hover:underline"
-            >
-              {t(copy.ctaPrimary)}
-            </Link>
-          </div>
-        ) : (
-          <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory hide-scrollbar">
-            {featuredMonks.map((m) => {
-              const id = monkId(m);
-              if (!id) return null;
-              const name = pickTitle(m.name, lang);
-              const href = `/${locale}/monks/${id}`;
+
+            {/* SVG Mandala layer */}
+            <div className="absolute inset-0 z-10 flex items-center justify-center opacity-[0.08] pointer-events-none">
+              <svg
+                width="340" height="340" viewBox="0 0 100 100"
+                className="spin-slow origin-center"
+              >
+                <circle cx="50" cy="50" r="40" stroke="var(--gold)" strokeWidth="0.5" fill="none" />
+                <path d="M50 10 L60 40 L90 50 L60 60 L50 90 L40 60 L10 50 L40 40 Z" stroke="var(--gold)" strokeWidth="0.5" fill="none" />
+                <circle cx="50" cy="50" r="20" stroke="var(--gold)" strokeWidth="0.5" fill="none" />
+              </svg>
+            </div>
+
+            {/* Images layer */}
+            {heroSlideIndicesToRender.map((i) => {
+              const slide = heroSlides[i];
               return (
-                <Link
-                  key={id}
-                  href={href}
-                  className="snap-start shrink-0 w-[152px] rounded-[20px] bg-white overflow-hidden shadow-sm border border-black/[0.05] active:scale-[0.99] transition-transform"
+                <div
+                  key={`${slide.key}-${i}`}
+                  className={`absolute inset-0 z-10 transition-opacity duration-700 ease-out mix-blend-screen ${i === heroIndex ? "opacity-40" : "opacity-0 pointer-events-none"
+                    }`}
                 >
-                  <div className="relative aspect-[4/5] bg-ios-grouped overflow-hidden">
-                    {m.image ? (
-                      <Image
-                        src={m.image}
-                        alt={name}
-                        fill
-                        className="object-cover"
-                        sizes="152px"
-                        unoptimized={
-                          m.image.startsWith("http") &&
-                          !m.image.includes("res.cloudinary.com")
-                        }
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center text-black/15">
-                        <Users className="w-9 h-9" strokeWidth={1.25} />
-                      </div>
-                    )}
-                    {m.isAvailable !== false && (
-                      <span className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full border border-black/[0.06] bg-white/95 px-2 py-0.5 text-[9px] font-semibold text-ink shadow-sm backdrop-blur-sm">
-                        <span className="h-1.5 w-1.5 rounded-full bg-[#30d158]" />
-                        {t({ mn: "Онлайн", en: "Live" })}
-                      </span>
-                    )}
-                  </div>
-                  <div className="px-3 py-3">
-                    <p className="text-[13px] font-bold text-ink leading-tight line-clamp-2 text-center">
-                      {name}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        )}
-      </section>
-
-      {/* — Sacred Shop (featured products) — */}
-      {featuredProducts?.length > 0 && (
-        <section className="mb-12 anim-fade-up" style={{ animationDelay: "120ms" }}>
-          <div className="flex items-center justify-between gap-3 mb-4">
-            <h2 className="text-[1.25rem] font-bold text-ink tracking-tight">
-              {t(copy.sectionShop)}
-            </h2>
-            <Link
-              href={`/${locale}/shop`}
-              className="inline-flex items-center gap-0.5 text-[13px] font-semibold text-gold-dark shrink-0"
-            >
-              {t(copy.seeAllShop)} → 
-            </Link>
-          </div>
-
-          <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1 snap-x snap-mandatory hide-scrollbar">
-            {featuredProducts.slice(0, 4).map((p) => {
-              const name = pickTitle(p.name, lang);
-              const img = p.images?.[0] || "";
-              const href = `/${locale}/shop/${p._id}`;
-              return (
-                <Link
-                  key={p._id}
-                  href={href}
-                  className="snap-start shrink-0 w-[168px] rounded-[20px] bg-white overflow-hidden shadow-sm border border-black/[0.05] active:scale-[0.99] transition-transform"
-                >
-                  <div className="relative aspect-square bg-ios-grouped overflow-hidden">
-                    {img ? (
-                      <Image
-                        src={img}
-                        alt={name}
-                        fill
-                        className="object-cover"
-                        sizes="168px"
-                        unoptimized={
-                          img.startsWith("http") && !img.includes("res.cloudinary.com")
-                        }
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center text-black/15">
-                        <Sparkles className="w-9 h-9" strokeWidth={1.25} />
-                      </div>
-                    )}
-                  </div>
-                  <div className="px-3 py-3">
-                    <p className="text-[13px] font-bold text-ink leading-tight line-clamp-2">
-                      {name}
-                    </p>
-                    <p className="mt-1 text-[13px] font-black text-gold-dark">
-                      ₮{Number(p.price ?? 0).toLocaleString()}
-                    </p>
-                  </div>
-                </Link>
-              );
-            })}
-          </div>
-        </section>
-      )}
-
-      {/* — Shortcuts — */}
-      <section className="mb-12 anim-fade-up" style={{ animationDelay: "140ms" }}>
-        <h2 className="text-[1.125rem] font-bold text-ink tracking-tight mb-3">
-          {t(copy.sectionShortcuts)}
-        </h2>
-        <div className="rounded-[20px] bg-white overflow-hidden divide-y divide-black/[0.06] shadow-sm border border-black/[0.04]">
-          {shortcuts.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className="flex items-center gap-3 px-4 py-3.5 active:bg-black/[0.03] transition-colors"
-            >
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black/[0.04] text-ink">
-                <item.icon size={17} strokeWidth={1.5} />
-              </span>
-              <span className="flex-1 text-[15px] font-semibold text-ink">
-                {t(item.label)}
-              </span>
-              <ChevronRight className="w-4 h-4 text-text-light" />
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* — Latest blog — */}
-      <section className="anim-fade-up" style={{ animationDelay: "180ms" }}>
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-[1.125rem] font-bold text-ink tracking-tight">
-            {t(copy.sectionStory)}
-          </h2>
-          <Link
-            href={`/${locale}/blog`}
-            className="inline-flex items-center gap-0.5 text-[13px] font-semibold text-gold-dark"
-          >
-            {t(copy.seeAll)}
-            <ChevronRight className="w-3.5 h-3.5" strokeWidth={2.5} />
-          </Link>
-        </div>
-
-        {!latest ? (
-          <div className="rounded-[20px] bg-ios-grouped px-5 py-10 text-center text-[15px] text-text-mid border border-black/[0.04] shadow-sm">
-            {t(copy.emptyBlog)}
-          </div>
-        ) : (
-          <Link
-            href={`/${locale}/blog/${latest.id}`}
-            className="group block rounded-[20px] overflow-hidden bg-white shadow-sm border border-black/[0.05]"
-          >
-            <div className="relative aspect-[16/9] bg-ios-grouped overflow-hidden rounded-t-[20px]">
-              {latest.cover ? (
-                <Image
-                  src={latest.cover}
-                  alt={pickTitle(latest.title, lang)}
-                  fill
-                  className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-                  sizes="(max-width:768px) 100vw, 640px"
-                  unoptimized={
-                    latest.cover.startsWith("http") &&
-                    !latest.cover.includes("res.cloudinary.com")
-                  }
-                />
-              ) : (
-                <div className="absolute inset-0 flex items-center justify-center bg-ios-grouped">
-                  <Newspaper
-                    className="w-11 h-11 text-black/12"
-                    strokeWidth={1}
-                  />
+                  {slide.src && (
+                    <Image
+                      src={slide.src}
+                      alt={slide.alt || "Gevabal"}
+                      fill
+                      className="object-cover"
+                      sizes="390px"
+                      priority={i === 0 && heroIndex === 0}
+                      fetchPriority={i === heroIndex ? "high" : "low"}
+                      placeholder="blur"
+                      blurDataURL={BLUR_DATA_URL}
+                      unoptimized={
+                        slide.src.startsWith("http") &&
+                        !slide.src.includes("res.cloudinary.com")
+                      }
+                    />
+                  )}
                 </div>
-              )}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
-              <div className="absolute bottom-0 left-0 right-0 p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-wide text-white/85 mb-1">
-                  {formatBlogPostDate(latest.date, lang)}
-                  {latest.category ? ` · ${latest.category}` : ""}
-                </p>
-                <h3 className="text-base font-bold text-white leading-snug tracking-tight line-clamp-2">
-                  {pickTitle(latest.title, lang)}
-                </h3>
-                <p className="mt-2 inline-flex items-center gap-1 text-[12px] font-semibold text-white">
-                  {t(copy.read)}
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </p>
+              );
+            })}
+
+            {/* Gradient overlay layer */}
+            <div
+              className="absolute inset-0 z-20 pointer-events-none"
+              style={{ background: "linear-gradient(to top, rgba(12,11,14,0.85) 0%, rgba(12,11,14,0.2) 60%, transparent 100%)" }}
+            />
+
+            {/* Content layer */}
+            <div className="absolute bottom-0 left-0 right-0 z-30 p-[22px]">
+              <p
+                className="mb-2"
+                style={{ fontSize: "9px", fontWeight: 700, letterSpacing: "0.12em", color: "rgba(191,164,106,0.80)", textTransform: "uppercase" }}
+              >
+                {t(copy.kicker)}
+              </p>
+              <h1
+                className="mb-4"
+                style={{ fontSize: "26px", fontWeight: 800, letterSpacing: "-0.03em", lineHeight: 1.15, color: "#FFFFFF", textShadow: "0 2px 12px rgba(0,0,0,0.4)" }}
+              >
+                {t(copy.headline)}
+              </h1>
+              <div className="flex gap-[10px]">
+                <LocalizedLink href="/monks" onClick={handleTap}>
+                  <button
+                    className="flex items-center justify-center active:scale-[0.975] transition-transform duration-200"
+                    style={{
+                      background: "var(--gold)", color: "white", fontSize: "13px", fontWeight: 700,
+                      padding: "9px 18px", borderRadius: "var(--r-pill)", boxShadow: "0 4px 20px rgba(191,164,106,0.4)",
+                      letterSpacing: "0.01em"
+                    }}
+                  >
+                    {t(copy.ctaPrimary)}
+                  </button>
+                </LocalizedLink>
+                <LocalizedLink href="/monks" onClick={handleTap} className="flex items-center active:opacity-70 transition-opacity">
+                  <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "13px", fontWeight: 600 }}>
+                    {t(copy.ctaSecondary)}
+                  </span>
+                </LocalizedLink>
               </div>
             </div>
-          </Link>
+
+            {/* Slide indicators layer */}
+            {heroSlides.length > 1 && (
+              <div className="absolute bottom-[14px] right-[20px] z-30 flex gap-[5px]">
+                {heroSlides.map((s, i) => (
+                  <div
+                    key={s.key}
+                    style={{
+                      height: "4px",
+                      borderRadius: i === heroIndex ? "2px" : "50%",
+                      width: i === heroIndex ? "18px" : "4px",
+                      background: i === heroIndex ? "var(--gold)" : "rgba(255,255,255,0.35)",
+                      transition: "width 0.3s var(--spring), background 0.3s"
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* — STATS ROW — */}
+        <div
+          className="mx-4 mt-5 mb-5"
+          style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "10px" }}
+        >
+          {statCells.map((cell, idx) => (
+            <div
+              key={cell.label}
+              className={`anim-${idx + 2} flex flex-col items-center gap-[6px]`}
+              style={{
+                background: "var(--bg-elevated)", borderRadius: "var(--r-xl)", boxShadow: "var(--depth-2)",
+                border: "0.5px solid rgba(255,255,255,0.8)", padding: "14px 12px"
+              }}
+            >
+              <div
+                className="flex items-center justify-center"
+                style={{ width: "36px", height: "36px", borderRadius: "var(--r-md)", background: cell.bg, color: cell.color }}
+              >
+                <cell.Icon size={18} strokeWidth={1.75} />
+              </div>
+              <div style={{ fontSize: "22px", fontWeight: 800, letterSpacing: "-0.03em", color: "var(--ink)" }}>
+                {cell.value}
+              </div>
+              <div style={{ fontSize: "11px", fontWeight: 500, color: "var(--ink-3)", marginTop: "1px" }}>
+                {cell.label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* — FEATURED MONKS — */}
+        <div className="mb-5" data-reveal>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "24px 16px 12px" }}>
+            <h2 className="t-title-3" style={{ color: "var(--ink)" }}>{t(copy.sectionGuides)}</h2>
+            <LocalizedLink href="/monks" style={{ fontSize: "14px", fontWeight: 600, color: "var(--gold)", letterSpacing: "-0.01em" }}>
+              {t(copy.seeAll)}
+            </LocalizedLink>
+          </div>
+
+          <div
+            style={{ padding: "0 16px", display: "flex", gap: "12px", overflowX: "auto", scrollSnapType: "x mandatory" }}
+            className="hide-scrollbar"
+          >
+            {featuredMonks.length === 0 ? (
+              <div className="card w-full p-8 flex flex-col items-center justify-center">
+                <Sparkles size={28} className="text-gold mb-2" />
+                <p className="t-subhead text-ink-3">{t(copy.emptyGuides)}</p>
+              </div>
+            ) : (
+              featuredMonks.map((m) => {
+                const id = monkId(m);
+                if (!id) return null;
+                const name = pickTitle(m.name, lang);
+                const titleText = pickTitle(m.title, lang) || "Үзмэрч";
+
+                return (
+                  <LocalizedLink
+                    key={id}
+                    href={`/monks/${id}`}
+                    className="card shrink-0 active:scale-[0.975] transition-transform duration-200"
+                    style={{ width: "166px", scrollSnapAlign: "start" }}
+                    onClick={handleTap}
+                  >
+                    <div style={{ height: "186px", position: "relative", overflow: "hidden" }}>
+                      {m.image ? (
+                        <Image
+                          src={m.image}
+                          alt={name}
+                          fill
+                          className="object-cover"
+                          sizes="166px"
+                          placeholder="blur"
+                          blurDataURL={BLUR_DATA_URL}
+                          unoptimized={
+                            m.image.startsWith("http") &&
+                            !m.image.includes("res.cloudinary.com")
+                          }
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-secondary-bg flex items-center justify-center">
+                          <Users className="text-ink-3" size={32} />
+                        </div>
+                      )}
+                      <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.62) 0%, rgba(0,0,0,0.08) 55%, transparent 100%)" }} />
+
+                      {m.isAvailable !== false && (
+                        <div className="badge-live absolute" style={{ top: "8px", left: "8px" }}>
+                          Онлайн
+                        </div>
+                      )}
+
+                      <div className="absolute bottom-0 w-full" style={{ padding: "10px 12px" }}>
+                        <div style={{ fontSize: "13px", fontWeight: 700, color: "#FFFFFF", letterSpacing: "-0.015em", lineHeight: 1.2, textShadow: "0 1px 4px rgba(0,0,0,0.5)" }} className="truncate">
+                          {name}
+                        </div>
+                        <div style={{ fontSize: "10px", fontWeight: 600, color: "rgba(255,255,255,0.65)", letterSpacing: "0.04em", textTransform: "uppercase", marginTop: "2px" }} className="truncate">
+                          {titleText}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ background: "white", padding: "10px 12px" }}>
+                      <div className="flex items-center gap-[4px]">
+                        <Star size={11} className="fill-gold text-gold" strokeWidth={0} />
+                        <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--ink)" }}>5.0</span>
+                        <span style={{ fontSize: "11px", color: "var(--ink-4)" }}>(12)</span>
+                      </div>
+                      <div style={{ fontSize: "13px", fontWeight: 800, color: "var(--gold-dark)", marginTop: "4px", textAlign: "right" }}>
+                        ₮30,000
+                      </div>
+                    </div>
+                  </LocalizedLink>
+                )
+              })
+            )}
+          </div>
+        </div>
+
+        {/* — SACRED SHOP — */}
+        {featuredProducts?.length > 0 && (
+          <div className="mb-5" data-reveal>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "24px 16px 12px" }}>
+              <h2 className="t-title-3" style={{ color: "var(--ink)" }}>{t(copy.sectionShop)}</h2>
+              <LocalizedLink href="/shop" style={{ fontSize: "14px", fontWeight: 600, color: "var(--gold)", letterSpacing: "-0.01em" }}>
+                {t(copy.seeAllShop)}
+              </LocalizedLink>
+            </div>
+
+            <div
+              style={{ padding: "0 16px", display: "flex", gap: "12px", overflowX: "auto", scrollSnapType: "x mandatory" }}
+              className="hide-scrollbar"
+            >
+              {featuredProducts.slice(0, 4).map((p) => {
+                const name = pickTitle(p.name, lang);
+                const img = p.images?.[0] || "";
+                return (
+                  <LocalizedLink
+                    key={p._id}
+                    href={`/shop/${p._id}`}
+                    className="card shrink-0 active:scale-[0.975] transition-transform duration-200"
+                    style={{ width: "176px", scrollSnapAlign: "start" }}
+                    onClick={handleTap}
+                  >
+                    <div style={{ aspectRatio: "1/1", position: "relative" }}>
+                      {img ? (
+                        <Image
+                          src={img}
+                          alt={name}
+                          fill
+                          className="object-cover"
+                          sizes="176px"
+                          placeholder="blur"
+                          blurDataURL={BLUR_DATA_URL}
+                          unoptimized={
+                            img.startsWith("http") && !img.includes("res.cloudinary.com")
+                          }
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-secondary-bg flex items-center justify-center">
+                          <Sparkles className="text-ink-3" size={32} />
+                        </div>
+                      )}
+                      <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.18) 0%, transparent 50%)" }} />
+                    </div>
+                    <div style={{ padding: "12px" }}>
+                      <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink)", letterSpacing: "-0.01em" }} className="line-clamp-2 leading-snug">
+                        {name}
+                      </div>
+                      <div className="flex justify-between items-center" style={{ marginTop: "6px" }}>
+                        <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--gold-dark)" }}>
+                          ₮{Number(p.price ?? 0).toLocaleString()}
+                        </div>
+                        <div style={{ width: "28px", height: "28px", background: "var(--gold)", borderRadius: "var(--r-sm)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "16px", fontWeight: 700 }}>
+                          +
+                        </div>
+                      </div>
+                    </div>
+                  </LocalizedLink>
+                );
+              })}
+            </div>
+          </div>
         )}
-      </section>
+
+        {/* — SHORTCUTS — */}
+        <div className="mb-5" data-reveal>
+          <div style={{ padding: "24px 16px 12px" }}>
+            <h2 className="t-title-3" style={{ color: "var(--ink)" }}>{t(copy.sectionShortcuts)}</h2>
+          </div>
+          <div style={{ margin: "0 16px", borderRadius: "var(--r-xl)", overflow: "hidden", boxShadow: "var(--depth-2)", background: "white" }}>
+            {shortcuts.map((item, idx) => (
+              <LocalizedLink
+                key={item.href}
+                href={item.href}
+                className="flex items-center active:bg-[rgba(0,0,0,0.03)] transition-colors"
+                style={{
+                  gap: "14px", padding: "14px 16px", minHeight: "54px",
+                  borderBottom: idx === shortcuts.length - 1 ? "none" : "0.5px solid var(--sep)"
+                }}
+                onClick={handleTap}
+              >
+                <div style={{ width: "34px", height: "34px", borderRadius: "var(--r-md)", background: item.bg, color: item.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <item.icon size={17} strokeWidth={2} />
+                </div>
+                <div style={{ fontSize: "16px", fontWeight: 500, color: "var(--ink)", flex: 1 }}>
+                  {t(item.label)}
+                </div>
+                <ChevronRight size={16} color="var(--ink-4)" strokeWidth={2} />
+              </LocalizedLink>
+            ))}
+          </div>
+        </div>
+
+        {/* — LATEST BLOG — */}
+        <div className="mb-5" data-reveal>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "24px 16px 12px" }}>
+            <h2 className="t-title-3" style={{ color: "var(--ink)" }}>{t(copy.sectionStory)}</h2>
+            <LocalizedLink href="/blog" style={{ fontSize: "14px", fontWeight: 600, color: "var(--gold)", letterSpacing: "-0.01em" }}>
+              {t(copy.seeAll)}
+            </LocalizedLink>
+          </div>
+
+          {latest && (
+            <LocalizedLink
+              href={`/blog/${latest.id}`}
+              className="card block active:scale-[0.975] transition-transform duration-200"
+              style={{ margin: "0 16px", boxShadow: "var(--depth-3)" }}
+              onClick={handleTap}
+            >
+              <div style={{ aspectRatio: "16/9", position: "relative" }}>
+                {latest.cover ? (
+                  <Image
+                    src={latest.cover}
+                    alt={pickTitle(latest.title, lang)}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width:768px) 100vw, 640px"
+                    placeholder="blur"
+                    blurDataURL={BLUR_DATA_URL}
+                    unoptimized={
+                      latest.cover.startsWith("http") &&
+                      !latest.cover.includes("res.cloudinary.com")
+                    }
+                  />
+                ) : (
+                  <div className="absolute inset-0 bg-secondary-bg flex items-center justify-center">
+                    <Newspaper className="text-ink-3" size={40} />
+                  </div>
+                )}
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.25) 55%, transparent 100%)" }} />
+
+                <div className="absolute bottom-0 w-full" style={{ padding: "18px 16px" }}>
+                  <div style={{ display: "inline-flex", background: "rgba(191,164,106,0.85)", color: "white", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", padding: "3px 9px", borderRadius: "var(--r-pill)", marginBottom: "8px" }}>
+                    {latest.category || "Нийтлэл"}
+                  </div>
+                  <div style={{ fontSize: "17px", fontWeight: 700, color: "white", letterSpacing: "-0.015em", lineHeight: 1.3, textShadow: "0 1px 8px rgba(0,0,0,0.4)" }} className="line-clamp-2">
+                    {pickTitle(latest.title, lang)}
+                  </div>
+                  <div style={{ fontSize: "11px", fontWeight: 500, color: "rgba(255,255,255,0.6)", marginTop: "8px", display: "flex", gap: "10px" }}>
+                    <span>{formatBlogPostDate(latest.date, lang)}</span>
+                    {latest.authorName && <span>· {latest.authorName}</span>}
+                  </div>
+                  <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--gold-light)", marginTop: "6px" }}>
+                    {t(copy.read)}
+                  </div>
+                </div>
+              </div>
+            </LocalizedLink>
+          )}
+        </div>
+
+      </div>
     </div>
   );
 }

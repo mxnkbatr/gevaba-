@@ -16,27 +16,6 @@ export interface MobileScrollViewProps {
     direction?: 'vertical' | 'horizontal';
 }
 
-/**
- * Native-feeling scroll view with pull-to-refresh.
- * 
- * Features:
- * - Pull-to-refresh with haptic feedback
- * - iOS bounce effect
- * - Android overscroll
- * - Smooth scrolling
- * 
- * @example
- * ```tsx
- * <MobileScrollView 
- *   pullToRefresh 
- *   onRefresh={async () => {
- *     await fetchNewData();
- *   }}
- * >
- *   <MonkList />
- * </MobileScrollView>
- * ```
- */
 export default function MobileScrollView({
     children,
     pullToRefresh = false,
@@ -51,7 +30,7 @@ export default function MobileScrollView({
     const touchStartY = useRef(0);
     const isPulling = useRef(false);
 
-    const PULL_THRESHOLD = 80; // Distance to trigger refresh
+    const PULL_THRESHOLD = 72; // Changed to 72px per specs
 
     const handleTouchStart = useCallback((e: React.TouchEvent) => {
         if (!pullToRefresh || !onRefresh) return;
@@ -102,6 +81,20 @@ export default function MobileScrollView({
 
     const refreshProgress = Math.min(pullDistance / PULL_THRESHOLD, 1);
 
+    // Generate Apple-like activity indicator bars
+    const spinnerBars = Array.from({ length: 12 }).map((_, i) => (
+        <div
+            key={i}
+            className="absolute left-[46%] top-0 h-[28%] w-[8%] rounded-full bg-gold opacity-30"
+            style={{
+                transform: `rotate(${i * 30}deg) translate(0, 130%)`,
+                animation: isRefreshing ? `ios-spinner 1.2s linear infinite` : 'none',
+                animationDelay: `${(i * 1.2) / 12}s`,
+                opacity: isRefreshing ? undefined : Math.max(0.2, refreshProgress * (i / 12)),
+            }}
+        />
+    ));
+
     return (
         <div
             ref={scrollRef}
@@ -110,6 +103,7 @@ export default function MobileScrollView({
         ${direction === 'vertical' ? 'h-full' : 'w-full'}
         ${isIOS ? '-webkit-overflow-scrolling-touch' : ''}
         ${className}
+        relative
       `}
             style={{
                 overscrollBehavior: 'contain',
@@ -119,35 +113,31 @@ export default function MobileScrollView({
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
         >
-            {/* Pull-to-refresh indicator */}
+            <style dangerouslySetInnerHTML={{__html: `
+                @keyframes ios-spinner {
+                    0% { opacity: 1; }
+                    100% { opacity: 0.15; }
+                }
+            `}} />
+
+            {/* Pull-to-refresh indicator top-4 centered */}
             {pullToRefresh && (
                 <div
-                    className="flex items-center justify-center transition-all duration-200 ease-out"
+                    className="absolute left-0 right-0 flex justify-center transition-opacity duration-200"
                     style={{
-                        height: isRefreshing ? 60 : pullDistance,
-                        opacity: isRefreshing || pullDistance > 20 ? 1 : 0,
+                        top: "16px", // top-4
+                        opacity: isRefreshing || pullDistance > 10 ? 1 : 0,
+                        zIndex: 10,
+                        pointerEvents: 'none'
                     }}
                 >
-                    <div className="flex flex-col items-center gap-2">
-                        {isRefreshing ? (
-                            <>
-                                <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-                                <span className="text-xs text-text-muted">Refreshing...</span>
-                            </>
-                        ) : (
-                            <>
-                                <div
-                                    className="w-6 h-6 border-2 border-primary rounded-full transition-transform"
-                                    style={{
-                                        transform: `rotate(${refreshProgress * 360}deg)`,
-                                        borderTopColor: 'transparent',
-                                    }}
-                                />
-                                {pullDistance > PULL_THRESHOLD && (
-                                    <span className="text-xs text-primary font-medium">Release to refresh</span>
-                                )}
-                            </>
-                        )}
+                    <div 
+                        className="relative w-7 h-7"
+                        style={{
+                            transform: isRefreshing ? 'none' : `rotate(${refreshProgress * 360}deg) scale(${Math.min(1, 0.5 + refreshProgress * 0.5)})`,
+                        }}
+                    >
+                        {spinnerBars}
                     </div>
                 </div>
             )}
@@ -156,7 +146,7 @@ export default function MobileScrollView({
             <div
                 className="transition-transform duration-200"
                 style={{
-                    transform: `translateY(${isRefreshing ? 0 : 0}px)`,
+                    transform: `translateY(${isRefreshing ? 60 : pullDistance * 0.5}px)`,
                 }}
             >
                 {children}

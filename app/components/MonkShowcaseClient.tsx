@@ -40,14 +40,11 @@ export default function MonkShowcaseClient({
       }
     };
 
-    // SSR already gave us a list: do not overwrite with stale IndexedDB first, and defer
-    // the duplicate Mongo/API round-trip until idle (faster tab + less jank).
     if (initialMonks?.length) {
       const run = () => {
         void refreshFromNetwork();
       };
       let idleId: number | undefined;
-      /** DOM timers use numeric ids; Node typings use Timeout — use number for browser build */
       let timeoutId: number | undefined;
       if (typeof requestIdleCallback !== "undefined") {
         idleId = requestIdleCallback(run, { timeout: 15000 });
@@ -90,7 +87,6 @@ export default function MonkShowcaseClient({
 
   const filteredMonks = useMemo<Monk[]>(() => {
     const query = searchQuery.toLowerCase();
-    // Sorting preferred names
     const preferredNames = [
       "Буянцог",
       "Ундраа",
@@ -122,7 +118,6 @@ export default function MonkShowcaseClient({
       return matchesQuery;
     });
 
-    // Sort by rank then by monkNumber
     return result.sort((a, b) => {
       const rankA = getMonkRank(a);
       const rankB = getMonkRank(b);
@@ -138,40 +133,49 @@ export default function MonkShowcaseClient({
     router.push(`/${validLang}/monks/${monkId}`);
   };
 
+  const langClass = language === "mn" ? "lang-mn" : "";
+
   return (
-    <div
-      className={hideHeader ? "" : "relative min-h-[100svh] bg-cream pb-24"}
-      style={
-        hideHeader
-          ? {}
-          : {
-              paddingTop:
-                "calc(var(--header-height-mobile) + env(safe-area-inset-top, 0px))",
-            }
-      }
-    >
-      {/* Header Area */}
-      {!hideHeader && (
-        <div className="sticky top-[calc(var(--header-height-mobile)+env(safe-area-inset-top,0px))] bg-white/85 backdrop-blur-md backdrop-saturate-150 z-30 border-b border-black/[0.06] shadow-[0_1px_0_rgba(0,0,0,0.04)]">
-          <LargeHeader
-            title={t({ mn: "Багш", en: "Mentors" })}
-            highlight={t({ mn: "Нээлттэй", en: "Available" })}
-            subtitle={t({
-              mn: "Танд хамгийн зохицох багшийг хайж олоорой",
-              en: "Find the right mentor for your journey",
-            })}
-            right={
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-black/[0.06] bg-white shadow-sm">
-                <Sparkles size={22} className="text-gold" strokeWidth={1.25} />
-              </div>
-            }
-          />
-          <div className="px-6 pb-5">
-            <div className="relative">
+    <div className={hideHeader ? "" : `page font-sans ${langClass}`}>
+      <div className={hideHeader ? "" : "max-w-[480px] mx-auto w-full pb-4"}>
+        {!hideHeader && (
+          <div 
+            className="sticky z-30 bg-bg-secondary/80 backdrop-blur-xl pb-4"
+            style={{ 
+                top: "var(--nav-h)",
+                marginTop: "calc(var(--nav-h) * -1)",
+                paddingTop: "var(--nav-h)"
+            }}
+          >
+            <LargeHeader
+              title={t({ mn: "Багш", en: "Mentors" })}
+              highlight={t({ mn: "Нээлттэй", en: "Available" })}
+              subtitle={t({
+                mn: "Танд хамгийн зохицох багшийг хайж олоорой",
+                en: "Find the right mentor for your journey",
+              })}
+              omitNavGutter={true}
+            />
+            
+            {/* SEARCH BAR — Apple HIG */}
+            <div 
+              style={{
+                margin: "12px 16px 0",
+                height: "38px",
+                background: "rgba(118,118,128,0.12)",
+                borderRadius: "10px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                padding: "0 10px",
+                transition: "background 0.2s, box-shadow 0.2s"
+              }}
+              className="focus-within:bg-[rgba(118,118,128,0.2)]"
+            >
               <Search
-                className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-earth/45"
-                size={17}
-                strokeWidth={1.35}
+                size={16}
+                color="var(--ink-3)"
+                strokeWidth={2.5}
               />
               <input
                 type="text"
@@ -181,60 +185,78 @@ export default function MonkShowcaseClient({
                 })}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-[20px] border-0 bg-[#F2F2F7] py-3.5 pl-11 pr-4 text-[16px] font-normal text-ink shadow-[0_1px_4px_rgba(0,0,0,0.06)] outline-none transition-shadow placeholder:text-earth/50 focus:shadow-[0_4px_20px_rgba(0,0,0,0.08)]"
+                style={{
+                  border: "none",
+                  background: "transparent",
+                  flex: 1,
+                  fontSize: "16px",
+                  outline: "none",
+                  color: "var(--ink)",
+                  fontWeight: 400
+                }}
+                className="placeholder:text-[var(--ink-4)]"
               />
             </div>
-          </div>
-        </div>
-      )}
-
-      <div className={hideHeader ? "px-0" : "relative z-10 mt-6 px-5 pb-10"}>
-        {filteredMonks.length > 0 ? (
-          <>
-          {!hideHeader && (
-            <div className="mb-5 flex items-end justify-between gap-3">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-earth/50">
-                  {t({ mn: "Удирдамж", en: "Guidance" })}
-                </p>
-                <p className="mt-1 text-lg font-semibold text-ink tracking-tight">
-                  {t({ mn: "Багш нар", en: "Mentors" })}
-                </p>
-              </div>
-              <span className="shrink-0 rounded-full bg-black/[0.05] px-3 py-1 text-[12px] font-semibold tabular-nums text-earth">
-                {filteredMonks.length}
-              </span>
-            </div>
-          )}
-          <div className="flex flex-col">
-            {filteredMonks.map((monk, index) => (
-              <MonkCard
-                key={monk._id?.toString()}
-                monk={monk}
-                index={index}
-                onClick={() => handleMonkClick(monk._id?.toString() || "")}
-              />
-            ))}
-          </div>
-          </>
-        ) : (
-          <div
-            className="anim-fade-up mx-auto max-w-md rounded-[20px] border border-black/[0.06] bg-white px-8 py-14 text-center shadow-sm"
-          >
-            <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-black/[0.04]">
-              <Search size={28} className="text-earth/45" strokeWidth={1.25} />
-            </div>
-            <h3 className="text-lg font-semibold text-ink tracking-tight">
-              {t({ mn: "Илэрц олдсонгүй", en: "No mentors found" })}
-            </h3>
-            <p className="mt-2 text-[14px] text-earth/65">
-              {t({
-                mn: "Та хайлтаа өөрчлөөд үзээрэй.",
-                en: "Try adjusting your search query.",
-              })}
-            </p>
           </div>
         )}
+
+        <div className={hideHeader ? "px-0" : "px-4"}>
+          {filteredMonks.length > 0 ? (
+            <>
+              {!hideHeader && (
+                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "12px", marginTop: "16px" }}>
+                  <div>
+                    <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--ink-3)" }}>
+                      {t({ mn: "Удирдамж", en: "Guidance" })}
+                    </p>
+                    <p style={{ fontSize: "17px", fontWeight: 600, color: "var(--ink)", letterSpacing: "-0.015em", marginTop: "4px" }}>
+                      {t({ mn: "Багш нар", en: "Mentors" })}
+                    </p>
+                  </div>
+                  <span style={{ fontSize: "12px", fontWeight: 600, background: "rgba(0,0,0,0.05)", padding: "4px 10px", borderRadius: "var(--r-pill)", color: "var(--ink-3)" }}>
+                    {filteredMonks.length}
+                  </span>
+                </div>
+              )}
+              <div className="flex flex-col">
+                {filteredMonks.map((monk, index) => (
+                  <MonkCard
+                    key={monk._id?.toString()}
+                    monk={monk}
+                    index={index}
+                    onClick={() => handleMonkClick(monk._id?.toString() || "")}
+                  />
+                ))}
+              </div>
+            </>
+          ) : (
+            <div
+              className="anim-1 card"
+              style={{
+                margin: "32px auto",
+                maxWidth: "320px",
+                padding: "32px 24px",
+                textAlign: "center",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center"
+              }}
+            >
+              <div style={{ width: "64px", height: "64px", borderRadius: "20px", background: "rgba(0,0,0,0.04)", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
+                <Search size={28} color="var(--ink-4)" strokeWidth={1.5} />
+              </div>
+              <h3 className="t-headline" style={{ color: "var(--ink)" }}>
+                {t({ mn: "Илэрц олдсонгүй", en: "No mentors found" })}
+              </h3>
+              <p className="t-subhead" style={{ color: "var(--ink-3)", marginTop: "8px" }}>
+                {t({
+                  mn: "Та хайлтаа өөрчлөөд үзээрэй.",
+                  en: "Try adjusting your search query.",
+                })}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

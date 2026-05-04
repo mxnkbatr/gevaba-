@@ -1,5 +1,5 @@
 import { getCollection } from "@/app/lib/mongodb";
-import { sendPushToUser } from "@/lib/fcm";
+import { sendPushToUser } from "@/lib/pushService";
 
 export async function notifyAdminNewOrder(
   orderId: string,

@@ -9,6 +9,8 @@ import OfflineBanner from '../components/OfflineBanner'
 import { CartProvider } from '@/contexts/CartContext'
 import CartDrawerClient from "../components/CartDrawerClient"
 
+import RealTimeCallHandler from '../components/RealTimeCallHandler'
+
 export default async function RootLayout({
   children,
   params,
@@ -33,6 +35,7 @@ export default async function RootLayout({
           <SmoothScroll />
           <CartProvider>
             <NotificationProvider>
+              <RealTimeCallHandler />
               <Navbar />
               <CartDrawerClient />
               <div className="premium-scroll w-full h-full">

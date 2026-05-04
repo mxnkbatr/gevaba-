@@ -2,9 +2,9 @@
 
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { 
-    ChevronLeft, Star, Calendar, Award, MessageCircle, 
-    Share2, ShieldCheck, Sparkles, Heart, Globe, 
+import {
+    ChevronLeft, Star, Calendar, Award, MessageCircle,
+    Share2, ShieldCheck, Sparkles, Heart, Globe,
     Clock, CheckCircle, MoreHorizontal, Send, StarHalf,
     UserCircle, Loader2
 } from "lucide-react";
@@ -42,15 +42,15 @@ function buildAvailableServices(mData: any, sData: any[], lang: string, routeMon
     const services = isSpecial
         ? sData
         : sData.filter((s: any) => {
-              const isDirectMatch = s.monkId === monkIdStr;
-              const isReferenced =
-                  Array.isArray(mData.services) &&
-                  mData.services.some((ms: any) => {
-                      const msId = typeof ms === "string" ? ms : ms.id || ms._id;
-                      return msId === s._id || msId === s.id;
-                  });
-              return isDirectMatch || isReferenced || s.isUniversal;
-          });
+            const isDirectMatch = s.monkId === monkIdStr;
+            const isReferenced =
+                Array.isArray(mData.services) &&
+                mData.services.some((ms: any) => {
+                    const msId = typeof ms === "string" ? ms : ms.id || ms._id;
+                    return msId === s._id || msId === s.id;
+                });
+            return isDirectMatch || isReferenced || s.isUniversal;
+        });
 
     const uniqueServicesMap = new Map();
     services.forEach((s: any) => {
@@ -93,7 +93,7 @@ export default function MonkProfileClient({
     const [loading, setLoading] = useState(!initialMonk);
     const [wishlistLoading, setWishlistLoading] = useState(false);
     const [submittingReview, setSubmittingReview] = useState(false);
-    
+
     // New Review Form State
     const [newReviewRating, setNewReviewRating] = useState(5);
     const [newReviewComment, setNewReviewComment] = useState("");
@@ -246,7 +246,7 @@ export default function MonkProfileClient({
     const handleBook = (srvId?: string) => {
         const id = srvId || (availableServices[0]?._id || availableServices[0]?.id);
         if (!id) return;
-        
+
         if (isSignedIn) {
             router.push(`/${lang}/booking/${id}?monkId=${monkId}&date=${selectedDate}`);
         } else {
@@ -296,13 +296,13 @@ export default function MonkProfileClient({
                     className="object-cover"
                     priority
                 />
-                
+
                 {/* Overlays */}
                 <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/70 to-transparent z-10" />
                 <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/10 to-transparent z-10" />
-                
+
                 {/* Floating Controls */}
-                <div 
+                <div
                     className="absolute z-30 w-full px-5 flex justify-between items-center"
                     style={{ top: "max(env(safe-area-inset-top, 0px), 16px)" }}
                 >
@@ -312,23 +312,22 @@ export default function MonkProfileClient({
                     >
                         <ChevronLeft className="text-white" size={26} />
                     </button>
-                    
+
                     <div className="flex gap-3">
-                        <button 
+                        <button
                             onClick={handleShare}
                             className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-2xl border border-white/30 flex items-center justify-center shadow-lg active:scale-90 transition-transform"
                         >
                             <Share2 size={20} className="text-white" />
                         </button>
-                        <button 
+                        <button
                             onClick={toggleWishlist}
                             className="w-11 h-11 rounded-full bg-white/20 backdrop-blur-2xl border border-white/30 flex items-center justify-center shadow-lg active:scale-90 transition-transform"
                         >
                             <Heart
                                 size={22}
-                                className={`transition-colors duration-200 ${
-                                    isWishlisted ? "text-red-500 fill-red-500" : "text-white"
-                                }`}
+                                className={`transition-colors duration-200 ${isWishlisted ? "text-red-500 fill-red-500" : "text-white"
+                                    }`}
                             />
                         </button>
                     </div>
@@ -360,7 +359,7 @@ export default function MonkProfileClient({
             <div
                 className="relative z-20 space-y-12 px-6 pt-8 pb-[calc(env(safe-area-inset-bottom\,0px)+var(--tab-bar-height\,84px)+1rem)]"
             >
-                
+
                 {/* 1. Stats Grid */}
                 <section className="grid grid-cols-4 gap-3">
                     {[
@@ -388,7 +387,7 @@ export default function MonkProfileClient({
                         </h2>
                         <span className="text-[11px] font-bold text-earth/40">{t({ mn: "Дараагийн 14 хоног", en: "Next 14 days" })}</span>
                     </div>
-                    <div 
+                    <div
                         ref={calendarRef}
                         className="flex gap-3 overflow-x-auto pb-4 hide-scrollbar -mx-6 px-6"
                     >
@@ -398,11 +397,10 @@ export default function MonkProfileClient({
                                 <button
                                     key={d.full}
                                     onClick={() => setSelectedDate(d.full)}
-                                    className={`flex h-20 w-16 shrink-0 flex-col items-center justify-center rounded-[1.8rem] border transition-all ${
-                                        isSelected
+                                    className={`flex h-20 w-16 shrink-0 flex-col items-center justify-center rounded-[1.8rem] border transition-all ${isSelected
                                             ? "scale-105 border-black/[0.08] bg-gold text-neutral-900 shadow-sm"
                                             : "border-black/[0.06] bg-white text-earth shadow-sm hover:border-black/[0.1]"
-                                    }`}
+                                        }`}
                                 >
                                     <span
                                         className={`mb-1 text-[10px] font-bold uppercase ${isSelected ? "text-neutral-800/60" : "text-earth/40"}`}
@@ -426,7 +424,7 @@ export default function MonkProfileClient({
                     </h2>
                     <div className="flex gap-4 overflow-x-auto pb-4 hide-scrollbar -mx-6 px-6">
                         {availableServices.map((svc: any) => (
-                            <div 
+                            <div
                                 key={svc._id || svc.id}
                                 className="flex w-[240px] shrink-0 flex-col rounded-[20px] border border-black/[0.06] bg-white p-6 shadow-sm"
                             >
@@ -434,14 +432,14 @@ export default function MonkProfileClient({
                                     <Sparkles size={24} />
                                 </div>
                                 <h3 className="text-[16px] font-black text-ink leading-tight mb-1 truncate">
-                                    {svc.name?.[lang as 'mn'|'en'] || svc.name?.mn || "Ritual"}
+                                    {svc.name?.[lang as 'mn' | 'en'] || svc.name?.mn || "Ritual"}
                                 </h3>
                                 <p className="text-[12px] font-bold text-earth/40 uppercase tracking-widest mb-4">
                                     {svc.duration || "60 min"}
                                 </p>
                                 <div className="mt-auto flex items-center justify-between">
                                     <p className="text-[18px] font-black text-ink">₮{svc.price.toLocaleString()}</p>
-                                    <button 
+                                    <button
                                         onClick={() => handleBook(svc._id || svc.id)}
                                         className="flex h-10 w-10 items-center justify-center rounded-xl border border-black/[0.06] bg-gold text-neutral-900 transition-transform active:scale-90"
                                     >
@@ -486,7 +484,7 @@ export default function MonkProfileClient({
                             {monkBio}
                         </p>
                         {monkBio.length > 200 && (
-                            <button 
+                            <button
                                 onClick={() => setIsBioExpanded(!isBioExpanded)}
                                 className="mt-2 flex items-center gap-1 text-[13px] font-black text-gold transition-transform active:scale-95"
                             >
@@ -563,30 +561,30 @@ export default function MonkProfileClient({
                             <h3 className="text-[14px] font-black text-ink mb-4">{t({ mn: "Үнэлгээ өгөх", en: "Rate this Monk" })}</h3>
                             <div className="flex gap-2 mb-4">
                                 {[1, 2, 3, 4, 5].map((star) => (
-                                    <button 
+                                    <button
                                         key={star}
                                         onClick={() => setNewReviewRating(star)}
                                         className="p-1 active:scale-125 transition-transform"
                                     >
-                                        <Star 
-                                            size={28} 
+                                        <Star
+                                            size={28}
                                             className={
                                                 star <= newReviewRating
                                                     ? "fill-gold text-gold"
                                                     : "text-stone/30"
-                                            } 
+                                            }
                                         />
                                     </button>
                                 ))}
                             </div>
                             <div className="relative">
-                                <textarea 
+                                <textarea
                                     value={newReviewComment}
                                     onChange={(e) => setNewReviewComment(e.target.value)}
                                     placeholder={t({ mn: "Таны сэтгэгдэл...", en: "Share your experience..." })}
                                     className="min-h-[100px] w-full resize-none rounded-2xl border-2 border-transparent bg-[#F2F2F7] p-4 text-[14px] outline-none transition-all focus:border-black/10"
                                 />
-                                <button 
+                                <button
                                     onClick={submitReview}
                                     disabled={submittingReview}
                                     className="absolute bottom-3 right-3 flex h-10 w-10 items-center justify-center rounded-xl bg-gold text-neutral-900 shadow-sm transition-all active:scale-90 disabled:opacity-50"

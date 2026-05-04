@@ -12,28 +12,17 @@ const JWT_SECRET = process.env.JWT_SECRET;
  * Every authenticated route gets the same object.
  */
 export interface AuthUser {
-  /** Primary identifier — MongoDB _id (string) for custom users, Clerk ID for Clerk users */
-  id: string;
-  /** Always the MongoDB _id (string), resolved from Clerk or JWT */
-  dbId: string;
-  /** Display name */
+  id: string;        // Clerk ID or MongoDB _id (legacy/custom)
+  dbId: string;      // Always the MongoDB _id (string)
+  clerkId?: string;  // Clerk ID if applicable
   fullName: string;
-  /** "client" | "monk" | "admin" */
-  role: string;
-  /** True if authenticated via Clerk */
+  role: "seeker" | "monk" | "admin";
+  email?: string;
   isClerk: boolean;
 }
 
 /**
  * Resolve the authenticated user from a request.
- *
- * Resolution order (first match wins):
- *  1. `auth_token` cookie → verify JWT → lookup MongoDB user
- *  2. `Authorization: Bearer <token>` header → same JWT flow
- *  3. Clerk `currentUser()` → resolve MongoDB user by clerkId
- *
- * @param request - The incoming Request object
- * @returns AuthUser if authenticated, null otherwise
  */
 export async function getAuthUser(request?: Request): Promise<AuthUser | null> {
   try {
@@ -65,16 +54,18 @@ export async function getAuthUser(request?: Request): Promise<AuthUser | null> {
             return {
               id: dbUser._id.toString(),
               dbId: dbUser._id.toString(),
+              clerkId: dbUser.clerkId,
               fullName: dbUser.firstName
                 ? `${dbUser.firstName} ${dbUser.lastName || ""}`.trim()
                 : dbUser.phone || "User",
-              role: dbUser.role || "client",
-              isClerk: false,
+              role: (dbUser.role as any) || "seeker",
+              email: dbUser.email,
+              isClerk: !!dbUser.clerkId,
             };
           }
         }
       } catch {
-        // Invalid/expired custom JWT — fall through to Clerk
+        // Invalid/expired custom JWT
       }
     }
 
@@ -82,29 +73,35 @@ export async function getAuthUser(request?: Request): Promise<AuthUser | null> {
     const clerkUser = await currentUser();
     if (clerkUser) {
       const { db } = await connectToDatabase();
-      const dbUser = await db
+      let dbUser = await db
         .collection("users")
         .findOne({ clerkId: clerkUser.id });
 
+      // If Clerk user exists but no DB record, we might want to auto-create it or just fallback
+      // For now, follow the pattern of providing a fallback dbId if not found
       if (dbUser) {
         return {
           id: clerkUser.id,
           dbId: dbUser._id.toString(),
+          clerkId: clerkUser.id,
           fullName:
             clerkUser.fullName ||
             `${clerkUser.firstName || ""} ${clerkUser.lastName || ""}`.trim() ||
             "User",
-          role: dbUser.role || (clerkUser.publicMetadata?.role as string) || "client",
+          role: (dbUser.role as any) || "seeker",
+          email: clerkUser.emailAddresses[0]?.emailAddress || dbUser.email,
           isClerk: true,
         };
       }
 
-      // Clerk user exists but no DB record — return minimal info
+      // Fallback for new Clerk users not yet in our MongoDB
       return {
         id: clerkUser.id,
-        dbId: clerkUser.id, // No DB record yet; use Clerk ID as fallback
+        dbId: clerkUser.id, // Temporary fallback
+        clerkId: clerkUser.id,
         fullName: clerkUser.fullName || "User",
-        role: (clerkUser.publicMetadata?.role as string) || "client",
+        role: "seeker",
+        email: clerkUser.emailAddresses[0]?.emailAddress,
         isClerk: true,
       };
     }

@@ -118,22 +118,6 @@ export default function ProfilePage() {
     return { upcomingBookings: upcoming, historyBookings: history, acceptedCount: acc, totalEarnings: acc * (profile?.isSpecial ? 88800 : 40000) };
   }, [bookings, profile]);
 
-  const joinVideo = async (booking: Booking) => {
-    setJoiningId(booking._id);
-    try {
-      if (isMonk) {
-        setBookings(prev => prev.map(b => b._id === booking._id ? { ...b, callStatus: "active" } : b));
-        await fetch(`/api/bookings/${booking._id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ callStatus: "active" }) });
-      }
-      const name = encodeURIComponent(user?.fullName || user?.firstName || "User");
-      const r = await fetch(`/api/livekit?room=${booking._id}&username=${name}`);
-      if (!r.ok) throw new Error("Token failed");
-      const data = await r.json();
-      setActiveRoomToken(data.token);
-      setActiveRoomName(booking._id);
-    } catch (e) { console.error(e); }
-    finally { setJoiningId(null); }
-  };
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -199,17 +183,6 @@ export default function ProfilePage() {
     finally { setIsSaving(false); }
   };
 
-  // --- RENDER: Video Room ---
-  if (activeRoomToken && activeRoomName) {
-    return <LiveRitualRoom
-      token={activeRoomToken} serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL!}
-      roomName={activeRoomName} bookingId={activeRoomName} isMonk={isMonk}
-      onLeave={async () => {
-        if (isMonk) await fetch(`/api/bookings/${activeRoomName}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ callStatus: "ended" }) });
-        setActiveRoomToken(null); setActiveRoomName(null); window.location.reload();
-      }}
-    />;
-  }
 
   // --- RENDER: Guest ---
   if (!authLoading && !user) {
@@ -413,13 +386,13 @@ export default function ProfilePage() {
                   {b.status === "confirmed" && (
                     <div className="flex gap-1.5">
                       <button
-                        onClick={() => setActiveChatBooking(b)}
+                        onClick={() => router.push(`/${lang}/booking/${b._id}`)}
                         className="flex h-9 w-9 items-center justify-center rounded-xl border border-black/[0.06] bg-white shadow-sm transition-transform hover:border-black/[0.1] active:scale-90"
                       >
                         <MessageCircle size={15} className="text-earth" />
                       </button>
                       <button
-                        onClick={() => joinVideo(b)}
+                        onClick={() => router.push(`/${lang}/booking/${b._id}`)}
                         disabled={joiningId === b._id}
                         className="flex h-9 w-9 items-center justify-center rounded-xl border border-black/[0.06] bg-gold shadow-sm transition-transform active:scale-90 disabled:opacity-50"
                       >

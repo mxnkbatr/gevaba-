@@ -5,6 +5,8 @@ import Image from "next/image";
 import { Monk } from "@/database/types";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Star, ArrowRight } from "lucide-react";
+import { hapticsLight } from "@/app/capacitor/plugins/haptics";
+import { usePlatform } from "@/app/capacitor/hooks/usePlatform";
 
 interface MonkCardProps {
     monk: Monk;
@@ -12,8 +14,11 @@ interface MonkCardProps {
     onClick?: () => void;
 }
 
+const BLUR_DATA_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+
 export default function MonkCard({ monk, index = 0, onClick }: MonkCardProps) {
     const { language: lang } = useLanguage();
+    const { isNative } = usePlatform();
     const validLang = (['mn', 'en'].includes(lang) ? lang : 'mn') as 'mn' | 'en';
 
     const name = monk.name?.[validLang] || monk.name?.mn || monk.name?.en || "Unknown";
@@ -28,15 +33,55 @@ export default function MonkCard({ monk, index = 0, onClick }: MonkCardProps) {
         ? monk.specialties[0]
         : (validLang === 'en' ? "Spiritual Guide" : "Засалч");
 
+    const handleTap = async () => {
+        if (isNative) {
+            await hapticsLight();
+        }
+        if (onClick) {
+            onClick();
+        }
+    };
+
     return (
         <div
-            onClick={onClick}
-            className="app-card-premium group mb-5 flex cursor-pointer items-center gap-4 p-5 transition-all duration-300 active:scale-[0.98] hover:shadow-[0_16px_48px_-12px_rgba(0,0,0,0.12)]"
+            onClick={handleTap}
+            className="card mb-3 transition-all duration-200 active:scale-[0.975]"
+            style={{
+                padding: "12px",
+                display: "flex",
+                gap: "12px",
+                cursor: "pointer",
+                alignItems: "center"
+            }}
         >
-            {/* Avatar & Status */}
-            <div className="relative w-20 h-20 flex-shrink-0">
-                <div className={`absolute inset-0 rounded-full ${isOnline ? "aura-pulse" : "bg-stone/50"}`} />
-                <div className="relative w-full h-full rounded-full overflow-hidden border border-white shadow-md z-10">
+            {/* Avatar Block */}
+            <div style={{ position: "relative", width: "80px", height: "80px", flexShrink: 0 }}>
+                {isOnline && (
+                    <div
+                        className="aura-pulse"
+                        style={{
+                            position: "absolute",
+                            inset: "2px",
+                            borderRadius: "22px",
+                            border: "1.5px solid var(--gold-glow)",
+                            zIndex: 0
+                        }}
+                    />
+                )}
+
+                <div
+                    style={{
+                        position: "relative",
+                        width: "100%",
+                        height: "100%",
+                        borderRadius: "22px",
+                        overflow: "hidden",
+                        border: "0.5px solid rgba(0,0,0,0.08)",
+                        boxShadow: "var(--depth-1)",
+                        backgroundColor: "var(--bg-secondary)",
+                        zIndex: 10
+                    }}
+                >
                     <Image
                         src={monk.image || "/default-monk.jpg"}
                         alt={name}
@@ -44,41 +89,79 @@ export default function MonkCard({ monk, index = 0, onClick }: MonkCardProps) {
                         priority={index < 3}
                         loading={index < 3 ? undefined : "lazy"}
                         className="object-cover"
+                        placeholder="blur"
+                        blurDataURL={BLUR_DATA_URL}
                     />
                 </div>
+
                 {isOnline && (
-                        <div className="absolute left-2.5 top-2.5 flex items-center gap-1.5 rounded-full bg-black/45 px-2 py-0.5 shadow-sm backdrop-blur-md">
-                            <span className="h-1.5 w-1.5 rounded-full bg-[#30d158]" />
-                            <span className="text-[8px] font-semibold uppercase tracking-wider text-white/95">Online</span>
-                        </div>
-                    )}
+                    <div
+                        style={{
+                            position: "absolute",
+                            bottom: "2px",
+                            right: "2px",
+                            width: "14px",
+                            height: "14px",
+                            background: "var(--sys-live)",
+                            borderRadius: "50%",
+                            border: "2.5px solid white",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                            zIndex: 20
+                        }}
+                    />
+                )}
             </div>
 
-            {/* Info Container */}
-            <div className="flex-1 min-w-0 pr-2 overflow-hidden">
-                <div className="flex flex-col gap-0.5">
-                    <h3 className="text-base font-semibold text-ink leading-tight truncate">{name}</h3>
-                    <p className="line-clamp-1 text-[10px] font-semibold uppercase tracking-widest text-earth/50">{titleText}</p>
-                </div>
-
-                <p className="text-[11px] text-earth/60 mt-1 truncate">
-                    {specialty} · {years}{validLang === "en" ? ` yrs` : " жил"}
-                </p>
-
-                <div className="flex items-center gap-1.5 mt-2">
-                    <div className="flex items-center gap-1">
-                        <Star size={10} className="text-gold fill-gold" strokeWidth={0} />
-                        <span className="text-[11px] font-semibold text-ink">{rating}</span>
-                        <span className="text-[10px] text-earth/40">({reviews})</span>
+            {/* Info Block */}
+            <div style={{ flex: 1, minWidth: 0 }}>
+                <div className="flex justify-between items-start gap-2">
+                    <div className="min-w-0">
+                        <h3 className="t-headline truncate" style={{ color: "var(--ink)", fontSize: "17px" }}>
+                            {name}
+                        </h3>
+                        <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--ink-3)", marginTop: "1px" }} className="truncate">
+                            {titleText}
+                        </div>
+                    </div>
+                    <div style={{ fontSize: "16px", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.01em" }}>
+                        ₮{price}
                     </div>
                 </div>
+
+                <div style={{ fontSize: "13px", fontWeight: 400, color: "var(--ink-3)", marginTop: "4px" }} className="truncate">
+                    {specialty} · {years}{validLang === "en" ? ` yrs` : " жил"}
+                </div>
+
+                <div style={{ marginTop: "6px", display: "flex", alignItems: "center", gap: "6px" }}>
+                    <div style={{ display: "flex", gap: "1.5px" }}>
+                        {[...Array(5)].map((_, i) => (
+                            <Star
+                                key={i}
+                                size={11}
+                                className={i < Math.floor(Number(rating)) ? "text-gold fill-gold" : "text-ink-5 fill-ink-5"}
+                                strokeWidth={0}
+                            />
+                        ))}
+                    </div>
+                    <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--ink)" }}>{rating}</span>
+                    <span style={{ fontSize: "11px", fontWeight: 400, color: "var(--ink-4)" }}>({reviews})</span>
+                </div>
             </div>
 
-            {/* Right: Booking Focus */}
-            <div className="flex flex-col items-end shrink-0">
-                <p className="text-sm font-semibold text-ink mb-2">₮{price}</p>
-                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-black/[0.06] bg-gold text-neutral-900 shadow-sm">
-                    <ArrowRight size={15} strokeWidth={1.75} />
+            {/* Right Action */}
+            <div style={{ flexShrink: 0 }}>
+                <div
+                    className="flex items-center justify-center active:scale-[0.9] transition-all"
+                    style={{
+                        width: "36px",
+                        height: "36px",
+                        background: "var(--gold-muted)",
+                        borderRadius: "12px",
+                        color: "var(--gold-dark)",
+                        transitionTimingFunction: "var(--spring)"
+                    }}
+                >
+                    <ArrowRight size={18} strokeWidth={2.5} />
                 </div>
             </div>
         </div>

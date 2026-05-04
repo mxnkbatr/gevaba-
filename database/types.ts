@@ -105,17 +105,29 @@ export interface Monk {
 
 export interface Booking {
   _id?: ObjectId | string;
-  userId: string; // Clerk ID or Custom ID
-  monkId: ObjectId | string;
-  date: Date;
-  time?: string; // Add time to interface as it is used
+  userId: string;         // Clerk ID or Legacy ID
+  clientId?: string;      // MongoDB _id of client (seeker)
+  monkId: ObjectId | string; // Legacy/Object monkId
+  monkDbId?: string;      // MongoDB _id of monk (resolved)
+  clientName?: string;    // Display name of seeker
+  monkName?: string;      // Display name of monk
+  date: string;           // YYYY-MM-DD
+  time?: string;          // HH:mm
   userPhone?: string;
   userEmail?: string;
-  type?: "Astrology" | "Counseling" | "Prayer" | "Ritual"; // Made optional as it might be derived from service
-  serviceName?: { mn: string; en: string; ko?: string; de?: string; }; // Add serviceName to interface
-  status: "pending" | "confirmed" | "completed" | "cancelled" | "rejected"; // Add rejected
+  price?: number;         // Service price
+  serviceName?: { mn: string; en: string; ko?: string; de?: string; };
+  type?: string;
+  status: "pending" | "confirmed" | "completed" | "cancelled" | "rejected";
+  callStatus?: "idle" | "waiting" | "in_call" | "ended";
+  callStartedAt?: Date;
+  callEndedAt?: Date;
+  callDurationSeconds?: number;
+  paymentStatus?: "pending" | "paid" | "refunded";
+  paymentRef?: string;    // QPay invoice ID or external ref
   notes?: string;
   createdAt: Date;
+  updatedAt?: Date;
 }
 
 export interface Comment {
@@ -180,9 +192,10 @@ export interface Message {
 export interface Notification {
   _id?: string | ObjectId;
   userId: string;
-  title: { mn: string; en: string };
-  message: { mn: string; en: string };
-  type: "booking" | "reminder" | "system" | "message";
+  title: string | { mn: string; en: string };
+  message: string | { mn: string; en: string };
+  type: "booking" | "reminder" | "system" | "message" | "call";
+  bookingId?: string;
   read: boolean;
   link?: string;
   createdAt: Date;

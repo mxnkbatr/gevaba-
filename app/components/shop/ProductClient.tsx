@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { ArrowLeft, Plus, ShoppingCart } from "lucide-react";
+import { ArrowLeft, ShoppingBag, Plus, Sparkles, ChevronLeft } from "lucide-react";
 import { useLanguage } from "@/app/contexts/LanguageContext";
-import { useShopCart } from "@/app/hooks/useShopCart";
+import { useCart } from "@/app/contexts/CartContext";
 import { LocalizedLink } from "@/app/components/LocalizedLink";
+import { hapticsLight } from "@/app/capacitor/plugins/haptics";
+import { usePlatform } from "@/app/capacitor/hooks/usePlatform";
 
 type Product = {
   _id: string;
@@ -20,10 +21,24 @@ type Product = {
   type?: "physical" | "digital";
 };
 
+const BLUR_DATA_URL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
+
 export default function ProductClient({ product }: { product: Product | null }) {
   const { language: lang, t } = useLanguage();
-  const { add, count } = useShopCart();
+  const { addToCart, totalItems } = useCart();
   const router = useRouter();
+  const { isNative } = usePlatform();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const handleTap = async () => {
+    if (isNative) await hapticsLight();
+  };
 
   const title = useMemo(() => {
     if (!product) return "";
@@ -32,129 +47,156 @@ export default function ProductClient({ product }: { product: Product | null }) 
 
   if (!product) {
     return (
-      <div className="min-h-[100svh] bg-cream px-5 pt-[calc(env(safe-area-inset-top,44px)+88px)] pb-[calc(env(safe-area-inset-bottom,34px)+96px)]">
-        <div className="mx-auto w-full max-w-2xl">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="rounded-full bg-white px-4 py-2.5 border border-black/[0.06] text-sm font-semibold"
-            aria-label={t({ mn: "Буцах", en: "Back" })}
-          >
-            <span className="inline-flex items-center gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              {t({ mn: "Буцах", en: "Back" })}
-            </span>
-          </button>
-          <div className="app-card-premium p-6 mt-4">
-            <p className="text-h2">{t({ mn: "Бараа олдсонгүй", en: "Product not found" })}</p>
-          </div>
-        </div>
+      <div className="page flex flex-col items-center justify-center p-8 text-center">
+        <h2 className="t-headline">{t({ mn: "Бараа олдсонгүй", en: "Product not found" })}</h2>
+        <button onClick={() => router.back()} className="btn-primary mt-4 px-6">{t({ mn: "Буцах", en: "Go Back" })}</button>
       </div>
     );
   }
 
   const img = Array.isArray(product.images) ? product.images[0] : undefined;
-  const desc =
-    (lang === "mn" ? product.description?.mn : product.description?.en) ??
-    product.description?.mn ??
-    product.description?.en ??
-    "";
-  const soldOut = typeof product.stock === "number" && product.stock !== -1 && product.stock <= 0;
+  const desc = (lang === "mn" ? product.description?.mn : product.description?.en) ?? product.description?.mn ?? product.description?.en ?? "";
+  const isSoldOut = typeof product.stock === "number" && product.stock !== -1 && product.stock <= 0;
 
   return (
-    <div className="min-h-[100svh] bg-cream px-5 pt-[calc(env(safe-area-inset-top,44px)+88px)] pb-[calc(env(safe-area-inset-bottom,34px)+96px)]">
-      <div className="mx-auto w-full max-w-3xl">
-        <div className="flex items-center justify-between gap-3 mb-4">
-          <button
-            type="button"
-            onClick={() => router.back()}
-            className="rounded-full bg-white px-4 py-2.5 border border-black/[0.06] text-sm font-semibold active:scale-[0.99] transition"
-            aria-label={t({ mn: "Буцах", en: "Back" })}
-          >
-            <span className="inline-flex items-center gap-2">
-              <ArrowLeft className="w-4 h-4" />
-              {t({ mn: "Буцах", en: "Back" })}
-            </span>
-          </button>
+    <div className={`page font-sans ${lang === "mn" ? "lang-mn" : ""}`}>
+      
+      {/* — TOP NAVIGATION BAR — */}
+      <div 
+        className="fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4"
+        style={{ 
+          height: "var(--nav-h)",
+          backgroundColor: isScrolled ? "rgba(242,242,247,0.8)" : "transparent",
+          backdropFilter: isScrolled ? "blur(20px)" : "none",
+          borderBottom: isScrolled ? "0.5px solid var(--sep)" : "none",
+          transition: "all 0.3s ease"
+        }}
+      >
+        <button 
+          onClick={() => { router.back(); handleTap(); }}
+          className="btn-icon"
+          style={{ width: "36px", height: "36px", background: isScrolled ? "transparent" : "rgba(255,255,255,0.8)", borderRadius: "12px" }}
+        >
+          <ChevronLeft size={24} color="var(--ink)" />
+        </button>
 
-          <LocalizedLink
-            href="/shop/cart"
-            className="relative rounded-full bg-white px-4 py-2.5 border border-black/[0.06] text-sm font-semibold"
-            aria-label={t({ mn: "Сагс", en: "Cart" })}
-          >
-            <span className="inline-flex items-center gap-2">
-              <ShoppingCart className="w-4 h-4" />
-              {t({ mn: "Сагс", en: "Cart" })}
-            </span>
-            {count > 0 && (
-              <span className="absolute -top-1 -right-1 h-5 min-w-5 px-1 rounded-full bg-amber-500 text-white text-[11px] font-black flex items-center justify-center">
-                {count}
+        <LocalizedLink href="/shop/cart" onClick={handleTap}>
+          <div className="relative btn-icon" style={{ width: "36px", height: "36px", background: isScrolled ? "transparent" : "rgba(255,255,255,0.8)", borderRadius: "12px" }}>
+            <ShoppingBag size={20} color="var(--gold)" strokeWidth={2} />
+            {totalItems > 0 && (
+              <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 rounded-full bg-sys-red border border-white flex items-center justify-center text-[9px] font-bold text-white leading-none">
+                {totalItems}
               </span>
             )}
-          </LocalizedLink>
+          </div>
+        </LocalizedLink>
+      </div>
+
+      <div className="max-w-[480px] mx-auto w-full pb-32">
+        
+        {/* — PRODUCT HERO IMAGE — */}
+        <div className="relative aspect-square w-full bg-bg-secondary overflow-hidden" style={{ borderRadius: "0 0 32px 32px" }}>
+          {img ? (
+            <Image
+              src={img}
+              alt={title}
+              fill
+              className="object-cover"
+              priority
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
+            />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center text-ink-5">
+              <ShoppingBag size={80} strokeWidth={0.5} />
+            </div>
+          )}
+          {isSoldOut && (
+            <div className="absolute inset-0 bg-white/60 backdrop-blur-[2px] flex items-center justify-center">
+              <span className="text-sm font-bold tracking-widest text-ink uppercase bg-white/90 px-4 py-2 rounded-xl shadow-lg">
+                {t({ mn: "Дууссан", en: "Sold Out" })}
+              </span>
+            </div>
+          )}
         </div>
 
-        <motion.div
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="app-card-premium overflow-hidden"
-        >
-          <div className="relative aspect-[16/10] bg-ios-grouped">
-            {img ? (
-              <Image
-                src={img}
-                alt={title}
-                fill
-                sizes="(max-width: 768px) 100vw, 768px"
-                className="object-cover"
-                priority={false}
-              />
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center text-text-light text-sm">
-                {t({ mn: "Зураггүй", en: "No image" })}
-              </div>
-            )}
-            {soldOut && (
-              <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center">
-                <span className="text-[11px] font-black uppercase tracking-widest text-earth">
-                  {t({ mn: "ДУУСCАН", en: "SOLD OUT" })}
-                </span>
-              </div>
-            )}
-          </div>
-
-          <div className="p-6">
-            <h1 className="text-h1" style={{ fontFamily: "var(--font-display)" }}>
+        {/* — PRODUCT INFO — */}
+        <div className="px-5 mt-6">
+          <div className="flex flex-col gap-1">
+            <span className="text-[12px] font-bold uppercase tracking-wider text-gold-dark opacity-80">
+              {product.category || t({ mn: "Бараа", en: "Product" })}
+            </span>
+            <h1 className="text-[26px] font-bold leading-tight text-ink">
               {title}
             </h1>
-            <p className="text-3xl font-black text-ink mt-3">
-              {Number(product.price ?? 0).toLocaleString()}₮
-            </p>
-            {desc ? <p className="text-body mt-4 whitespace-pre-line">{desc}</p> : null}
+          </div>
 
-            <div className="mt-6 flex gap-3">
-              <button
-                type="button"
-                onClick={() => add(product._id, 1)}
-                disabled={soldOut}
-                className={`btn-primary flex-1 h-12 ${
-                  soldOut ? "opacity-60 pointer-events-none" : ""
-                }`}
-              >
-                <span className="inline-flex items-center justify-center gap-2">
-                  <Plus className="w-4 h-4" />
-                  {t({ mn: "Сагсанд нэмэх", en: "Add to cart" })}
-                </span>
-              </button>
-              <LocalizedLink href="/shop/cart" className="flex-1">
-                <button type="button" className="btn-secondary w-full h-12">
-                  {t({ mn: "Сагсаа үзэх", en: "View cart" })}
-                </button>
-              </LocalizedLink>
+          <div className="mt-4 flex items-baseline gap-2">
+            <span className="text-[24px] font-black text-ink">
+              ₮{Number(product.price ?? 0).toLocaleString()}
+            </span>
+          </div>
+
+          <div className="mt-8">
+            <h3 className="text-[13px] font-bold uppercase tracking-wider text-ink-3 mb-2">
+              {t({ mn: "Тайлбар", en: "Description" })}
+            </h3>
+            <div className="card p-4">
+              <p className="text-[16px] leading-relaxed text-ink-2 whitespace-pre-line">
+                {desc || t({ mn: "Тайлбар оруулаагүй байна.", en: "No description available." })}
+              </p>
             </div>
           </div>
-        </motion.div>
+
+          {/* — EXTRA INFO CARDS — */}
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <div className="card p-3 flex flex-col items-center text-center gap-1">
+              <div className="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center mb-1">
+                <Sparkles size={18} className="text-blue-500" />
+              </div>
+              <span className="text-[11px] font-bold text-ink-3 uppercase">{t({ mn: "Хүргэлт", en: "Delivery" })}</span>
+              <span className="text-[13px] font-semibold text-ink">24-48 цаг</span>
+            </div>
+            <div className="card p-3 flex flex-col items-center text-center gap-1">
+              <div className="w-10 h-10 rounded-full bg-green-50 flex items-center justify-center mb-1">
+                <ShoppingBag size={18} className="text-green-500" />
+              </div>
+              <span className="text-[11px] font-bold text-ink-3 uppercase">{t({ mn: "Төлөв", en: "Stock" })}</span>
+              <span className="text-[13px] font-semibold text-ink">{isSoldOut ? t({ mn: "Дууссан", en: "Empty" }) : t({ mn: "Бэлэн", en: "In Stock" })}</span>
+            </div>
+          </div>
+        </div>
       </div>
+
+      {/* — BOTTOM ACTION BAR — */}
+      {!isSoldOut && (
+        <div 
+          className="fixed bottom-0 left-0 right-0 z-50 px-6 py-4 pb-[calc(16px+var(--sab))]"
+          style={{ 
+            background: "linear-gradient(to top, white 80%, rgba(255,255,255,0))",
+            backdropFilter: "blur(4px)"
+          }}
+        >
+          <div className="max-w-[432px] mx-auto flex gap-3">
+            <button 
+              onClick={() => { addToCart(product._id, 1); handleTap(); }}
+              className="flex-1 btn-primary h-[54px] text-[17px] font-bold flex items-center justify-center gap-2"
+              style={{ background: "var(--ink)", color: "white", borderRadius: "18px" }}
+            >
+              <Plus size={20} strokeWidth={3} />
+              {t({ mn: "Сагсанд нэмэх", en: "Add to Cart" })}
+            </button>
+            <LocalizedLink href="/shop/cart" onClick={handleTap} className="shrink-0">
+              <div 
+                className="flex items-center justify-center h-[54px] w-[54px]"
+                style={{ background: "var(--bg-secondary)", borderRadius: "18px", border: "0.5px solid var(--sep)" }}
+              >
+                <ShoppingBag size={22} color="var(--ink)" />
+              </div>
+            </LocalizedLink>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectToDatabase } from "@/database/db";
 import { ObjectId } from "mongodb";
-import { currentUser } from "@clerk/nextjs/server";
+import { getAuthUser } from "@/lib/auth";
 import { invalidateCache } from "@/lib/api/cache";
 
 type Props = {
@@ -17,85 +17,68 @@ export async function POST(request: Request, props: Props) {
       return NextResponse.json({ message: "Invalid booking ID" }, { status: 400 });
     }
 
-    const user = await currentUser();
+    const user = await getAuthUser(request);
     if (!user) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
     const { db } = await connectToDatabase();
 
-    // 1. Find the booking
     const booking = await db.collection("bookings").findOne({ _id: new ObjectId(id) });
     if (!booking) {
       return NextResponse.json({ message: "Booking not found" }, { status: 404 });
     }
 
-    // 2. Authorization Check (Only Monk or Admin)
-    const isAdmin = user.publicMetadata.role === "admin";
-    let isMonk = false;
+    // Authorization: Monk who is assigned, or Admin
+    const isAssignedMonk = booking.monkDbId === user.dbId || booking.monkId?.toString() === user.dbId;
+    const isAdmin = user.role === "admin";
 
-    if (booking.monkId) {
-      // Fetch monk profile to check if it matches current user
-      const monkProfile = await db.collection("users").findOne({ _id: new ObjectId(booking.monkId) });
-      if (monkProfile && monkProfile.clerkId === user.id) {
-        isMonk = true;
-      }
+    if (!isAssignedMonk && !isAdmin) {
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
-    if (!isMonk && !isAdmin) {
-      return NextResponse.json({ message: "Forbidden: Only the Monk or Admin can complete this booking." }, { status: 403 });
-    }
-
-    // 3. Check if already processed
     if (booking.status === 'completed') {
       return NextResponse.json({ message: "Booking already completed" });
     }
 
-    // 4. Update Monk's Earnings (Add 50,000 as requested)
-    const monkId = booking.monkId;
-    if (monkId) {
-      // monkId can be string or ObjectId in booking, ensure we match correctly
-      // In types.ts: monkId: ObjectId | string
-      const monkQuery = ObjectId.isValid(monkId) ? { _id: new ObjectId(monkId) } : { _id: monkId };
-
-      // Fetch monk to check status for earnings
+    // 4. Update Monk's Earnings
+    const monkDbId = booking.monkDbId || booking.monkId;
+    if (monkDbId) {
+      const monkQuery = ObjectId.isValid(monkDbId) ? { _id: new ObjectId(monkDbId) } : { _id: monkDbId };
       const monk = await db.collection("users").findOne(monkQuery);
 
       if (monk) {
-        const isSpecial = monk.isSpecial === true;
-        const earningsAmount = isSpecial ? 88800 : 40000;
+        const earningsAmount = booking.price || (monk.isSpecial ? 88800 : 40000);
+        await db.collection("users").updateOne(monkQuery, { $inc: { earnings: earningsAmount } });
 
-        await db.collection("users").updateOne(
-          monkQuery,
-          { $inc: { earnings: earningsAmount } }
-        );
-
-        // If the monk who completed the service is NOT special, 
-        // give 10,000₮ commission to all special monks
-        if (!isSpecial) {
+        // Commission for special monks if non-special monk did the work
+        if (!monk.isSpecial) {
           await db.collection("users").updateMany(
-            { role: "monk", isSpecial: true },
+            { role: "monk", isSpecial: true, _id: { $ne: monk._id } },
             { $inc: { earnings: 10000 } }
           );
         }
       }
     }
 
-    // 5. Delete Chat Messages (Cleanup)
+    // 5. Cleanup and Status Update
     await db.collection("messages").deleteMany({ bookingId: id });
-
-    // 6. Mark Booking as Completed
     await db.collection("bookings").updateOne(
       { _id: new ObjectId(id) },
-      { $set: { status: 'completed', updatedAt: new Date() } }
+      { $set: { 
+        status: 'completed', 
+        callStatus: 'ended',
+        callEndedAt: new Date(),
+        updatedAt: new Date() 
+      } }
     );
 
     await invalidateCache('bookings:*');
 
-    return NextResponse.json({ success: true, message: "Booking completed, payment added, and chat history cleaned." });
+    return NextResponse.json({ success: true, message: "Booking completed" });
 
   } catch (error: any) {
     console.error("Complete Booking Error:", error);
-    return NextResponse.json({ message: "Internal Error", error: error.message }, { status: 500 });
+    return NextResponse.json({ message: "Internal Error" }, { status: 500 });
   }
 }

@@ -126,22 +126,46 @@ export async function POST(request: Request) {
     const monkQuery = ObjectId.isValid(monkId) ? { _id: new ObjectId(monkId) } : { _id: monkId };
     const monk = await db.collection("users").findOne(monkQuery);
     let serviceName = "Spiritual Session";
+    let price = 0;
 
     if (serviceId) {
       if (ObjectId.isValid(serviceId)) {
         const serviceDoc = await db.collection("services").findOne({ _id: new ObjectId(serviceId) });
-        if (serviceDoc) serviceName = serviceDoc.title?.en || serviceDoc.title?.mn || serviceName;
+        if (serviceDoc) {
+          serviceName = serviceDoc.title?.en || serviceDoc.title?.mn || serviceName;
+          price = serviceDoc.price || 0;
+        }
       }
       if (serviceName === "Spiritual Session" && monk?.services) {
         const embedded = monk.services.find((s: any) => s.id === serviceId);
-        if (embedded) serviceName = embedded.name?.en || embedded.name?.mn || serviceName;
+        if (embedded) {
+          serviceName = embedded.name?.en || embedded.name?.mn || serviceName;
+          price = embedded.price || 0;
+        }
       }
     }
 
     // 4. Save Booking & Send Notifications & In-App Notice PARALLEL
+    const monkDbId = monk?._id.toString();
     const newBooking = {
-      monkId, clientId: body.userId || authenticatedUserId, clientName: userName, serviceName: { en: serviceName, mn: serviceName },
-      date, time, userEmail, userPhone, note, status: 'pending', createdAt: new Date()
+      userId: user.id, // Legacy field
+      clientId: authenticatedUserId, // Consistent MongoDB _id
+      monkId, // Legacy field
+      monkDbId, // Resolved MongoDB _id
+      clientName: userName || user.fullName,
+      monkName: monk?.name?.mn || monk?.name?.en,
+      serviceName: { en: serviceName, mn: serviceName },
+      price,
+      date, 
+      time, 
+      userEmail, 
+      userPhone, 
+      note, 
+      status: 'pending', 
+      callStatus: 'idle',
+      paymentStatus: 'pending',
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
     
     const [result] = await Promise.all([
@@ -164,22 +188,43 @@ export async function POST(request: Request) {
       })(),
       (async () => {
         try {
-          const clientId = body.userId || authenticatedUserId;
-          if (clientId) {
-            await db.collection("notifications").insertOne({
-              userId: clientId,
-              title: { mn: "Захиалга илгээгдлээ", en: "Booking Requested" },
-              message: { 
-                mn: `${monk?.name?.mn || "Лам"}-д засал захиалах хүсэлт илгээгдлээ.`, 
-                en: `Request sent to ${monk?.name?.en || "the Monk"} for a session.` 
-              },
-              type: "booking", read: false, createdAt: new Date()
+          // Push notification to Monk
+          if (monkDbId) {
+            const { sendPushToUser } = await import("@/lib/pushService");
+            await sendPushToUser({
+              userId: monkDbId,
+              title: "🔔 Шинэ захиалга ирлээ",
+              body: `${userName || user.fullName} — ${date} ${time}`,
+              data: { type: "new_booking", url: "/monk/dashboard" }
             });
+
+            // Ably real-time event to Monk
+            try {
+              const { ablyRest } = await import("@/lib/ably");
+              await ablyRest.channels.get(`monk:${monkDbId}:bookings`).publish("new_booking", {
+                clientName: userName || user.fullName,
+                date,
+                time,
+              });
+            } catch (ablyErr) {
+              console.error("Ably error in booking POST:", ablyErr);
+            }
           }
-          if (monkId) {
-             const monkIdStr = typeof monkId === 'object' ? monkId.toString() : monkId;
+
+          // In-app notifications
+          await db.collection("notifications").insertOne({
+            userId: authenticatedUserId,
+            title: { mn: "Захиалга илгээгдлээ", en: "Booking Requested" },
+            message: { 
+              mn: `${monk?.name?.mn || "Лам"}-д засал захиалах хүсэлт илгээгдлээ.`, 
+              en: `Request sent to ${monk?.name?.en || "the Monk"} for a session.` 
+            },
+            type: "booking", read: false, createdAt: new Date()
+          });
+
+          if (monkDbId) {
              await db.collection("notifications").insertOne({
-              userId: monkIdStr,
+              userId: monkDbId,
               title: { mn: "Шинэ захиалга", en: "New Booking" },
               message: { 
                 mn: `Танд ${userName || "Хэрэглэгч"}-ээс ${date}-ны ${time} цагт шинэ захиалга ирлээ.`, 
@@ -188,7 +233,9 @@ export async function POST(request: Request) {
               type: "booking", read: false, createdAt: new Date()
             });
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error("Notification Error in booking POST:", e);
+        }
       })()
     ]);
 

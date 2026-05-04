@@ -68,6 +68,11 @@ export async function PATCH(
       updateData.callStatus = callStatus;
     }
 
+    // 3. callStatus = "waiting" болго — дуудлага хүлээж байна
+    if (status === 'confirmed') {
+      updateData.callStatus = "waiting";
+    }
+
     await db.collection("bookings").updateOne(
       { _id: new ObjectId(id) },
       { $set: updateData }
@@ -75,18 +80,20 @@ export async function PATCH(
 
     // Send Notification Logic
     if (status === 'confirmed' || status === 'rejected') {
-      if (!monkProfile && booking.monkId) {
-        monkProfile = await db.collection("users").findOne({ _id: new ObjectId(booking.monkId) });
+      if (!monkProfile && (booking.monkDbId || booking.monkId)) {
+        monkProfile = await db.collection("users").findOne({ 
+          _id: new ObjectId(booking.monkDbId || booking.monkId) 
+        });
       }
 
-      const monkName = monkProfile?.name?.en || monkProfile?.name?.mn || "The Monk";
-      const serviceName = booking.serviceName?.en || booking.serviceName?.mn || "Spiritual Session";
+      const monkName = monkProfile?.name?.mn || monkProfile?.name?.en || "Лам";
+      const serviceName = booking.serviceName?.mn || booking.serviceName?.en || "Засал";
 
       if (booking.userEmail) {
         try {
           await sendBookingStatusUpdate({
             userEmail: booking.userEmail,
-            userName: booking.clientName || "Seeker",
+            userName: booking.clientName || "Хэрэглэгч",
             monkName,
             serviceName,
             date: booking.date,
@@ -102,69 +109,53 @@ export async function PATCH(
       try {
         const clientId = booking.clientId || booking.userId;
         if (clientId) {
-          const isMN = true;
           await db.collection("notifications").insertOne({
             userId: clientId,
             title: status === 'confirmed'
-              ? { mn: "Захиалга баталгаажлаа", en: "Booking Confirmed" }
-              : { mn: "Захиалга цуцлагдлаа", en: "Booking Rejected" },
+              ? { mn: "✅ Захиалга баталгаажлаа!", en: "✅ Booking Confirmed!" }
+              : { mn: "❌ Захиалга цуцлагдлаа", en: "❌ Booking Rejected" },
             message: status === 'confirmed'
               ? {
-                  mn: `${monkName} таны ${booking.date}-ны ${booking.time} цагийн захиалгыг баталгаажууллаа.`,
-                  en: `${monkName} has confirmed your booking for ${booking.date} at ${booking.time}.`
+                  mn: `${booking.date} ${booking.time} цагийн захиалга батлагдлаа. Та дуудлага эхлүүлж болно.`,
+                  en: `Your booking for ${booking.date} at ${booking.time} is confirmed. You can now start the call.`
                 }
               : {
                   mn: `${monkName} таны захиалгыг цуцаллаа.`,
                   en: `${monkName} has rejected your booking request.`
                 },
             type: "booking",
+            bookingId: id,
             read: false,
-            link: `/${isMN ? 'mn' : 'en'}/profile`,
             createdAt: new Date()
           });
 
           // TRIGGER PUSH NOTIFICATION
           try {
-            const { pushTriggers, sendPushNotification } = await import("@/lib/pushService");
+            const { sendPushToUser } = await import("@/lib/pushService");
             
             // Notify User
-            await pushTriggers.bookingUpdate(
-              clientId.toString(),
-              monkName,
-              status,
-              booking.date,
-              booking.time
-            );
+            await sendPushToUser({
+              userId: clientId,
+              title: status === 'confirmed' ? "✅ Захиалга батлагдлаа!" : "❌ Захиалга цуцлагдлаа",
+              body: status === 'confirmed'
+                ? `${booking.date} ${booking.time} цагийн захиалга батлагдлаа.`
+                : `${monkName} таны захиалгыг цуцаллаа.`,
+              data: { type: "booking_confirmed", bookingId: id, url: `/booking/${id}` }
+            });
 
-            // Notify Monk
-            if (status === 'confirmed' && booking.monkId) {
-               // In-app notification for monk
-               await db.collection("notifications").insertOne({
-                 userId: booking.monkId,
-                 title: { mn: "Шинэ захиалга батлагдлаа", en: "New Booking Confirmed" },
-                 message: {
-                   mn: `Та ${booking.clientName || "Хэрэглэгч"}-н ${booking.date}-ны ${booking.time} цагийн захиалгыг баталлаа.`,
-                   en: `You confirmed a booking for ${booking.clientName || "User"} on ${booking.date} at ${booking.time}.`
-                 },
-                 type: "booking",
-                 read: false,
-                 link: `/${isMN ? 'mn' : 'en'}/profile`,
-                 createdAt: new Date()
-               });
-
-               // Push notification to monk
-               await sendPushNotification(booking.monkId.toString(), {
-                 title: "Шинэ захиалга батлагдлаа",
-                 body: `Та ${booking.clientName || "Хэрэглэгч"}-н ${booking.date}-ны ${booking.time} цагийн захиалгыг баталлаа.`,
-                 data: {
-                   type: "booking",
-                   bookingId: id,
-                   status
-                 }
-               });
+            // TRIGGER ABLY REAL-TIME
+            try {
+              const { ablyRest } = await import("@/lib/ably");
+              await ablyRest.channels.get(`booking:${clientId}:status`).publish(status, {
+                bookingId: id,
+                status,
+                monkName,
+              });
+            } catch (ablyErr) {
+              console.error("Ably error in booking PATCH:", ablyErr);
             }
           } catch (pushErr) {
-            console.error("Push Notification recruitment failed:", pushErr);
+            console.error("Push Notification failed:", pushErr);
           }
         }
       } catch (err) {

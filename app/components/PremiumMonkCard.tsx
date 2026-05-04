@@ -1,6 +1,7 @@
 import React from "react";
 import Image from "next/image";
 import { Monk } from "@/database/types";
+import { Star } from "lucide-react";
 
 interface PremiumMonkCardProps {
   monk: Monk;
@@ -8,69 +9,60 @@ interface PremiumMonkCardProps {
 }
 
 export default function PremiumMonkCard({ monk, onClick }: PremiumMonkCardProps) {
-  // Use serif font for the monk's name and title to create a high-end feel
-  // The background is solid white (Alabaster) with a very soft shadow to float
-  // Subtle Morning Sky Blue border for a glassmorphism-adjacent premium accent
+  const isOnline = monk.isAvailable !== false;
+  
   return (
     <div
       onClick={onClick}
-      className="relative w-full max-w-sm rounded-[24px] bg-white p-5 cursor-pointer press-effect transition-all duration-300"
+      className="relative flex-shrink-0 cursor-pointer overflow-hidden transition-transform active:scale-[0.98]"
       style={{
-        boxShadow: "0 10px 40px rgba(0,0,0,0.04)",
-        border: "1px solid #E0F2FE",
+        width: "200px",
+        borderRadius: "var(--radius-2xl)",
+        boxShadow: "var(--shadow-md)",
+        backgroundColor: "var(--stone)"
       }}
     >
-      <div className="flex items-center gap-4">
-        {/* Avatar with subtle glow */}
-        <div className="relative w-[72px] h-[72px] rounded-full overflow-hidden shadow-sm">
+      {/* Top Image Section */}
+      <div className="relative w-full h-[120px] bg-secondary-bg">
+        {monk.image && (
           <Image
-            src={monk.image || "/default-blog.jpg"}
-            alt={monk.name.en}
+            src={monk.image}
+            alt={monk.name.en || "Monk"}
             fill
             className="object-cover"
           />
-        </div>
-
-        {/* Info Container */}
-        <div className="flex-1 flex flex-col justify-center">
-          {/* Serif Typography for Name */}
-          <h3 className="font-serif text-[20px] font-bold leading-tight text-[#333333]">
-            {monk.name.en}
-          </h3>
-          <p className="font-serif text-[14px] italic text-[#8B4513] mt-1">
-            {monk.title?.en || "Spiritual Guide"}
-          </p>
-        </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
+        
+        {isOnline && (
+          <div className="absolute top-2 left-2 flex items-center gap-1 rounded-full bg-black/50 px-2 py-0.5 shadow-sm backdrop-blur-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-ios-live" />
+            <span className="text-[10px] font-semibold text-white">Онлайн</span>
+          </div>
+        )}
       </div>
 
-      {/* Stats and Action */}
-      <div className="mt-5 flex items-center justify-between border-t border-[#E0F2FE] pt-4">
-        {/* Sans-serif for data */}
-        <div className="flex flex-col">
-          <span className="font-sans text-[12px] font-semibold uppercase tracking-wider text-[#555555]">
-            Session
-          </span>
-          <span className="font-sans text-[16px] font-bold text-[#333333]">
-            1-on-1 Video
-          </span>
-        </div>
-
-        {/* 10% Amber 'Book Now' Button with soft corners */}
-        <button
-          className="rounded-[24px] bg-gold px-5 py-2.5 font-sans text-[14px] font-bold text-ink shadow-sm transition-transform active:scale-95"
-          style={{ boxShadow: "0 4px 14px rgba(191, 164, 106, 0.22)" }}
+      {/* Bottom Info Section */}
+      <div className="bg-stone p-3">
+        <h3 
+          className="text-ink truncate"
+          style={{ fontSize: "14px", fontWeight: 600 }}
         >
-          Book Now
-        </button>
-      </div>
-      
-      {/* Decorative Zen Iconography (Low opacity) */}
-      <div className="absolute top-4 right-4 opacity-[0.03] pointer-events-none">
-        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#8B4513" strokeWidth="1" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-          <path d="M2 12h20" />
-        </svg>
+          {monk.name.en || monk.name.mn}
+        </h3>
+        <p 
+          className="text-ink-tertiary truncate mt-0.5"
+          style={{ fontSize: "11px" }}
+        >
+          {monk.title?.en || monk.title?.mn || "Spiritual Guide"}
+        </p>
+        <div className="flex items-center gap-0.5 mt-1.5">
+          <Star size={10} className="text-gold fill-gold" strokeWidth={0} />
+          <Star size={10} className="text-gold fill-gold" strokeWidth={0} />
+          <Star size={10} className="text-gold fill-gold" strokeWidth={0} />
+          <Star size={10} className="text-gold fill-gold" strokeWidth={0} />
+          <Star size={10} className="text-ink-quaternary fill-ink-quaternary" strokeWidth={0} />
+        </div>
       </div>
     </div>
   );
