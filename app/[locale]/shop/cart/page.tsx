@@ -4,7 +4,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ChevronLeft, Minus, Plus, Trash2, ShoppingBag, Sparkles } from "lucide-react";
 import { useLanguage } from "@/app/contexts/LanguageContext";
-import { useCart } from "@/app/contexts/CartContext";
+import { useCart } from "@/contexts/CartContext";
 import { LocalizedLink } from "@/app/components/LocalizedLink";
 import { hapticsLight } from "@/app/capacitor/plugins/haptics";
 import { usePlatform } from "@/app/capacitor/hooks/usePlatform";
