@@ -142,9 +142,7 @@ export default function MonkShowcaseClient({
           <div 
             className="sticky z-30 bg-bg-secondary/80 backdrop-blur-xl pb-4"
             style={{ 
-                top: "var(--nav-h)",
-                marginTop: "calc(var(--nav-h) * -1)",
-                paddingTop: "var(--nav-h)"
+                top: "var(--nav-h)"
             }}
           >
             <LargeHeader

@@ -306,8 +306,13 @@ export async function PATCH(request: Request, props: Props) {
 
             // --- C. Send Push Notification ---
             try {
-                const { pushTriggers } = await import("@/lib/pushService");
-                await pushTriggers.monkApproved(id);
+                const { sendPushToUser } = await import("@/lib/pushService");
+                await sendPushToUser({
+                    userId: id,
+                    title: "🎉 Таны өргөдөл батлагдлаа!",
+                    body: "Та одоо Гэвабал дээр засал хийх боломжтой боллоо.",
+                    data: { type: "monk_approval", approved: "true" }
+                });
             } catch (pushErr) {
                 console.error("Push Notification for monk approval failed:", pushErr);
             }

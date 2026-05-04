@@ -75,7 +75,8 @@
     "redis": "^5.11.0",
     "resend": "^6.6.0",
     "rust-modules": "file:rust-modules/pkg",
-    "svix": "^1.82.0"
+    "svix": "^1.82.0",
+    "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
     "@capacitor/network": "^8.0.0",

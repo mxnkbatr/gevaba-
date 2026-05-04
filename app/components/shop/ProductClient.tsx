@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, ShoppingBag, Plus, Sparkles, ChevronLeft } from "lucide-react";
 import { useLanguage } from "@/app/contexts/LanguageContext";
-import { useCart } from "@/app/contexts/CartContext";
+import { useCart } from "@/contexts/CartContext";
 import { LocalizedLink } from "@/app/components/LocalizedLink";
 import { hapticsLight } from "@/app/capacitor/plugins/haptics";
 import { usePlatform } from "@/app/capacitor/hooks/usePlatform";
@@ -171,15 +171,16 @@ export default function ProductClient({ product }: { product: Product | null }) 
       {/* — BOTTOM ACTION BAR — */}
       {!isSoldOut && (
         <div 
-          className="fixed bottom-0 left-0 right-0 z-50 px-6 py-4 pb-[calc(16px+var(--sab))]"
+          className="fixed left-0 right-0 z-50 px-6 py-4 pb-[calc(16px+env(safe-area-inset-bottom,34px))]"
           style={{ 
+            bottom: "calc(49px + env(safe-area-inset-bottom, 34px))",
             background: "linear-gradient(to top, white 80%, rgba(255,255,255,0))",
             backdropFilter: "blur(4px)"
           }}
         >
           <div className="max-w-[432px] mx-auto flex gap-3">
             <button 
-              onClick={() => { addToCart(product._id, 1); handleTap(); }}
+              onClick={() => { addToCart(product as any, 1); handleTap(); }}
               className="flex-1 btn-primary h-[54px] text-[17px] font-bold flex items-center justify-center gap-2"
               style={{ background: "var(--ink)", color: "white", borderRadius: "18px" }}
             >

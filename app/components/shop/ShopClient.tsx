@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Search, ShoppingBag, Plus } from "lucide-react";
 import { useLanguage } from "@/app/contexts/LanguageContext";
 import { LocalizedLink } from "@/app/components/LocalizedLink";
-import { useCart } from "@/app/contexts/CartContext";
+import { useCart } from "@/contexts/CartContext";
 import { hapticsLight } from "@/app/capacitor/plugins/haptics";
 import { usePlatform } from "@/app/capacitor/hooks/usePlatform";
 import LargeHeader from "@/app/components/LargeHeader";
@@ -247,4 +247,4 @@ export default function ShopClient({ initialProducts }: { initialProducts: Produ
       </div>
     </div>
   );
-
+}

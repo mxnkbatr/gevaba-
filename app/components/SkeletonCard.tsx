@@ -16,3 +16,23 @@ export default function SkeletonCard() {
     </div>
   );
 }
+
+export function SkeletonMonkList({ count = 3 }: { count?: number }) {
+  return (
+    <div style={{ padding: "0 16px", display: "flex", gap: "12px", overflow: "hidden" }}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="skeleton" style={{ width: "166px", height: "240px", borderRadius: "20px", flexShrink: 0 }} />
+      ))}
+    </div>
+  );
+}
+
+export function SkeletonBlogList({ count = 1 }: { count?: number }) {
+  return (
+    <div style={{ margin: "0 16px", display: "flex", flexDirection: "column", gap: "12px" }}>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="skeleton" style={{ width: "100%", height: "200px", borderRadius: "20px" }} />
+      ))}
+    </div>
+  );
+}

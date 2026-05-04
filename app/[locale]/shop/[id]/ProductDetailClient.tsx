@@ -224,8 +224,11 @@ export default function ProductDetailClient({ product }: { product: ShopProduct 
         </motion.div>
       </div>
 
-      {/* Sticky actions */}
-      <div className="fixed left-0 right-0 bottom-0 z-40 px-5 pb-[calc(env(safe-area-inset-bottom,34px)+12px)] pt-3 bg-cream/80 backdrop-blur-2xl border-t border-black/[0.06]">
+      {/* Sticky actions - positioned above the bottom tab bar */}
+      <div 
+        className="fixed left-0 right-0 z-40 px-5 pb-[calc(env(safe-area-inset-bottom,34px)+16px)] pt-4 bg-white/90 backdrop-blur-2xl border-t border-black/[0.06] shadow-[0_-4px_16px_rgba(0,0,0,0.04)]"
+        style={{ bottom: "calc(49px + env(safe-area-inset-bottom, 34px))" }}
+      >
         <div className="mx-auto w-full max-w-3xl grid grid-cols-2 gap-3">
           <button
             type="button"

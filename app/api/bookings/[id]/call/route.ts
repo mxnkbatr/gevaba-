@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/database/db";
 import { ObjectId } from "mongodb";
 import { getAuthUser } from "@/lib/auth";
@@ -6,13 +6,14 @@ import { sendPushToUser } from "@/lib/pushService";
 import { ablyRest } from "@/lib/ably";
 
 // POST — call эхлэх
-export async function POST(req: Request, { params }: { params: { id: string } }) {
+export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const user = await getAuthUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { db } = await connectToDatabase();
-    const booking = await db.collection("bookings").findOne({ _id: new ObjectId(params.id) });
+    const booking = await db.collection("bookings").findOne({ _id: new ObjectId(id) });
 
     if (!booking || booking.status !== "confirmed") {
       return NextResponse.json({ error: "Booking not available for call" }, { status: 400 });
@@ -26,7 +27,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     // callStatus update
     await db.collection("bookings").updateOne(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(id) },
       { $set: { callStatus: "in_call", callStartedAt: new Date(), updatedAt: new Date() } }
     );
 
@@ -38,25 +39,25 @@ export async function POST(req: Request, { params }: { params: { id: string } })
         body: `${booking.clientName || "Хэрэглэгч"} дуудлага эхлүүллээ. Одоо нэвтрэх!`,
         data: {
           type: "call_incoming",
-          bookingId: params.id,
-          roomName: `booking-${params.id}`,
-          url: `/booking/${params.id}`
+          bookingId: id,
+          roomName: `booking-${id}`,
+          url: `/booking/${id}`
         }
       });
 
       // Ably-р лам-д real-time дуудлага мэдэгдэл
       try {
         await ablyRest.channels.get(`monk:${booking.monkDbId}:calls`).publish("incoming_call", {
-          bookingId: params.id,
+          bookingId: id,
           clientName: booking.clientName || "Хэрэглэгч",
-          roomName: `booking-${params.id}`,
+          roomName: `booking-${id}`,
         });
       } catch (e) {
         console.error("Ably publish error:", e);
       }
     }
 
-    return NextResponse.json({ success: true, roomName: `booking-${params.id}` });
+    return NextResponse.json({ success: true, roomName: `booking-${id}` });
   } catch (error) {
     console.error("Call POST error:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
@@ -64,20 +65,21 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 }
 
 // DELETE — call дуусгах
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
+    const { id } = await params;
     const user = await getAuthUser(req);
     if (!user) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { db } = await connectToDatabase();
-    const booking = await db.collection("bookings").findOne({ _id: new ObjectId(params.id) });
+    const booking = await db.collection("bookings").findOne({ _id: new ObjectId(id) });
     if (!booking) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const callStart = booking.callStartedAt ? new Date(booking.callStartedAt).getTime() : 0;
     const durationSec = callStart ? Math.round((Date.now() - callStart) / 1000) : 0;
 
     await db.collection("bookings").updateOne(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(id) },
       {
         $set: {
           status: "completed",
@@ -97,7 +99,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
         userId: booking.clientId, 
         title: "📋 Засал дууслаа", 
         body: summary,
-        data: { type: "call_ended", bookingId: params.id } 
+        data: { type: "call_ended", bookingId: id } 
       }).catch(console.error);
     }
     
@@ -106,7 +108,7 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
         userId: booking.monkDbId, 
         title: "✅ Засал дууслаа", 
         body: summary,
-        data: { type: "call_ended", bookingId: params.id } 
+        data: { type: "call_ended", bookingId: id } 
       }).catch(console.error);
       
       // Орлого нэм — лам-д
@@ -124,3 +126,4 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+

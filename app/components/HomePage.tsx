@@ -179,7 +179,6 @@ export default function HomePage({
     statsRating: { mn: "Үнэлгээ", en: "Rating" },
     statsSessions: { mn: "Засал", en: "Sessions" },
     sectionGuides: { mn: "Онцлох багш", en: "Featured guides" },
-    sectionShortcuts: { mn: "Түргэн холбоос", en: "Shortcuts" },
     sectionStory: { mn: "Сүүлийн нийтлэл", en: "Latest story" },
     seeAll: { mn: "Бүгд ›", en: "See all ›" },
     read: { mn: "Унших →", en: "Read →" },
@@ -195,36 +194,7 @@ export default function HomePage({
     seeAllShop: { mn: "Бүгд ›", en: "See all ›" },
   };
 
-  const shortcuts = [
-    {
-      href: `/sign-in`,
-      icon: Users,
-      label: { mn: "Нэвтрэх", en: "Sign in" },
-      bg: "rgba(0,122,255,0.10)",
-      color: "#007AFF"
-    },
-    {
-      href: `/monks`,
-      icon: CalendarPlus,
-      label: { mn: "Захиалах", en: "Book" },
-      bg: "rgba(191,164,106,0.12)",
-      color: "var(--gold)"
-    },
-    {
-      href: `/messenger`,
-      icon: MessageCircle,
-      label: { mn: "Мессеж", en: "Messages" },
-      bg: "rgba(88,86,214,0.10)",
-      color: "#5856D6"
-    },
-    {
-      href: `/blog`,
-      icon: Newspaper,
-      label: { mn: "Блог", en: "Blog" },
-      bg: "rgba(255,149,0,0.10)",
-      color: "#FF9500"
-    },
-  ];
+
 
   const statCells = [
     {
@@ -560,34 +530,7 @@ export default function HomePage({
           </div>
         )}
 
-        {/* — SHORTCUTS — */}
-        <div className="mb-5" data-reveal>
-          <div style={{ padding: "24px 16px 12px" }}>
-            <h2 className="t-title-3" style={{ color: "var(--ink)" }}>{t(copy.sectionShortcuts)}</h2>
-          </div>
-          <div style={{ margin: "0 16px", borderRadius: "var(--r-xl)", overflow: "hidden", boxShadow: "var(--depth-2)", background: "white" }}>
-            {shortcuts.map((item, idx) => (
-              <LocalizedLink
-                key={item.href}
-                href={item.href}
-                className="flex items-center active:bg-[rgba(0,0,0,0.03)] transition-colors"
-                style={{
-                  gap: "14px", padding: "14px 16px", minHeight: "54px",
-                  borderBottom: idx === shortcuts.length - 1 ? "none" : "0.5px solid var(--sep)"
-                }}
-                onClick={handleTap}
-              >
-                <div style={{ width: "34px", height: "34px", borderRadius: "var(--r-md)", background: item.bg, color: item.color, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <item.icon size={17} strokeWidth={2} />
-                </div>
-                <div style={{ fontSize: "16px", fontWeight: 500, color: "var(--ink)", flex: 1 }}>
-                  {t(item.label)}
-                </div>
-                <ChevronRight size={16} color="var(--ink-4)" strokeWidth={2} />
-              </LocalizedLink>
-            ))}
-          </div>
-        </div>
+
 
         {/* — LATEST BLOG — */}
         <div className="mb-5" data-reveal>

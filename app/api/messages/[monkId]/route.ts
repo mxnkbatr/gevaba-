@@ -118,13 +118,13 @@ export async function POST(request: Request, { params }: { params: Promise<{ mon
 
     // TRIGGER PUSH NOTIFICATION
     try {
-      const { pushTriggers } = await import("@/lib/pushService");
-      await pushTriggers.newMessage(
-        receiverId,
-        senderName.toString(),
-        text || "Sent an image",
-        senderId
-      );
+      const { sendPushToUser } = await import("@/lib/pushService");
+      await sendPushToUser({
+        userId: receiverId,
+        title: `Шинэ зурвас: ${senderName}`,
+        body: text || "Зураг илгээлээ",
+        data: { type: "message", senderId: senderId }
+      });
     } catch (pushErr) {
       console.error("Push Notification for message failed:", pushErr);
     }

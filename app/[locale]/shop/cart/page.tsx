@@ -22,8 +22,6 @@ export default function ShopCartPage() {
   const { items, updateQuantity, removeFromCart, clearCart, totalItems } = useCart();
   const router = useRouter();
   const { isNative } = usePlatform();
-  const [products, setProducts] = useState<Record<string, Product>>({});
-  const [loading, setLoading] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -36,39 +34,22 @@ export default function ShopCartPage() {
     if (isNative) await hapticsLight();
   };
 
-  useEffect(() => {
-    if (items.length === 0) return;
-    let cancelled = false;
-    (async () => {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/shop/products");
-        const list: Product[] = res.ok ? await res.json() : [];
-        if (cancelled) return;
-        const map: Record<string, Product> = {};
-        for (const p of list) map[p._id] = p;
-        setProducts(map);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [items.length]);
+
 
   const rows = useMemo(() => {
     return items.map((it) => {
-      const p = products[it.productId];
+      const p = it.product;
+      const productId = (p?._id ?? "").toString();
       return {
-        ...it,
+        productId,
         product: p,
+        quantity: it.quantity,
         title: (lang === "mn" ? p?.name?.mn : p?.name?.en) ?? p?.name?.mn ?? p?.name?.en ?? t({ mn: "Бараа", en: "Product" }),
         price: Number(p?.price ?? 0),
         lineTotal: Number(p?.price ?? 0) * it.quantity,
       };
     });
-  }, [items, products, lang]);
+  }, [items, lang]);
 
   const totalAmount = useMemo(() => rows.reduce((acc, r) => acc + r.lineTotal, 0), [rows]);
 
@@ -193,8 +174,9 @@ export default function ShopCartPage() {
       {/* — BOTTOM CHECKOUT BAR — */}
       {items.length > 0 && (
         <div 
-          className="fixed bottom-0 left-0 right-0 z-50 px-6 py-4 pb-[calc(16px+var(--sab))]"
+          className="fixed left-0 right-0 z-50 px-6 py-4 pb-[calc(16px+env(safe-area-inset-bottom,34px))]"
           style={{ 
+            bottom: "calc(49px + env(safe-area-inset-bottom, 34px))",
             background: "linear-gradient(to top, white 80%, rgba(255,255,255,0))",
             backdropFilter: "blur(4px)"
           }}
