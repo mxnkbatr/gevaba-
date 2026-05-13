@@ -39,11 +39,11 @@ export default function LargeHeader({
             <h1 className="t-large-title" style={{ color: "var(--ink)" }}>
               {title}
               {highlight ? (
-                <span style={{ color: "var(--gold)" }}> {highlight}</span>
+                <span style={{ color: "var(--gold)", opacity: 0.85 }}> {highlight}</span>
               ) : null}
             </h1>
             {subtitle ? (
-              <p style={{ fontSize: "16px", fontWeight: 400, color: "var(--ink-3)", marginTop: "4px" }}>
+              <p style={{ fontSize: "15px", fontWeight: 400, color: "var(--ink-3)", marginTop: "8px" }}>
                 {subtitle}
               </p>
             ) : null}

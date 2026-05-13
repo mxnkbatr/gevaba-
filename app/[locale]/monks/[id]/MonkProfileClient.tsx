@@ -298,8 +298,8 @@ export default function MonkProfileClient({
                 />
 
                 {/* Overlays */}
-                <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/70 to-transparent z-10" />
-                <div className="absolute inset-0 bg-gradient-to-t from-cream via-cream/10 to-transparent z-10" />
+                <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-black/60 to-transparent z-10" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
 
                 {/* Floating Controls */}
                 <div
@@ -334,22 +334,22 @@ export default function MonkProfileClient({
                 </div>
 
                 {/* Identity Card (Bottom Overlap) */}
-                <div className="absolute inset-x-0 bottom-0 z-20 px-6 pb-4">
+                <div className="absolute inset-x-0 bottom-0 z-20 px-6 pb-6">
                     <div className="anim-fade-up flex flex-col items-center">
                         <div className="relative mb-3 group">
-                            <div className="w-28 h-28 rounded-[2.8rem] border-4 border-white shadow-2xl overflow-hidden bg-white/50 backdrop-blur-md">
+                            <div className="w-28 h-28 rounded-full border-2 border-white shadow-xl overflow-hidden bg-white/50 backdrop-blur-md">
                                 <img src={monk.image || "/default-monk.jpg"} className="w-full h-full object-cover" />
                             </div>
                             {monk.isAvailable !== false && (
-                                <div className="absolute -bottom-1 -right-1 h-4 w-4 rounded-full border-[3px] border-white bg-[#30d158] shadow-sm" />
+                                <div className="absolute bottom-1 right-1 h-3.5 w-3.5 rounded-full border-2 border-white bg-[#30d158] shadow-sm animate-pulse" />
                             )}
                         </div>
-                        <h1 className="text-3xl font-black text-ink tracking-tight text-center">{monkName}</h1>
+                        <h1 className="text-3xl font-black text-white tracking-tight text-center drop-shadow-md">{monkName}</h1>
                         <div className="flex items-center gap-2 mt-1">
-                            <span className="text-[14px] font-black uppercase tracking-widest text-gold">
+                            <span className="text-[13px] font-bold uppercase tracking-widest text-gold drop-shadow-sm">
                                 {monkTitle}
                             </span>
-                            <ShieldCheck size={16} className="text-emerald-500" />
+                            <ShieldCheck size={16} className="text-emerald-400 drop-shadow-sm" />
                         </div>
                     </div>
                 </div>
@@ -363,18 +363,18 @@ export default function MonkProfileClient({
                 {/* 1. Stats Grid */}
                 <section className="grid grid-cols-4 gap-3">
                     {[
-                        { icon: <CheckCircle />, val: monk.totalBookings || "120+", label: t({ mn: "Тус", en: "Helps" }) },
-                        { icon: <Star />, val: reviewStats.averageRating || "5.0", label: t({ mn: "Үнэлгээ", en: "Rating" }) },
-                        { icon: <Award />, val: `${monk.yearsOfExperience || 10}ж`, label: t({ mn: "Туршлага", en: "Exp" }) },
-                        { icon: <Clock />, val: "~2ц", label: t({ mn: "Хариу", en: "Resp" }) },
+                        { icon: <CheckCircle strokeWidth={1.5} />, val: monk.totalBookings || "120+", label: t({ mn: "Тус", en: "Helps" }) },
+                        { icon: <Star strokeWidth={1.5} />, val: reviewStats.averageRating || "5.0", label: t({ mn: "Үнэлгээ", en: "Rating" }) },
+                        { icon: <Award strokeWidth={1.5} />, val: `${monk.yearsOfExperience || 10}ж`, label: t({ mn: "Туршлага", en: "Exp" }) },
+                        { icon: <Clock strokeWidth={1.5} />, val: "~2ц", label: t({ mn: "Хариу", en: "Resp" }) },
                     ].map((s, i) => (
                         <div
                             key={i}
-                            className="flex flex-col items-center justify-center rounded-[1.75rem] border border-black/[0.06] bg-white p-3 shadow-sm"
+                            className="flex flex-col items-center justify-center rounded-[1.75rem] border border-black/[0.04] bg-white p-3 shadow-sm"
                         >
-                            <div className="mb-1.5 scale-90 text-earth/45">{s.icon}</div>
-                            <div className="text-[16px] font-black text-ink leading-none">{s.val}</div>
-                            <div className="text-[9px] font-black uppercase tracking-wider text-earth/40 mt-1">{s.label}</div>
+                            <div className="mb-1.5 text-earth/40">{s.icon}</div>
+                            <div className="text-[17px] font-black text-ink leading-none">{s.val}</div>
+                            <div className="text-[9px] font-bold uppercase tracking-[0.05em] text-earth/40 mt-1.5">{s.label}</div>
                         </div>
                     ))}
                 </section>
@@ -403,13 +403,13 @@ export default function MonkProfileClient({
                                         }`}
                                 >
                                     <span
-                                        className={`mb-1 text-[10px] font-bold uppercase ${isSelected ? "text-neutral-800/60" : "text-earth/40"}`}
+                                        className={`mb-1 text-[10px] font-bold uppercase ${isSelected ? "text-neutral-800/70" : "text-earth/30"}`}
                                     >
                                         {d.weekday}
                                     </span>
-                                    <span className="text-[18px] font-black leading-none">{d.day}</span>
+                                    <span className={`text-[18px] font-black leading-none ${isSelected ? "" : "text-earth/60"}`}>{d.day}</span>
                                     {isSelected && (
-                                        <div className="mt-1.5 h-1 w-1 rounded-full bg-neutral-900/35" />
+                                        <div className="mt-1.5 h-1 w-1 rounded-full bg-neutral-900/40" />
                                     )}
                                 </button>
                             );
@@ -441,9 +441,9 @@ export default function MonkProfileClient({
                                     <p className="text-[18px] font-black text-ink">₮{svc.price.toLocaleString()}</p>
                                     <button
                                         onClick={() => handleBook(svc._id || svc.id)}
-                                        className="flex h-10 w-10 items-center justify-center rounded-xl border border-black/[0.06] bg-gold text-neutral-900 transition-transform active:scale-90"
+                                        className="flex h-9 w-9 items-center justify-center rounded-full border border-black/[0.06] bg-gold text-neutral-900 transition-transform active:scale-90 shadow-sm"
                                     >
-                                        <ChevronLeft size={20} className="rotate-180" />
+                                        <ChevronLeft size={18} className="rotate-180" strokeWidth={2.5} />
                                     </button>
                                 </div>
                             </div>
@@ -451,24 +451,26 @@ export default function MonkProfileClient({
                     </div>
                 </section>
 
-                {/* Primary CTA — урсгалд: заслын жагсаалтын доор */}
-                <div className="-mx-6 flex items-center gap-3 border-t border-black/[0.06] bg-cream/92 px-5 py-3 shadow-[0_-4px_24px_rgba(0,0,0,0.04)] backdrop-blur-2xl">
-                    <button
-                        type="button"
-                        onClick={() => router.push(`/${lang}/messenger?monkId=${monkId}`)}
-                        className="flex h-14 w-14 shrink-0 items-center justify-center rounded-[1.35rem] border border-black/[0.06] bg-white text-gold shadow-sm transition-transform active:scale-95"
-                    >
-                        <MessageCircle size={26} strokeWidth={2} />
-                    </button>
+                {/* Floating CTA */}
+                <div className="fixed bottom-[calc(env(safe-area-inset-bottom,0px)+16px)] left-0 right-0 z-50 px-5 pointer-events-none">
+                    <div className="flex items-center gap-3 rounded-[1.75rem] bg-white/90 p-2 shadow-[0_8px_30px_rgba(0,0,0,0.12)] backdrop-blur-xl border border-white pointer-events-auto">
+                        <button
+                            type="button"
+                            onClick={() => router.push(`/${lang}/messenger?monkId=${monkId}`)}
+                            className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[1.35rem] bg-black/[0.03] text-gold transition-transform active:scale-95"
+                        >
+                            <MessageCircle size={24} strokeWidth={1.5} />
+                        </button>
 
-                    <button
-                        type="button"
-                        onClick={() => handleBook()}
-                        className="cta-button relative flex min-h-[56px] flex-1 gap-2 overflow-hidden rounded-[1.35rem] text-[13px] transition-transform active:scale-[0.98]"
-                    >
-                        <Calendar size={18} strokeWidth={2.2} />
-                        {!isSignedIn ? t({ mn: "Нэвтэрч орох", en: "Sign in to Book" }) : t({ mn: "Цаг захиалах", en: "Book Ritual" })}
-                    </button>
+                        <button
+                            type="button"
+                            onClick={() => handleBook()}
+                            className="cta-button relative flex min-h-[52px] flex-1 items-center justify-center gap-2 overflow-hidden rounded-[1.35rem] text-[14px] font-bold transition-transform active:scale-[0.98]"
+                        >
+                            <Calendar size={18} strokeWidth={2} />
+                            {!isSignedIn ? t({ mn: "Нэвтэрч орох", en: "Sign in to Book" }) : t({ mn: "Цаг захиалах", en: "Book Ritual" })}
+                        </button>
+                    </div>
                 </div>
 
                 {/* 4. Bio Section */}
@@ -480,7 +482,7 @@ export default function MonkProfileClient({
                         <Globe size={16} className="text-earth/35" />
                     </div>
                     <div className="relative">
-                        <p className={`text-[15px] font-medium text-earth/80 leading-relaxed font-serif ${!isBioExpanded ? "line-clamp-4" : ""}`}>
+                        <p className={`text-[15px] font-medium text-earth/80 leading-[1.6] font-serif ${!isBioExpanded ? "line-clamp-4" : ""}`}>
                             {monkBio}
                         </p>
                         {monkBio.length > 200 && (

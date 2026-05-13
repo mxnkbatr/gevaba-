@@ -2,13 +2,15 @@
 
 :root {
   /* ── BRAND ── */
-  --gold-rgb: 191, 164, 106;
-  --gold: #BFA46A;
-  --gold-light: #D4C29A;
-  --gold-pale: #F7F2E8;
-  --gold-dark: #5A4D35;
-  --gold-muted: rgba(191, 164, 106, 0.14);
-  --gold-glow: rgba(191, 164, 106, 0.28);
+  --gold-rgb: 206, 129, 60;
+  --gold: #CE813C; /* Warm Orange/Copper from Login button */
+  --gold-legacy: #BFA46A; /* Original logo gold */
+  --gold-light: #E9B282;
+  --gold-pale: #FDF5ED;
+  --gold-dark: #8C5321;
+  --gold-muted: rgba(206, 129, 60, 0.14);
+  --gold-glow: rgba(206, 129, 60, 0.28);
+  --nav-active-bg: #efe3d5; /* Active tab background */
 
   /* ── APPLE SEMANTIC COLORS ── */
   --ink: #1D1D1F;
@@ -156,13 +158,111 @@ body {
   -webkit-text-size-adjust: 100%;
   text-rendering: optimizeLegibility;
   font-feature-settings: "kern" 1, "liga" 1;
+  /* Prevent double-tap zoom — eliminates 300ms click delay globally */
+  touch-action: manipulation;
 }
 
+/* ── NATIVE FEEL RESET ──────────────────────────────────────────────
+   Every interactive element behaves like a native UIKit control:
+   • Zero tap highlight (no grey flash on tap)
+   • Instant press response — no cursor confusion
+   • No text selection when tapping UI (feels webby)
+   • No focus ring (we style focus ourselves or omit for touch)
+   ──────────────────────────────────────────────────────────────── */
 a,
 button,
-[role="button"] {
+[role="button"],
+input,
+select,
+textarea,
+label,
+[tabindex] {
   -webkit-tap-highlight-color: transparent;
   touch-action: manipulation;
+  outline: none;
+}
+
+/* Prevent accidental text selection when swiping/scrolling */
+nav,
+header,
+.card,
+.btn-primary,
+.btn-secondary,
+.btn-ghost,
+.btn-icon,
+.mobile-tab-bar,
+.mobile-header {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* ── INSTANT PRESS STATES (0ms — feels like native) ─────────────────
+   Native apps respond to touch with *zero* delay.
+   CSS :active fires immediately on touchstart in WebKit.
+   We apply a subtle scale + opacity so EVERY tappable thing
+   gives tactile visual confirmation before any JS runs.
+   ──────────────────────────────────────────────────────────────── */
+button:active,
+a:active,
+[role="button"]:active {
+  opacity: 0.75;
+  /* transition intentionally absent — must be instant */
+}
+
+/* Cards get their own scale — overrides opacity above */
+.card:active,
+.app-card-premium:active,
+[data-pressable]:active {
+  transform: scale(0.975);
+  opacity: 1;
+  transition: transform 0.05s linear;
+}
+
+/* ── GPU COMPOSITING ─────────────────────────────────────────────────
+   Promote scroll containers and animated elements to their own
+   compositor layer. Eliminates jank during scroll and transitions.
+   ──────────────────────────────────────────────────────────────── */
+.mobile-tab-bar,
+.mobile-header,
+.card,
+.glass,
+.glass-light {
+  will-change: transform;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* ── MOMENTUM / NATIVE SCROLL ────────────────────────────────────────
+   -webkit-overflow-scrolling: touch gives iOS rubber-band physics.
+   scroll-snap makes horizontal carousels feel like native pickers.
+   ──────────────────────────────────────────────────────────────── */
+.native-scroll {
+  -webkit-overflow-scrolling: touch;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-behavior: auto; /* instant, not smooth — native apps are instant */
+}
+
+.native-scroll-x {
+  -webkit-overflow-scrolling: touch;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-behavior: auto;
+  /* Hide scrollbar — native carousels don't show it */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.native-scroll-x::-webkit-scrollbar { display: none; }
+
+/* ── NO CURSOR / POINTER CURSOR ──────────────────────────────────────
+   On touch devices, cursor: pointer triggers the 300ms delay in some
+   older WebViews. cursor: default is correct for native-like apps.
+   ──────────────────────────────────────────────────────────────── */
+@media (pointer: coarse) {
+  a, button, [role="button"] {
+    cursor: default;
+  }
 }
 
 /* ── TYPOGRAPHY SCALE (SF Pro Dynamic Type) ── */
@@ -607,4 +707,142 @@ button,
 [data-reveal].anim-visible {
   opacity: 1;
   transform: translateY(0);
+}
+
+/* ── PREMIUM SCROLL ── */
+.premium-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* ──────────────────────────────────────────────────────────────────
+   LIVEKIT VIDEO ROOM — Native WebView Overrides
+   Overrides the default @livekit/components-styles to match our
+   premium dark Buddhist aesthetic (#05051a base, gold accents).
+   ────────────────────────────────────────────────────────────────── */
+
+/* Root container */
+.lk-room-container,
+.lk-video-conference {
+  background: #05051a !important;
+  --lk-bg: #05051a !important;
+  --lk-bg2: #0d0d2a !important;
+  --lk-bg3: #131330 !important;
+  --lk-border-color: rgba(191, 164, 106, 0.15) !important;
+  --lk-accent-fg: #BFA46A !important;
+  --lk-control-fg: rgba(255, 255, 255, 0.85) !important;
+  --lk-control-bg: rgba(255, 255, 255, 0.08) !important;
+  --lk-control-hover-bg: rgba(255, 255, 255, 0.14) !important;
+  --lk-control-active-bg: rgba(191, 164, 106, 0.20) !important;
+  --lk-danger-bg: rgba(255, 59, 48, 0.18) !important;
+  --lk-danger-fg: #FF6B6B !important;
+  font-family: var(--font-text) !important;
+  border-radius: 0 !important;
+}
+
+/* Participant tiles */
+.lk-participant-tile {
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.06) !important;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4) !important;
+  background: #0d0d2a !important;
+}
+
+/* Focus (large) tile */
+.lk-focus-layout .lk-participant-tile {
+  border-radius: 12px !important;
+}
+
+/* Participant name label */
+.lk-participant-name {
+  font-family: var(--font-text) !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.02em !important;
+  color: rgba(255, 255, 255, 0.80) !important;
+  background: rgba(0, 0, 0, 0.45) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border-radius: 8px !important;
+  padding: 3px 8px !important;
+}
+
+/* Control bar */
+.lk-control-bar {
+  background: rgba(5, 5, 26, 0.92) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border-top: 0.5px solid rgba(255, 255, 255, 0.06) !important;
+  padding-bottom: env(safe-area-inset-bottom, 0px) !important;
+  padding-left: env(safe-area-inset-left, 0px) !important;
+  padding-right: env(safe-area-inset-right, 0px) !important;
+  gap: 12px !important;
+}
+
+/* Control buttons */
+.lk-button {
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.09) !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.10) !important;
+  transition: transform 0.18s var(--spring), background 0.15s !important;
+  min-width: 52px !important;
+  min-height: 52px !important;
+}
+
+.lk-button:active {
+  transform: scale(0.91) !important;
+}
+
+.lk-button:hover {
+  background: rgba(255, 255, 255, 0.15) !important;
+}
+
+/* End call / Disconnect button — red */
+.lk-disconnect-button {
+  background: rgba(255, 59, 48, 0.20) !important;
+  border-color: rgba(255, 59, 48, 0.40) !important;
+  color: #FF6B6B !important;
+}
+
+.lk-disconnect-button:hover {
+  background: rgba(255, 59, 48, 0.35) !important;
+}
+
+/* Mute/unmute active state — gold accent */
+.lk-button[aria-pressed="true"],
+.lk-button[data-lk-active="true"] {
+  background: rgba(191, 164, 106, 0.18) !important;
+  border-color: rgba(191, 164, 106, 0.40) !important;
+  color: #BFA46A !important;
+}
+
+/* Chat panel */
+.lk-chat {
+  background: rgba(13, 13, 42, 0.97) !important;
+  backdrop-filter: blur(24px) !important;
+  -webkit-backdrop-filter: blur(24px) !important;
+  border-left: 0.5px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+.lk-chat-entry {
+  background: rgba(255, 255, 255, 0.05) !important;
+  border-radius: 12px !important;
+  border: 0.5px solid rgba(255, 255, 255, 0.06) !important;
+}
+
+/* Placeholder / connection overlay */
+.lk-connection-quality-indicator {
+  opacity: 0.65 !important;
+}
+
+/* No camera placeholder */
+.lk-participant-placeholder {
+  background: #0d0d2a !important;
+}
+
+/* ── CALL SCREEN — prevent bounce scroll ── */
+.fixed.inset-0.z-\[100\] {
+  overscroll-behavior: none;
+  -webkit-overflow-scrolling: auto;
 }

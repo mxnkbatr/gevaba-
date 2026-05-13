@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import { motion } from "framer-motion";
 import { Monk } from "@/database/types";
 import { useLanguage } from "../contexts/LanguageContext";
 import { Star, ArrowRight } from "lucide-react";
@@ -43,13 +44,19 @@ export default function MonkCard({ monk, index = 0, onClick }: MonkCardProps) {
     };
 
     return (
-        <div
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-20px" }}
+            transition={{ duration: 0.4, delay: Math.min(index * 0.05, 0.3) }}
             onClick={handleTap}
-            className="card mb-3 transition-all duration-200 active:scale-[0.975]"
+            className="mb-4 transition-all duration-200 active:scale-[0.975] active:bg-gray-50 bg-white"
             style={{
-                padding: "12px",
+                borderRadius: "24px",
+                boxShadow: "0 8px 30px rgba(0,0,0,0.04)",
+                padding: "16px",
                 display: "flex",
-                gap: "12px",
+                gap: "14px",
                 cursor: "pointer",
                 alignItems: "center"
             }}
@@ -58,13 +65,18 @@ export default function MonkCard({ monk, index = 0, onClick }: MonkCardProps) {
             <div style={{ position: "relative", width: "80px", height: "80px", flexShrink: 0 }}>
                 {isOnline && (
                     <div
-                        className="aura-pulse"
+                        className="animate-pulse"
                         style={{
                             position: "absolute",
-                            inset: "2px",
-                            borderRadius: "22px",
-                            border: "1.5px solid var(--gold-glow)",
-                            zIndex: 0
+                            bottom: "2px",
+                            right: "2px",
+                            width: "14px",
+                            height: "14px",
+                            background: "var(--sys-live)",
+                            borderRadius: "50%",
+                            border: "2.5px solid white",
+                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+                            zIndex: 20
                         }}
                     />
                 )}
@@ -93,37 +105,20 @@ export default function MonkCard({ monk, index = 0, onClick }: MonkCardProps) {
                         blurDataURL={BLUR_DATA_URL}
                     />
                 </div>
-
-                {isOnline && (
-                    <div
-                        style={{
-                            position: "absolute",
-                            bottom: "2px",
-                            right: "2px",
-                            width: "14px",
-                            height: "14px",
-                            background: "var(--sys-live)",
-                            borderRadius: "50%",
-                            border: "2.5px solid white",
-                            boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
-                            zIndex: 20
-                        }}
-                    />
-                )}
             </div>
 
             {/* Info Block */}
             <div style={{ flex: 1, minWidth: 0 }}>
                 <div className="flex justify-between items-start gap-2">
                     <div className="min-w-0">
-                        <h3 className="t-headline truncate" style={{ color: "var(--ink)", fontSize: "17px" }}>
+                        <h3 className="t-headline truncate" style={{ color: "var(--ink)", fontSize: "16px", fontWeight: 600 }}>
                             {name}
                         </h3>
-                        <div style={{ fontSize: "11px", fontWeight: 700, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--ink-3)", marginTop: "1px" }} className="truncate">
+                        <div style={{ fontSize: "10px", fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", color: "var(--ink-4)", marginTop: "2px" }} className="truncate">
                             {titleText}
                         </div>
                     </div>
-                    <div style={{ fontSize: "16px", fontWeight: 800, color: "var(--ink)", letterSpacing: "-0.01em" }}>
+                    <div style={{ fontSize: "14px", fontWeight: 700, color: "var(--ink)", letterSpacing: "-0.01em" }}>
                         ₮{price}
                     </div>
                 </div>
@@ -151,19 +146,18 @@ export default function MonkCard({ monk, index = 0, onClick }: MonkCardProps) {
             {/* Right Action */}
             <div style={{ flexShrink: 0 }}>
                 <div
-                    className="flex items-center justify-center active:scale-[0.9] transition-all"
+                    className="flex items-center justify-center transition-all"
                     style={{
-                        width: "36px",
-                        height: "36px",
-                        background: "var(--gold-muted)",
-                        borderRadius: "12px",
-                        color: "var(--gold-dark)",
-                        transitionTimingFunction: "var(--spring)"
+                        width: "32px",
+                        height: "32px",
+                        background: "rgba(0,0,0,0.03)",
+                        borderRadius: "50%",
+                        color: "var(--ink-3)"
                     }}
                 >
-                    <ArrowRight size={18} strokeWidth={2.5} />
+                    <ArrowRight size={16} strokeWidth={2} />
                 </div>
             </div>
-        </div>
+        </motion.div>
     );
 }

@@ -42,30 +42,25 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
 	<key>WKAppBoundDomains</key>
 	<array>
 		<string>gevabal.mn</string>
+		<string>clerk.gevabal.mn</string>
 		<string>img.clerk.com</string>
 		<string>res.cloudinary.com</string>
-		<string>images.unsplash.com</string>
-		<string>i.pravatar.cc</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Профайл зураг авах, шинэчлэхийн тулд камер ашиглана.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Used for audio during live ritual sessions</string>
+	<string>Шууд зан үйл, зөвлөгөө авах үеэр дуу бичихэд микрофон ашиглана.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Профайл зураг сонгох, шинэчлэхийн тулд зургийн сангаас (Gallery) зураг уншина.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>

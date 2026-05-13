@@ -94,38 +94,37 @@ const BlogCard = ({
               <BookOpen size={36} strokeWidth={1.15} />
             </div>
           )}
-        </div>
 
-        <div className="p-4">
-          <div className="mb-2 flex items-start justify-between gap-2">
+          {/* Badge Overlay */}
+          <div className="absolute top-3 left-3 z-10">
             <span
-              className="inline-flex max-w-[70%] truncate rounded-full border px-2.5 py-0.5 text-[11px] font-semibold tracking-tight"
+              className="inline-flex rounded-full border px-3 py-1 text-[10px] font-bold tracking-widest uppercase shadow-sm backdrop-blur-md"
               style={{
-                color: ACCENT,
-                borderColor: "rgba(191, 164, 106, 0.38)",
-                backgroundColor: "rgba(191, 164, 106, 0.1)",
+                color: "var(--gold-dark)",
+                borderColor: "rgba(191, 164, 106, 0.3)",
+                backgroundColor: "rgba(255, 255, 255, 0.9)",
               }}
             >
               {categoryLabel}
             </span>
           </div>
+        </div>
 
-          <h3 className="text-[16px] font-semibold text-ink leading-snug line-clamp-2 tracking-tight">
+        <div className="p-4 pt-5 pb-5">
+          <h3 className="text-[17px] font-bold text-ink leading-snug line-clamp-2 tracking-tight">
             {title}
           </h3>
 
-          <p className="mt-2 text-xs text-neutral-400">
+          <p className="mt-3 text-[11px] font-semibold uppercase tracking-widest text-earth/40">
             {author}
-            <span className="text-neutral-300"> · </span>
+            <span className="mx-1.5 text-earth/20">·</span>
             {dateStr}
           </p>
 
-          <div
-            className="mt-3 inline-flex items-center gap-1 text-[12px] font-semibold"
-            style={{ color: ACCENT }}
-          >
-            {t(TRANSLATIONS.readMore)}
-            <ArrowRight size={14} strokeWidth={2} className="shrink-0 opacity-90" />
+          <div className="mt-4 flex items-center justify-end">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full border border-black/[0.04] bg-gold/15 text-gold-dark transition-transform group-active:scale-90 shadow-sm">
+              <ArrowRight size={16} strokeWidth={2.5} />
+            </div>
           </div>
         </div>
       </Link>
@@ -218,7 +217,7 @@ export default function BlogListClient({
 
   return (
     <div className="relative min-h-[100svh] flex flex-col bg-white pb-24 pt-[calc(56px+env(safe-area-inset-top,0px))] md:pt-[88px]">
-      <header className="sticky z-30 border-b border-black/[0.06] bg-white/85 backdrop-blur-xl backdrop-saturate-150 shadow-[0_1px_0_rgba(0,0,0,0.03)] top-[calc(56px+env(safe-area-inset-top,0px))] md:top-[80px]">
+      <header className="sticky z-30 border-b border-black/[0.06] bg-[rgba(248,248,250,0.85)] backdrop-blur-2xl backdrop-saturate-150 shadow-[0_1px_0_rgba(0,0,0,0.03)] top-[calc(56px+env(safe-area-inset-top,0px))] md:top-[80px]">
         <LargeHeader
           omitNavGutter
           title={t(TRANSLATIONS.titleMain)}
@@ -249,25 +248,25 @@ export default function BlogListClient({
 
           <div className="relative">
             <Search
-              className="pointer-events-none absolute left-4 top-1/2 z-[1] -translate-y-1/2 text-neutral-400/55"
-              size={16}
-              strokeWidth={1.25}
+              className="pointer-events-none absolute left-3.5 top-1/2 z-[1] -translate-y-1/2 text-earth/30"
+              size={15}
+              strokeWidth={2.5}
             />
             <input
               type="search"
               placeholder={t(TRANSLATIONS.searchPlaceholder)}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full rounded-full border-0 bg-[#F2F2F7] py-3 pl-11 pr-11 text-[15px] font-normal text-ink outline-none ring-0 placeholder:text-neutral-400/75 focus:bg-[#ECECEC] transition-colors"
+              className="w-full rounded-[16px] border-0 bg-black/[0.04] py-2.5 pl-9 pr-10 text-[15px] font-medium text-ink outline-none ring-0 placeholder:text-earth/40 focus:bg-black/[0.06] transition-colors"
             />
             {search ? (
               <button
                 type="button"
                 onClick={() => setSearch("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 text-neutral-400 hover:bg-black/[0.05] transition-colors"
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 text-earth/40 hover:bg-black/[0.05] transition-colors"
                 aria-label="Clear"
               >
-                <X size={16} strokeWidth={1.25} className="text-neutral-500" />
+                <X size={15} strokeWidth={2.5} className="text-earth/40" />
               </button>
             ) : null}
           </div>

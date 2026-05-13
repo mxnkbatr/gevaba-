@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState } from "react";
-import { Phone, PhoneOff, Video, Loader2 } from "lucide-react";
+import { Video, Loader2, PhoneOff, Sparkles } from "lucide-react";
 import { useLanguage } from "@/app/contexts/LanguageContext";
-import { hapticsLight } from "@/app/capacitor/plugins/haptics";
+import { hapticsLight, hapticsMedium } from "@/app/capacitor/plugins/haptics";
 import LiveRitualRoom from "@/app/components/LiveRitualRoom";
+import { motion } from "framer-motion";
 
 interface Props {
   bookingId: string;
@@ -22,18 +23,20 @@ export default function CallLauncher({ bookingId, monkName, callStatus, isMonk }
   const startCall = async () => {
     setIsConnecting(true);
     try {
-      hapticsLight();
-      
-      // 1. Notify backend (only seekers start calls)
+      await hapticsMedium();
+
+      // 1. Notify backend to start (only client starts call)
       if (!isMonk) {
         const startRes = await fetch(`/api/bookings/${bookingId}/call`, { method: "POST" });
         if (!startRes.ok) throw new Error("Could not start call");
       }
 
-      // 2. Get LiveKit token
-      const res = await fetch(`/api/livekit?room=booking-${bookingId}&username=${encodeURIComponent(isMonk ? "Monk" : "User")}`);
+      // 2. Fetch LiveKit token
+      const res = await fetch(
+        `/api/livekit?room=booking-${bookingId}&username=${encodeURIComponent(isMonk ? "Monk" : "User")}`
+      );
       if (!res.ok) throw new Error("Failed to get call token");
-      
+
       const { token, wsUrl: url } = await res.json();
       setLiveKitToken(token);
       setWsUrl(url);
@@ -46,79 +49,179 @@ export default function CallLauncher({ bookingId, monkName, callStatus, isMonk }
 
   const endCall = async () => {
     try {
-      hapticsLight();
+      await hapticsLight();
       await fetch(`/api/bookings/${bookingId}/call`, { method: "DELETE" });
       setLiveKitToken(null);
       setWsUrl(null);
       setIsConnecting(false);
-      window.location.reload(); // Refresh to show completed state
+      window.location.reload();
     } catch (e) {
       console.error("Call end error:", e);
     }
   };
 
+  // ── Active room view ──
   if (liveKitToken && wsUrl) {
     return (
-      <div className="fixed inset-0 z-[100] bg-black">
-        <LiveRitualRoom
-          token={liveKitToken}
-          serverUrl={wsUrl}
-          roomName={`booking-${bookingId}`}
-          onLeave={endCall}
-          isMonk={isMonk}
-          bookingId={bookingId}
-        />
-      </div>
+      <LiveRitualRoom
+        token={liveKitToken}
+        serverUrl={wsUrl}
+        roomName={`booking-${bookingId}`}
+        onLeave={endCall}
+        isMonk={isMonk}
+        bookingId={bookingId}
+        monkName={monkName}
+      />
     );
   }
 
+  // ── Pre-call states ──
   return (
-    <div className="mt-6 flex flex-col items-center gap-4">
+    <div className="mt-4">
+      {/* ── CLIENT: waiting → start button ── */}
       {callStatus === "waiting" && !isMonk && (
-        <button 
-          onClick={startCall} 
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={startCall}
           disabled={isConnecting}
-          className="w-full h-14 bg-green-500 hover:bg-green-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 transition active:scale-95 disabled:opacity-50"
+          style={{
+            width: "100%",
+            height: 56,
+            borderRadius: 18,
+            border: "none",
+            background: isConnecting
+              ? "rgba(48,209,88,0.35)"
+              : "linear-gradient(135deg, #30D158 0%, #27B348 100%)",
+            color: "#fff",
+            fontSize: 15,
+            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            boxShadow: isConnecting
+              ? "none"
+              : "0 4px 24px rgba(48,209,88,0.35)",
+            cursor: isConnecting ? "not-allowed" : "pointer",
+            opacity: isConnecting ? 0.7 : 1,
+            transition: "all 0.2s",
+          }}
         >
           {isConnecting ? (
-            <Loader2 className="animate-spin" size={24} />
+            <>
+              <Loader2 size={20} className="animate-spin" />
+              {t({ mn: "Холбогдож байна...", en: "Connecting..." })}
+            </>
           ) : (
-            <Video size={24} />
+            <>
+              <Video size={20} />
+              {t({ mn: "Дуудлага эхлүүлэх", en: "Start Video Call" })}
+            </>
           )}
-          {isConnecting ? t({ mn: "Холбогдож байна...", en: "Connecting..." }) : t({ mn: "Дуудлага эхлүүлэх", en: "Start Call" })}
-        </button>
+        </motion.button>
       )}
 
+      {/* ── MONK: waiting to be joined ── */}
       {callStatus === "waiting" && isMonk && (
-        <div className="p-6 bg-blue-50 border border-blue-100 rounded-2xl text-center">
-          <p className="text-blue-700 font-semibold">
-            {t({ mn: "Хэрэглэгч дуудлага эхлүүлэхийг хүлээж байна...", en: "Waiting for client to start call..." })}
-          </p>
-          <button 
-             onClick={startCall}
-             className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-xl text-sm font-bold"
+        <div
+          style={{
+            padding: "20px 20px",
+            background: "rgba(191,164,106,0.08)",
+            border: "0.5px solid rgba(191,164,106,0.25)",
+            borderRadius: 20,
+            textAlign: "center",
+          }}
+        >
+          <Sparkles size={20} color="var(--gold)" style={{ margin: "0 auto 10px" }} />
+          <p
+            style={{
+              color: "var(--ink-2)",
+              fontSize: 14,
+              fontWeight: 600,
+              marginBottom: 16,
+              lineHeight: 1.5,
+            }}
           >
-            {t({ mn: "Нэвтрэх", en: "Enter Room" })}
-          </button>
+            {t({
+              mn: "Хэрэглэгч дуудлага эхлүүлэхийг хүлээж байна...",
+              en: "Waiting for client to start the session...",
+            })}
+          </p>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={startCall}
+            style={{
+              padding: "12px 28px",
+              borderRadius: 14,
+              border: "none",
+              background: "var(--gold)",
+              color: "white",
+              fontSize: 14,
+              fontWeight: 700,
+              cursor: "pointer",
+              boxShadow: "var(--depth-gold)",
+            }}
+          >
+            {t({ mn: "Засалд нэвтрэх", en: "Enter Room" })}
+          </motion.button>
         </div>
       )}
 
+      {/* ── IN_CALL: join active room ── */}
       {callStatus === "in_call" && (
-        <button 
+        <motion.button
+          whileTap={{ scale: 0.97 }}
           onClick={startCall}
-          className="w-full h-14 bg-blue-600 text-white rounded-2xl font-bold flex items-center justify-center gap-3 animate-pulse"
+          style={{
+            width: "100%",
+            height: 56,
+            borderRadius: 18,
+            border: "none",
+            background: "linear-gradient(135deg, var(--sys-blue) 0%, #0055D4 100%)",
+            color: "#fff",
+            fontSize: 15,
+            fontWeight: 700,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 10,
+            cursor: "pointer",
+            boxShadow: "0 4px 24px rgba(0,122,255,0.35)",
+          }}
         >
-          <Video size={24} />
-          {t({ mn: "Дуудлага руу орох", en: "Enter Call" })}
-        </button>
+          <Video size={20} />
+          {t({ mn: "Дуудлага руу орох", en: "Rejoin Call" })}
+        </motion.button>
       )}
 
+      {/* ── ENDED ── */}
       {callStatus === "ended" && (
-        <div className="flex flex-col items-center gap-2 text-green-600 font-bold">
-          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-            <PhoneOff size={24} />
+        <div
+          style={{
+            padding: "24px 20px",
+            background: "rgba(52,199,89,0.08)",
+            border: "0.5px solid rgba(52,199,89,0.22)",
+            borderRadius: 20,
+            textAlign: "center",
+          }}
+        >
+          <div
+            style={{
+              width: 48,
+              height: 48,
+              borderRadius: "50%",
+              background: "rgba(52,199,89,0.15)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              margin: "0 auto 12px",
+            }}
+          >
+            <PhoneOff size={22} color="#34C759" />
           </div>
-          <span>{t({ mn: "Засал амжилттай дууслаа ✓", en: "Ritual successfully completed ✓" })}</span>
+          <p style={{ color: "#34C759", fontSize: 15, fontWeight: 700 }}>
+            {t({ mn: "Засал амжилттай дууслаа ✓", en: "Ritual successfully completed ✓" })}
+          </p>
         </div>
       )}
     </div>

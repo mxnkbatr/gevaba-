@@ -190,7 +190,7 @@ export default function HomePage({
       mn: "Нийтлэл удахгүй орно.",
       en: "Stories are on the way.",
     },
-    sectionShop: { mn: "Тахилын дэлгүүр", en: "Sacred Shop" },
+    sectionShop: { mn: "Шидийн дэлгүүр", en: "Sacred Shop" },
     seeAllShop: { mn: "Бүгд ›", en: "See all ›" },
   };
 
@@ -215,7 +215,7 @@ export default function HomePage({
       value: "1.2к+",
       label: t(copy.statsSessions),
       Icon: Activity,
-      bg: "rgba(52,199,89,0.12)",
+      bg: "rgba(52,199,89,0.18)",
       color: "#34C759",
     },
   ];
@@ -311,7 +311,7 @@ export default function HomePage({
                     className="flex items-center justify-center active:scale-[0.975] transition-transform duration-200"
                     style={{
                       background: "var(--gold)", color: "white", fontSize: "13px", fontWeight: 700,
-                      padding: "9px 18px", borderRadius: "var(--r-pill)", boxShadow: "0 4px 20px rgba(191,164,106,0.4)",
+                      padding: "9px 18px", borderRadius: "16px", boxShadow: "0 4px 20px rgba(191,164,106,0.4)",
                       letterSpacing: "0.01em"
                     }}
                   >
@@ -334,9 +334,9 @@ export default function HomePage({
                     key={s.key}
                     style={{
                       height: "4px",
-                      borderRadius: i === heroIndex ? "2px" : "50%",
-                      width: i === heroIndex ? "18px" : "4px",
-                      background: i === heroIndex ? "var(--gold)" : "rgba(255,255,255,0.35)",
+                      borderRadius: i === heroIndex ? "3px" : "50%",
+                      width: i === heroIndex ? "22px" : "4px",
+                      background: i === heroIndex ? "var(--gold)" : "rgba(255,255,255,0.45)",
                       transition: "width 0.3s var(--spring), background 0.3s"
                     }}
                   />
@@ -356,7 +356,7 @@ export default function HomePage({
               key={cell.label}
               className={`anim-${idx + 2} flex flex-col items-center gap-[6px]`}
               style={{
-                background: "var(--bg-elevated)", borderRadius: "var(--r-xl)", boxShadow: "var(--depth-2)",
+                background: "var(--bg-elevated)", borderRadius: "var(--r-xl)", boxShadow: "0 8px 30px rgba(0,0,0,0.03)",
                 border: "0.5px solid rgba(255,255,255,0.8)", padding: "14px 12px"
               }}
             >
@@ -378,15 +378,15 @@ export default function HomePage({
 
         {/* — FEATURED MONKS — */}
         <div className="mb-5" data-reveal>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "24px 16px 12px" }}>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "24px 20px 12px" }}>
             <h2 className="t-title-3" style={{ color: "var(--ink)" }}>{t(copy.sectionGuides)}</h2>
-            <LocalizedLink href="/monks" style={{ fontSize: "14px", fontWeight: 600, color: "var(--gold)", letterSpacing: "-0.01em" }}>
+            <LocalizedLink href="/monks" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-4)", letterSpacing: "-0.01em" }}>
               {t(copy.seeAll)}
             </LocalizedLink>
           </div>
 
           <div
-            style={{ padding: "0 16px", display: "flex", gap: "12px", overflowX: "auto", scrollSnapType: "x mandatory" }}
+            style={{ padding: "4px 20px 20px", display: "flex", gap: "12px", overflowX: "auto", scrollSnapType: "x mandatory" }}
             className="hide-scrollbar"
           >
             {featuredMonks.length === 0 ? (
@@ -467,15 +467,15 @@ export default function HomePage({
         {/* — SACRED SHOP — */}
         {featuredProducts?.length > 0 && (
           <div className="mb-5" data-reveal>
-            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "24px 16px 12px" }}>
+            <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "24px 20px 12px" }}>
               <h2 className="t-title-3" style={{ color: "var(--ink)" }}>{t(copy.sectionShop)}</h2>
-              <LocalizedLink href="/shop" style={{ fontSize: "14px", fontWeight: 600, color: "var(--gold)", letterSpacing: "-0.01em" }}>
+              <LocalizedLink href="/shop" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-4)", letterSpacing: "-0.01em" }}>
                 {t(copy.seeAllShop)}
               </LocalizedLink>
             </div>
 
             <div
-              style={{ padding: "0 16px", display: "flex", gap: "12px", overflowX: "auto", scrollSnapType: "x mandatory" }}
+              style={{ padding: "4px 20px 20px", display: "flex", gap: "12px", overflowX: "auto", scrollSnapType: "x mandatory" }}
               className="hide-scrollbar"
             >
               {featuredProducts.slice(0, 4).map((p) => {
@@ -486,10 +486,10 @@ export default function HomePage({
                     key={p._id}
                     href={`/shop/${p._id}`}
                     className="card shrink-0 active:scale-[0.975] transition-transform duration-200"
-                    style={{ width: "176px", scrollSnapAlign: "start" }}
+                    style={{ width: "176px", scrollSnapAlign: "start", display: "flex", flexDirection: "column" }}
                     onClick={handleTap}
                   >
-                    <div style={{ aspectRatio: "1/1", position: "relative" }}>
+                    <div style={{ width: "100%", aspectRatio: "1/1", position: "relative" }}>
                       {img ? (
                         <Image
                           src={img}
@@ -508,18 +508,18 @@ export default function HomePage({
                           <Sparkles className="text-ink-3" size={32} />
                         </div>
                       )}
-                      <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.18) 0%, transparent 50%)" }} />
+                      <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.10) 0%, transparent 40%)" }} />
                     </div>
-                    <div style={{ padding: "12px" }}>
+                    <div style={{ padding: "12px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                       <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink)", letterSpacing: "-0.01em" }} className="line-clamp-2 leading-snug">
                         {name}
                       </div>
-                      <div className="flex justify-between items-center" style={{ marginTop: "6px" }}>
-                        <div style={{ fontSize: "14px", fontWeight: 800, color: "var(--gold-dark)" }}>
+                      <div className="flex justify-between items-center" style={{ marginTop: "8px" }}>
+                        <div style={{ fontSize: "15px", fontWeight: 800, color: "var(--gold-dark)" }}>
                           ₮{Number(p.price ?? 0).toLocaleString()}
                         </div>
-                        <div style={{ width: "28px", height: "28px", background: "var(--gold)", borderRadius: "var(--r-sm)", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "16px", fontWeight: 700 }}>
-                          +
+                        <div style={{ width: "24px", height: "24px", background: "rgba(0,0,0,0.04)", borderRadius: "var(--r-full)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--ink-4)" }}>
+                          <ArrowRight size={14} strokeWidth={2} />
                         </div>
                       </div>
                     </div>
@@ -533,10 +533,10 @@ export default function HomePage({
 
 
         {/* — LATEST BLOG — */}
-        <div className="mb-5" data-reveal>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "24px 16px 12px" }}>
+        <div className="mb-8" data-reveal>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", padding: "16px 20px 16px" }}>
             <h2 className="t-title-3" style={{ color: "var(--ink)" }}>{t(copy.sectionStory)}</h2>
-            <LocalizedLink href="/blog" style={{ fontSize: "14px", fontWeight: 600, color: "var(--gold)", letterSpacing: "-0.01em" }}>
+            <LocalizedLink href="/blog" style={{ fontSize: "13px", fontWeight: 600, color: "var(--ink-4)", letterSpacing: "-0.01em" }}>
               {t(copy.seeAll)}
             </LocalizedLink>
           </div>
@@ -568,20 +568,20 @@ export default function HomePage({
                     <Newspaper className="text-ink-3" size={40} />
                   </div>
                 )}
-                <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.25) 55%, transparent 100%)" }} />
+                <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.4) 60%, transparent 100%)" }} />
 
-                <div className="absolute bottom-0 w-full" style={{ padding: "18px 16px" }}>
-                  <div style={{ display: "inline-flex", background: "rgba(191,164,106,0.85)", color: "white", fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", padding: "3px 9px", borderRadius: "var(--r-pill)", marginBottom: "8px" }}>
+                <div className="absolute bottom-0 w-full" style={{ padding: "24px 20px" }}>
+                  <div style={{ display: "inline-flex", background: "rgba(191,164,106,0.9)", color: "white", fontSize: "10px", fontWeight: 800, textTransform: "uppercase", letterSpacing: "0.08em", padding: "4px 10px", borderRadius: "100px", marginBottom: "10px" }}>
                     {latest.category || "Нийтлэл"}
                   </div>
-                  <div style={{ fontSize: "17px", fontWeight: 700, color: "white", letterSpacing: "-0.015em", lineHeight: 1.3, textShadow: "0 1px 8px rgba(0,0,0,0.4)" }} className="line-clamp-2">
+                  <div style={{ fontSize: "18px", fontWeight: 800, color: "white", letterSpacing: "-0.015em", lineHeight: 1.3, textShadow: "0 2px 12px rgba(0,0,0,0.6)" }} className="line-clamp-2">
                     {pickTitle(latest.title, lang)}
                   </div>
-                  <div style={{ fontSize: "11px", fontWeight: 500, color: "rgba(255,255,255,0.6)", marginTop: "8px", display: "flex", gap: "10px" }}>
+                  <div style={{ fontSize: "11px", fontWeight: 600, color: "rgba(255,255,255,0.7)", marginTop: "10px", display: "flex", gap: "10px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
                     <span>{formatBlogPostDate(latest.date, lang)}</span>
                     {latest.authorName && <span>· {latest.authorName}</span>}
                   </div>
-                  <div style={{ fontSize: "13px", fontWeight: 600, color: "var(--gold-light)", marginTop: "6px" }}>
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--gold-light)", marginTop: "8px" }}>
                     {t(copy.read)}
                   </div>
                 </div>

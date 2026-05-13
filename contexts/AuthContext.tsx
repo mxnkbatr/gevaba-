@@ -23,9 +23,9 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
-  login: async () => {},
-  logout: async () => {},
-  refreshUser: async () => {},
+  login: async () => { },
+  logout: async () => { },
+  refreshUser: async () => { },
 });
 
 export const useAuth = () => useContext(AuthContext);
@@ -58,7 +58,7 @@ export const AuthProvider = ({
       const headers: HeadersInit = { "Content-Type": "application/json" };
       if (token) headers["Authorization"] = `Bearer ${token}`;
 
-      const res = await fetch("/api/auth/me", { 
+      const res = await fetch("/api/auth/me", {
         headers,
         credentials: "include",
       });
@@ -119,7 +119,7 @@ export const AuthProvider = ({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ fcmToken: null }),
         credentials: "include",
-      }).catch(() => {});
+      }).catch(() => { });
 
       await Promise.all([
         fetch("/api/auth/logout", { method: "POST" }),

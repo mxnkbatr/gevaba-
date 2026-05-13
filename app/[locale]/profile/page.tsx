@@ -1,12 +1,13 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { UserButton } from "@clerk/nextjs";
 import { useRouter } from "next/navigation";
 import {
   Video, Loader2, Edit, Upload, LogOut, LogIn,
   TrendingUp, CheckCircle, History, MessageCircle,
-  X, Save, Phone, UserCircle, Plus, Sun
+  X, Save, Phone, UserCircle, Plus, Sun, ChevronRight, Settings
 } from "lucide-react";
 import { useLanguage } from "../../contexts/LanguageContext";
 import LiveRitualRoom from "../../components/LiveRitualRoom";
@@ -251,41 +252,52 @@ export default function ProfilePage() {
   const displayTitle = isMonk ? (profile?.title?.[lk] || "Багш") : (lang === "mn" ? "Эрхэм сүсэгтэн" : "Seeker");
 
   return (
-    <main className="relative min-h-[100svh] bg-cream pb-[calc(var(--tab-bar-height,0px)+8px)] page-safe-top page-safe-bottom selection:bg-gold/20">
-      {/* ── HERO PROFILE CARD ── */}
-      <section className="relative z-10 mb-6 px-4">
-        <div className="relative overflow-hidden rounded-[28px] border border-black/[0.06] bg-white p-6 shadow-sm">
-          <div className="relative z-10 mb-5 flex items-center gap-4">
+    <div className="relative min-h-[100svh] bg-cream pb-[calc(var(--tab-bar-height,0px)+8px)] page-safe-top page-safe-bottom selection:bg-gold/20">
+      {/* ── HERO PROFILE HEADER (Glassmorphism & Centered) ── */}
+      <section className="relative z-10 mb-6 pt-8 pb-6">
+        <div className="absolute inset-0 z-0 bg-gradient-to-b from-black/[0.03] to-transparent pointer-events-none" />
+        
+        <div className="relative z-10 flex flex-col items-center text-center px-4">
+          <div className="relative mb-4">
             {/* Avatar */}
-            <div className="relative shrink-0">
-              {user?.authType === "clerk" ? (
-                <div className="scale-[1.6] origin-top-left ml-3 mt-1"><UserButton /></div>
-              ) : (
-                <div className="h-14 w-14 overflow-hidden rounded-2xl border border-black/[0.06] bg-[#F2F2F7]">
-                  {(profile?.avatar || profile?.image || user?.avatar) ? (
-                    <img src={profile?.avatar || profile?.image || user?.avatar} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xl font-black text-gold">
-                      {displayName?.[0]}
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            <div className="min-w-0 flex-1">
-              <h2 className="truncate font-serif text-[1.15rem] font-semibold text-ink">
-                {displayName}
-              </h2>
-              <p className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-earth/50">
-                {displayTitle}
-              </p>
-            </div>
+            {user?.authType === "clerk" ? (
+              <div className="scale-[1.8] origin-center"><UserButton /></div>
+            ) : (
+              <div className="h-20 w-20 overflow-hidden rounded-full border-2 border-white shadow-sm bg-[#F2F2F7]">
+                {(profile?.avatar || profile?.image || user?.avatar) ? (
+                  <img src={profile?.avatar || profile?.image || user?.avatar} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center text-2xl font-black text-gold">
+                    {displayName?.[0]}
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Edit Button (Small icon overlay) */}
+            <button
+              onClick={() => { setEditForm(profile || {}); setIsEditOpen(true); }}
+              className="absolute bottom-0 -right-1 flex h-7 w-7 items-center justify-center rounded-full border border-black/[0.06] bg-white shadow-sm text-ink"
+            >
+              <Edit size={12} />
+            </button>
           </div>
+          
+          <h2 className="font-serif text-[22px] font-semibold text-ink tracking-tight">
+            {displayName}
+          </h2>
+          <p className="mt-1 flex items-center justify-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.2em] text-earth/50">
+            {displayTitle}
+          </p>
+        </div>
+      </section>
+
+      <div className="px-4">
 
           {/* Stats (monk only) */}
           {isMonk && (
             <div className="mb-5 grid grid-cols-2 gap-3">
-              <div className="rounded-2xl border border-black/[0.06] bg-[#F8FAFC] p-3 text-center">
+              <div className="rounded-2xl border border-black/[0.06] bg-[#F8FAFC] p-3 text-center" data-pressable="false">
                 <p className="text-[20px] font-semibold text-ink">
                   {totalEarnings.toLocaleString()}₮
                 </p>
@@ -293,7 +305,7 @@ export default function ProfilePage() {
                   {lang === "mn" ? "Нийт орлого" : "Total Earnings"}
                 </p>
               </div>
-              <div className="rounded-2xl border border-black/[0.06] bg-[#F8FAFC] p-3 text-center">
+              <div className="rounded-2xl border border-black/[0.06] bg-[#F8FAFC] p-3 text-center" data-pressable="false">
                 <p className="text-[20px] font-semibold text-ink">{acceptedCount}</p>
                 <p className="mt-0.5 text-[9px] font-semibold uppercase tracking-wider text-earth/45">
                   {lang === "mn" ? "Захиалга" : "Bookings"}
@@ -302,51 +314,19 @@ export default function ProfilePage() {
             </div>
           )}
 
-          {/* Actions */}
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-2">
-            <button
-              onClick={() => { setEditForm(profile || {}); setIsEditOpen(true); }}
-              className="flex flex-1 items-center justify-center gap-2 rounded-2xl border border-black/[0.06] bg-[#F2F2F7] py-2.5 text-[11px] font-semibold text-ink transition-transform active:scale-95"
-            >
-              <Edit size={14} />
-              {lang === "mn" ? "Засах" : "Edit"}
-            </button>
-            <button
-              onClick={handleSignOut}
-              disabled={isSigningOut}
-              className="flex-1 flex items-center justify-center gap-2 bg-red-500/15 text-red-400 rounded-2xl py-2.5 text-[11px] font-bold border border-red-500/20 active:scale-95 transition-transform"
-            >
-              {isSigningOut ? <Loader2 size={14} className="animate-spin" /> : <LogOut size={14} />}
-              {lang === "mn" ? "Гарах" : "Sign Out"}
-            </button>
-            </div>
-
-            <button
-              onClick={handleDeleteAccount}
-              disabled={isDeletingAccount}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-red-600/25 bg-red-600/10 py-3 text-[11px] font-black text-red-700 active:scale-95 transition-transform disabled:opacity-50"
-            >
-              {isDeletingAccount ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />}
-              {lang === "mn" ? "Бүртгэл устгах" : "Delete account"}
-            </button>
-          </div>
-        </div>
-      </section>
+      </div>
 
       {/* ── BOOKINGS ── */}
       <section className="relative z-10 mb-6 px-4">
-        <div className="mb-3 flex items-end justify-between gap-3">
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-earth/50">
-              {t({ mn: "Захиалга", en: "Bookings" })}
-            </p>
-            <p className="mt-0.5 font-serif text-base font-semibold text-ink">
-              {lang === "mn" ? "Таны хуваарь" : "Your schedule"}
-            </p>
-          </div>
+        <div className="mb-4 flex flex-col gap-1">
+          <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-earth/40">
+            {t({ mn: "Захиалга", en: "Bookings" })}
+          </p>
+          <h3 className="font-serif text-[22px] font-semibold text-ink tracking-tight">
+            {lang === "mn" ? "Таны хуваарь" : "Your schedule"}
+          </h3>
         </div>
-        <div className="mb-4 flex gap-2">
+        <div className="native-scroll-x flex gap-2 mb-5 -mx-4 px-4 pb-1" data-pressable="false">
           {(["upcoming", "history"] as const).map(t => (
             <button key={t} onClick={() => setTab(t)}
               className={`pill-tab ${tab === t ? "active" : "inactive"}`}>
@@ -365,7 +345,7 @@ export default function ProfilePage() {
           ) : (tab === "upcoming" ? upcomingBookings : historyBookings).map(b => (
             <div
               key={b._id}
-              className="card-white rounded-[1.25rem] border border-black/[0.06] p-4 shadow-sm transition-shadow hover:shadow-md"
+              className="card-white rounded-[20px] border border-black/[0.04] p-4 shadow-[0_4px_20px_rgba(0,0,0,0.04)] bg-white"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
@@ -378,23 +358,25 @@ export default function ProfilePage() {
                   <p className="text-[11px] text-earth mt-1">{b.date} · {b.time}</p>
                 </div>
                 <div className="flex flex-col items-end gap-2 shrink-0">
-                  <span className={`booking-chip ${
-                    b.status === "confirmed" ? "status-confirmed" :
-                    b.status === "pending" ? "status-pending" :
-                    b.status === "completed" ? "status-completed" : "status-cancelled"
-                  }`}>{b.status}</span>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold tracking-wide ${
+                    b.status === "confirmed" ? "bg-green-100 text-green-700" :
+                    b.status === "pending" ? "bg-orange-100 text-orange-700" :
+                    b.status === "completed" ? "bg-gray-100 text-gray-700" : "bg-red-100 text-red-700"
+                  }`}>
+                    {b.status.toUpperCase()}
+                  </span>
                   {b.status === "confirmed" && (
                     <div className="flex gap-1.5">
                       <button
                         onClick={() => router.push(`/${lang}/booking/${b._id}`)}
-                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-black/[0.06] bg-white shadow-sm transition-transform hover:border-black/[0.1] active:scale-90"
+                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-black/[0.06] bg-white shadow-sm"
                       >
                         <MessageCircle size={15} className="text-earth" />
                       </button>
                       <button
                         onClick={() => router.push(`/${lang}/booking/${b._id}`)}
                         disabled={joiningId === b._id}
-                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-black/[0.06] bg-gold shadow-sm transition-transform active:scale-90 disabled:opacity-50"
+                        className="flex h-9 w-9 items-center justify-center rounded-xl border border-black/[0.06] bg-gold shadow-sm disabled:opacity-50"
                       >
                         {joiningId === b._id ? <Loader2 size={14} className="text-white animate-spin" /> : <Video size={14} className="text-white" />}
                       </button>
@@ -407,104 +389,164 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* ── DAILY WISDOM ── */}
-      <section className="relative z-10 mb-6 px-4">
-        <div className="relative overflow-hidden rounded-[20px] border border-black/[0.06] bg-white p-5 shadow-sm">
-          <Sun size={24} className="mb-3 text-gold" />
-          <h3 className="mb-2 text-[13px] font-black uppercase tracking-wider text-earth/50">
-            {lang === "mn" ? "Өдрийн сургаал" : "Daily Wisdom"}
-          </h3>
-          <p className="text-[13px] italic leading-relaxed text-earth/70">
-            "{lang === "mn" ? "Гэгээрэл дотроос ирдэг. Гаднаас бүү хай." : "Wisdom comes from within. Do not seek it without."}"
-          </p>
+      {/* ── SETTINGS / ACTIONS LIST ── */}
+      <section className="relative z-10 mt-2 mb-8 px-4">
+        <h3 className="mb-3 ml-1 text-[11px] font-bold uppercase tracking-[0.2em] text-earth/40">
+          {lang === "mn" ? "Тохиргоо" : "Settings"}
+        </h3>
+        <div className="overflow-hidden rounded-[24px] bg-white shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-black/[0.04]">
+          <button
+            onClick={() => { setEditForm(profile || {}); setIsEditOpen(true); }}
+            className="flex w-full items-center justify-between border-b border-black/[0.04] p-4 bg-white active:bg-black/[0.02]"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.04]">
+                <Settings size={16} className="text-earth" />
+              </div>
+              <span className="text-[15px] font-medium text-ink">{lang === "mn" ? "Профайл засах" : "Edit Profile"}</span>
+            </div>
+            <ChevronRight size={18} className="text-earth/40" />
+          </button>
+          
+          <button
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            className="flex w-full items-center justify-between border-b border-black/[0.04] p-4 bg-white active:bg-black/[0.02]"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-black/[0.04]">
+                {isSigningOut ? <Loader2 size={16} className="animate-spin text-earth" /> : <LogOut size={16} className="text-earth" />}
+              </div>
+              <span className="text-[15px] font-medium text-ink">{lang === "mn" ? "Гарах" : "Sign Out"}</span>
+            </div>
+            <ChevronRight size={18} className="text-earth/40" />
+          </button>
+          
+          <button
+            onClick={handleDeleteAccount}
+            disabled={isDeletingAccount}
+            className="flex w-full items-center justify-between p-4 bg-white active:bg-red-50"
+          >
+            <div className="flex items-center gap-3">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-50">
+                {isDeletingAccount ? <Loader2 size={16} className="animate-spin text-red-500" /> : <X size={16} className="text-red-500" />}
+              </div>
+              <span className="text-[15px] font-medium text-red-600">{lang === "mn" ? "Бүртгэл устгах" : "Delete Account"}</span>
+            </div>
+            <ChevronRight size={18} className="text-red-500/40" />
+          </button>
         </div>
       </section>
 
-      {isEditOpen && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-ink/45 backdrop-blur-md">
-          <div
-            className="w-full max-w-lg rounded-t-[28px] border-t border-black/[0.06] bg-cream p-6 shadow-[0_-12px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 ease-out"
-            style={{ 
-              paddingBottom: "max(env(safe-area-inset-bottom, 0px), 24px)",
-              transform: isEditOpen ? "translateY(0)" : "translateY(100%)"
-            }}
+      <AnimatePresence>
+        {isEditOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-end justify-center bg-ink/45 backdrop-blur-md"
+            onClick={() => setIsEditOpen(false)}
           >
-            <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-black/10" />
-            <div className="flex justify-between items-center mb-5">
-              <h3 className="text-[18px] font-black text-ink">
-                {lang === "mn" ? "Профайл засах" : "Edit Profile"}
-              </h3>
-              <button onClick={() => setIsEditOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-full border border-black/[0.06] bg-white shadow-sm">
-                <X size={16} className="text-earth" />
-              </button>
-            </div>
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+              className="w-full max-w-lg rounded-t-[28px] border-t border-black/[0.06] bg-cream p-6 shadow-[0_-12px_40px_rgba(0,0,0,0.08)]"
+              style={{
+                paddingBottom: "max(env(safe-area-inset-bottom, 0px), 24px)",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-black/10" />
+              <div className="flex justify-between items-center mb-5">
+                <h3 className="text-[18px] font-black text-ink">
+                  {lang === "mn" ? "Профайл засах" : "Edit Profile"}
+                </h3>
+                <button onClick={() => setIsEditOpen(false)} className="flex h-9 w-9 items-center justify-center rounded-full border border-black/[0.06] bg-white shadow-sm">
+                  <X size={16} className="text-earth" />
+                </button>
+              </div>
 
-            {/* Avatar upload */}
-            <div className="flex items-center gap-4 mb-5">
-              <div className="relative">
-                <div className="w-16 h-16 rounded-2xl overflow-hidden bg-stone">
-                  <img src={editForm.avatar || profile?.avatar || profile?.image || ""} className="w-full h-full object-cover" />
+              {/* Avatar upload */}
+              <div className="flex items-center gap-4 mb-5">
+                <div className="relative">
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-stone">
+                    <img src={editForm.avatar || profile?.avatar || profile?.image || ""} className="w-full h-full object-cover" />
+                  </div>
+                  <label className="absolute -bottom-1 -right-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-gold">
+                    <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
+                    <Upload size={11} className="text-white" />
+                  </label>
                 </div>
-                <label className="absolute -bottom-1 -right-1 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full bg-gold">
-                  <input type="file" className="hidden" accept="image/*" onChange={handleImageUpload} />
-                  <Upload size={11} className="text-white" />
-                </label>
+                {uploadingImage && <span className="text-[12px] text-earth">Хуулж байна...</span>}
               </div>
-              {uploadingImage && <span className="text-[12px] text-earth">Хуулж байна...</span>}
-            </div>
 
-            {/* Phone */}
-            <div className="mb-4">
-              <label className="input-label">{lang === "mn" ? "Утасны дугаар" : "Phone Number"}</label>
-              <div className="relative">
-                <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-earth" />
-                <input
-                  className="input pl-10"
-                  value={editForm.phone || ""}
-                  onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
-                  placeholder="+976 9900 0000"
-                />
+              {/* Phone */}
+              <div className="mb-4">
+                <label className="input-label">{lang === "mn" ? "Утасны дугаар" : "Phone Number"}</label>
+                <div className="relative">
+                  <Phone size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-earth" />
+                  <input
+                    className="input pl-10"
+                    value={editForm.phone || ""}
+                    onChange={e => setEditForm({ ...editForm, phone: e.target.value })}
+                    placeholder="+976 9900 0000"
+                  />
+                </div>
               </div>
-            </div>
 
-            <button onClick={saveProfile} disabled={isSaving} className="cta-button mt-2 flex min-h-[52px] w-full items-center justify-center gap-2">
-              {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
-              {lang === "mn" ? "Хадгалах" : "Save Profile"}
-            </button>
-          </div>
-        </div>
-      )}
+              <button onClick={saveProfile} disabled={isSaving} className="cta-button mt-2 flex min-h-[52px] w-full items-center justify-center gap-2">
+                {isSaving ? <Loader2 size={18} className="animate-spin" /> : <Save size={18} />}
+                {lang === "mn" ? "Хадгалах" : "Save Profile"}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── CHAT MODAL ── */}
-      {activeChatBooking && (
-        <div className="fixed inset-0 z-[100] flex items-end justify-center bg-ink/45 backdrop-blur-md">
-          <div
-            className="flex w-full max-w-lg flex-col rounded-t-[28px] border-t border-black/[0.06] bg-cream shadow-[0_-12px_40px_rgba(0,0,0,0.08)] transition-transform duration-300 ease-out"
-            style={{ 
-              height: "80svh", 
-              paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0px)",
-              transform: activeChatBooking ? "translateY(0)" : "translateY(100%)"
-            }}
+      <AnimatePresence>
+        {activeChatBooking && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-end justify-center bg-ink/45 backdrop-blur-md"
+            onClick={() => setActiveChatBooking(null)}
           >
-            <div className="flex items-center justify-between border-b border-black/[0.06] p-5">
-              <h3 className="text-[16px] font-black text-ink">
-                {lang === "mn" ? "Чат" : "Chat"}
-              </h3>
-              <button onClick={() => setActiveChatBooking(null)} className="flex h-9 w-9 items-center justify-center rounded-full border border-black/[0.06] bg-white shadow-sm">
-                <X size={16} className="text-earth" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-hidden">
-              <ChatWindow
-                bookingId={activeChatBooking._id}
-                currentUserId={user?.id || ""}
-                currentUserName={profile?.name?.[lk] || user?.fullName || "User"}
-                isMonk={isMonk}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-    </main>
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", bounce: 0, duration: 0.3 }}
+              className="flex w-full max-w-lg flex-col rounded-t-[28px] border-t border-black/[0.06] bg-cream shadow-[0_-12px_40px_rgba(0,0,0,0.08)]"
+              style={{
+                height: "80svh",
+                paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0px)",
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-black/[0.06] p-5">
+                <h3 className="text-[16px] font-black text-ink">
+                  {lang === "mn" ? "Чат" : "Chat"}
+                </h3>
+                <button onClick={() => setActiveChatBooking(null)} className="flex h-9 w-9 items-center justify-center rounded-full border border-black/[0.06] bg-white shadow-sm">
+                  <X size={16} className="text-earth" />
+                </button>
+              </div>
+              <div className="flex-1 overflow-hidden">
+                <ChatWindow
+                  bookingId={activeChatBooking._id}
+                  currentUserId={user?.id || ""}
+                  currentUserName={profile?.name?.[lk] || user?.fullName || "User"}
+                  isMonk={isMonk}
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

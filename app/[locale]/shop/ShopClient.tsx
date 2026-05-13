@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useCallback } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -9,7 +9,9 @@ import {
   ShoppingBag,
   Sparkles,
   Search,
+  X,
 } from "lucide-react";
+import LargeHeader from "@/app/components/LargeHeader";
 import { useLanguage } from "@/app/contexts/LanguageContext";
 import { useCart } from "@/contexts/CartContext";
 
@@ -53,6 +55,39 @@ function ProductSkeletonGrid() {
   );
 }
 
+/**
+ * ImageWithFallback — Next/Image wrapper that handles load failures gracefully.
+ * If the src URL is invalid, blocked, or the domain isn't whitelisted,
+ * shows a Buddhist-themed placeholder emoji instead of a broken image icon.
+ */
+function ImageWithFallback({
+  src,
+  alt,
+  ...props
+}: React.ComponentProps<typeof Image>) {
+  const [errored, setErrored] = useState(false);
+
+  if (!src || errored) {
+    return (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#F7F2E8] gap-1">
+        <span style={{ fontSize: 32, lineHeight: 1 }}>☸️</span>
+        <span style={{ fontSize: 10, color: "var(--ink-4)", fontWeight: 600, letterSpacing: "0.04em" }}>
+          {alt || "Бүтээгдэхүүн"}
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      {...props}
+      onError={() => setErrored(true)}
+    />
+  );
+}
+
 const CATEGORIES: Array<{
   id: "all" | ShopCategory;
   label: { mn: string; en: string };
@@ -66,9 +101,6 @@ const CATEGORIES: Array<{
   { id: "blessing", label: { mn: "Адислал", en: "Blessing" } },
 ];
 
-const pillActive = "bg-[var(--color-gold)] text-white";
-const pillInactive =
-  "bg-white/60 border border-gold/20 text-ink hover:bg-white/80";
 
 export default function ShopClient({ products }: { products: ShopProduct[] }) {
   const router = useRouter();
@@ -118,73 +150,67 @@ export default function ShopClient({ products }: { products: ShopProduct[] }) {
   const hasProducts = (products ?? []).length > 0;
 
   return (
-    <div className="min-h-[100svh] bg-cream px-5 pt-[calc(env(safe-area-inset-top,44px)+16px)] pb-[calc(env(safe-area-inset-bottom,34px)+96px)]">
-      {/* Header (BookingPageClient-style) */}
-      <div className="flex items-center justify-between gap-3 mb-5">
-        <button
-          type="button"
-          onClick={() => router.back()}
-          className="h-11 w-11 rounded-2xl bg-white border border-black/[0.06] shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex items-center justify-center active:scale-[0.99] transition"
-          aria-label={t({ mn: "Буцах", en: "Back" })}
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
+    <div className="relative min-h-[100svh] flex flex-col bg-white pb-24 pt-[calc(56px+env(safe-area-inset-top,0px))] md:pt-[88px]">
+      <header className="sticky z-30 border-b border-black/[0.06] bg-[rgba(248,248,250,0.85)] backdrop-blur-2xl backdrop-saturate-150 shadow-[0_1px_0_rgba(0,0,0,0.03)] top-[calc(56px+env(safe-area-inset-top,0px))] md:top-[80px]">
+        <LargeHeader
+          omitNavGutter
+          title={t({ mn: "Шидийн", en: "Sacred" })}
+          highlight={t({ mn: "Дэлгүүр", en: "Shop" })}
+          subtitle={t({
+            mn: "Ном судар, рашаан, адислалын эд зүйлс",
+            en: "Sutras, blessed items and more",
+          })}
+        />
 
-        <div className="min-w-0 flex-1">
-          <h1
-            className="text-h1 text-center"
-            style={{ fontFamily: "var(--font-display)" }}
-          >
-            {t({ mn: "Дэлгүүр", en: "Shop" })}
-          </h1>
+        <div className="space-y-3 px-5 pb-4 md:px-6">
+          <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-0.5">
+            {CATEGORIES.map((c) => {
+              const active = c.id === selectedCategory;
+              return (
+                <button
+                  key={c.id}
+                  onClick={() => setSelectedCategory(c.id)}
+                  type="button"
+                  className={`shrink-0 rounded-full px-4 py-2 text-[13px] font-semibold tracking-tight transition-all border ${
+                    active
+                      ? "border-gold/45 bg-[#F2F2F7] text-gold"
+                      : "border-transparent bg-[#F2F2F7] text-neutral-600 hover:bg-neutral-200/80 hover:text-ink"
+                  }`}
+                >
+                  {c.label[lang]}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="relative">
+            <Search
+              className="pointer-events-none absolute left-3.5 top-1/2 z-[1] -translate-y-1/2 text-earth/30"
+              size={15}
+              strokeWidth={2.5}
+            />
+            <input
+              type="search"
+              placeholder={t({ mn: "Бараа хайх...", en: "Search products..." })}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-full rounded-[16px] border-0 bg-black/[0.04] py-2.5 pl-9 pr-10 text-[15px] font-medium text-ink outline-none ring-0 placeholder:text-earth/40 focus:bg-black/[0.06] transition-colors"
+            />
+            {query ? (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-2 text-earth/40 hover:bg-black/[0.05] transition-colors"
+                aria-label="Clear"
+              >
+                <X size={15} strokeWidth={2.5} className="text-earth/40" />
+              </button>
+            ) : null}
+          </div>
         </div>
+      </header>
 
-        <button
-          type="button"
-          onClick={openDrawer}
-          className="relative h-11 w-11 rounded-2xl bg-white border border-black/[0.06] shadow-[0_1px_2px_rgba(0,0,0,0.04)] flex items-center justify-center active:scale-[0.99] transition"
-          aria-label={t({ mn: "Сагс", en: "Cart" })}
-        >
-          <ShoppingBag className="w-5 h-5" />
-          {totalItems > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 min-w-5 px-1 rounded-full bg-[var(--color-gold)] text-white text-[11px] font-black flex items-center justify-center">
-              {totalItems}
-            </span>
-          )}
-        </button>
-      </div>
-
-      {/* Category filter pills */}
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5 mb-4">
-        {CATEGORIES.map((c) => {
-          const active = c.id === selectedCategory;
-          return (
-            <button
-              key={c.id}
-              type="button"
-              onClick={() => setSelectedCategory(c.id)}
-              className={`shrink-0 px-4 py-2 rounded-full text-xs font-bold transition-all ${
-                active ? pillActive : pillInactive
-              }`}
-            >
-              {c.label[lang]}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Search */}
-      <div className="app-card-premium p-3 mb-5">
-        <div className="relative">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 opacity-35" size={18} />
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder={t({ mn: "Бараа хайх...", en: "Search products..." })}
-            className="w-full rounded-2xl bg-white border border-black/[0.06] pl-11 pr-4 py-3 text-sm outline-none focus:ring-2 focus:ring-[rgba(191,164,106,0.25)]"
-          />
-        </div>
-      </div>
+      <main className="relative z-10 flex-1 px-5 pb-[max(env(safe-area-inset-bottom),12px)] pt-5 sm:px-6">
 
       {!hasProducts ? (
         <ProductSkeletonGrid />
@@ -202,46 +228,47 @@ export default function ShopClient({ products }: { products: ShopProduct[] }) {
           {/* Featured row */}
           {featured.length > 0 && (
             <div className="mb-6">
-              <div className="flex items-center gap-2 mb-3">
+              <div className="flex items-center gap-2 mb-3 px-4">
                 <Sparkles className="w-4 h-4 text-[var(--color-gold)]" />
-                <p className="text-label">
+                <p className="text-[14px] font-bold text-ink">
                   {t({ mn: "Онцлох бүтээгдэхүүн", en: "Featured products" })}
                 </p>
               </div>
 
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5">
-                {featured.map((p) => (
-                  <button
-                    key={p._id}
-                    type="button"
-                    onClick={() => router.push(`/shop/${p._id}`)}
-                    className="shrink-0 w-56 text-left app-card-premium overflow-hidden"
-                  >
-                    <div className="relative aspect-square bg-ios-grouped">
-                      <Image
-                        src={p.images?.[0] || "/placeholder.png"}
-                        alt={(lang === "mn" ? p.name.mn : p.name.en) || "Product"}
-                        fill
-                        sizes="224px"
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="p-4">
-                      <p className="text-sm font-semibold line-clamp-1">
-                        {lang === "mn" ? p.name.mn : p.name.en}
-                      </p>
-                      <p className="text-secondary mt-1 font-black">
-                        ₮{Number(p.price ?? 0).toLocaleString()}
-                      </p>
-                    </div>
-                  </button>
-                ))}
+              <div className="native-scroll-x flex gap-4 pb-4 -mx-5 px-5">
+                {featured.map((p) => {
+                  const title = lang === "mn" ? p.name.mn : p.name.en;
+                  return (
+                    <button
+                      key={p._id}
+                      type="button"
+                      onClick={() => router.push(`/shop/${p._id}`)}
+                      className="shrink-0 w-44 text-left flex flex-col gap-3 group"
+                    >
+                      <div className="relative w-full aspect-square bg-[#F2F2F7] rounded-[24px] flex items-center justify-center overflow-hidden border border-black/[0.04] transition-shadow group-hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] active:scale-[0.98]">
+                        <ImageWithFallback
+                          src={p.images?.[0]}
+                          alt={title || "Product"}
+                          fill
+                          sizes="176px"
+                          className="object-cover"
+                        />
+                      </div>
+                      <div className="flex flex-col px-1">
+                        <span className="text-[13px] text-earth line-clamp-1 font-medium">{title}</span>
+                        <span className="font-bold text-[16px] text-ink mt-0.5">
+                          ₮{Number(p.price ?? 0).toLocaleString()}
+                        </span>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
 
           {/* Product grid */}
-          <motion.div variants={gridVariants} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          <motion.div variants={gridVariants} initial="hidden" animate="show" className="grid grid-cols-2 md:grid-cols-3 gap-5">
             {filtered.map((p) => {
               const outOfStock = p.stock === 0;
               const lowStock = p.stock > 0 && p.stock < 5;
@@ -253,43 +280,33 @@ export default function ShopClient({ products }: { products: ShopProduct[] }) {
                   type="button"
                   variants={cardVariants}
                   onClick={() => router.push(`/shop/${p._id}`)}
-                  className="text-left app-card-premium p-3 active:scale-[0.99] transition"
+                  className="text-left flex flex-col gap-3 group"
                 >
-                  <div className="relative aspect-square rounded-2xl overflow-hidden bg-ios-grouped">
-                    {img ? (
-                      <Image
-                        src={img}
-                        alt={title}
-                        fill
-                        sizes="(max-width: 768px) 50vw, 33vw"
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 flex items-center justify-center text-text-light text-sm">
-                        {t({ mn: "Зураггүй", en: "No image" })}
-                      </div>
-                    )}
+                  <div className="relative w-full aspect-square bg-[#F2F2F7] rounded-[24px] flex items-center justify-center overflow-hidden border border-black/[0.04] transition-shadow group-hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] active:scale-[0.98]">
+                    <ImageWithFallback
+                      src={img}
+                      alt={title}
+                      fill
+                      sizes="(max-width: 768px) 50vw, 33vw"
+                      className="object-cover"
+                    />
                     {outOfStock && (
-                      <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center">
-                        <span className="text-[11px] font-black uppercase tracking-widest text-earth">
-                          {t({ mn: "ДУУСCАН", en: "SOLD OUT" })}
+                      <div className="absolute inset-0 bg-white/70 backdrop-blur-[2px] flex items-center justify-center">
+                        <span className="rounded-full bg-black/80 px-3 py-1.5 text-[11px] font-bold tracking-widest text-white uppercase">
+                          {t({ mn: "Дууссан", en: "Sold Out" })}
                         </span>
                       </div>
                     )}
                     {lowStock && (
-                      <span className="absolute left-2 top-2 px-2 py-1 rounded-full bg-amber-500/90 text-white text-[10px] font-black">
-                        {t({ mn: `Сүүлийн ${p.stock} ширхэг`, en: `Only ${p.stock} left` })}
+                      <span className="absolute left-2 top-2 rounded-full bg-orange-100 px-2 py-1 text-[9px] font-bold tracking-widest text-orange-700 uppercase">
+                        Үлдсэн: {p.stock}
                       </span>
                     )}
                   </div>
 
-                  <div className="mt-3">
-                    <p className="text-sm font-semibold leading-snug line-clamp-2">
-                      {title}
-                    </p>
-                    <p className="mt-1 text-[var(--color-gold-dark)] font-black">
-                      ₮{Number(p.price ?? 0).toLocaleString()}
-                    </p>
+                  <div className="flex flex-col px-1">
+                    <span className="text-[13px] text-earth line-clamp-2 leading-[1.3] font-medium">{title}</span>
+                    <span className="font-bold text-[16px] text-ink mt-1">₮{Number(p.price ?? 0).toLocaleString()}</span>
                   </div>
                 </motion.button>
               );
@@ -297,6 +314,7 @@ export default function ShopClient({ products }: { products: ShopProduct[] }) {
           </motion.div>
         </>
       )}
+      </main>
     </div>
   );
 }

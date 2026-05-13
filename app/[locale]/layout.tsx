@@ -8,8 +8,8 @@ import { NotificationProvider } from '@/contexts/NotificationContext'
 import OfflineBanner from '../components/OfflineBanner'
 import { CartProvider } from '@/contexts/CartContext'
 import CartDrawerClient from "../components/CartDrawerClient"
-
 import RealTimeCallHandler from '../components/RealTimeCallHandler'
+import PageTransition from '../components/PageTransition'
 
 export default async function RootLayout({
   children,
@@ -21,31 +21,39 @@ export default async function RootLayout({
   const { locale } = await params;
   const validLocale = (['mn', 'en'].includes(locale) ? locale : 'mn') as any;
 
-  let serverUser = null;
-
-  // We rely on the client-side AuthContext calling /api/auth/me to properly hydrate user 
-  // and load complex MongoDB/JWT state without blocking Server Side Rendering (SSR) 
-
   return (
     <LanguageProvider initialLocale={validLocale}>
-      <AuthProvider initialUser={serverUser}>
+      <AuthProvider initialUser={null}>
         <ThemeProvider attribute="class" forcedTheme="light" defaultTheme="light" enableSystem={false}>
           <OfflineBanner />
           <CapacitorInitWrapper />
+          {/* SmoothScroll only for desktop — on native we use CSS momentum */}
           <SmoothScroll />
           <CartProvider>
             <NotificationProvider>
               <RealTimeCallHandler />
               <Navbar />
               <CartDrawerClient />
-              <div className="premium-scroll w-full h-full">
+              {/*
+                native-scroll: iOS momentum scrolling (-webkit-overflow-scrolling: touch)
+                overflow-x: hidden prevents horizontal bleed during page transitions
+              */}
+              <div
+                className="native-scroll w-full"
+                style={{ overflowX: "hidden" }}
+              >
                 <main
                   className="w-full relative overflow-x-hidden bg-cream"
                   style={{
                     paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)',
+                    /* Promote to GPU layer for jank-free page transition */
+                    isolation: 'isolate',
                   }}
                 >
-                  {children}
+                  {/* PageTransition wraps children — iOS push/pop animation on each route change */}
+                  <PageTransition>
+                    {children}
+                  </PageTransition>
                 </main>
               </div>
             </NotificationProvider>

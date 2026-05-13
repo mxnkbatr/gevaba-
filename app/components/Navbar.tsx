@@ -332,19 +332,18 @@ export default function NativeNavbar() {
                 <div
                   className="flex items-center justify-center"
                   style={{
-                    width: "32px",
+                    width: "56px",
                     height: "32px",
-                    borderRadius: "var(--r-md)",
-                    backgroundColor: isActive ? "rgba(191,164,106,0.15)" : "transparent",
-                    transform: isActive ? "scale(1.05)" : "scale(1)",
-                    transition: "all 0.22s var(--spring)"
+                    borderRadius: "16px",
+                    backgroundColor: isActive ? "var(--nav-active-bg)" : "transparent",
+                    transition: "all 0.25s var(--spring)"
                   }}
                 >
                   <item.icon
-                    size={24}
-                    strokeWidth={isActive ? 2 : 1.75}
+                    size={22}
+                    strokeWidth={isActive ? 2.2 : 2}
                     style={{
-                      color: isActive ? "var(--gold)" : "var(--ink-3)",
+                      color: isActive ? "var(--gold)" : "var(--ink-2)",
                       fill: "none"
                     }}
                   />
@@ -352,10 +351,10 @@ export default function NativeNavbar() {
                 <span
                   style={{
                     fontSize: "10px",
-                    fontWeight: 600,
-                    letterSpacing: "0.02em",
-                    color: isActive ? "var(--gold)" : "var(--ink-3)",
-                    transition: "color 0.22s var(--spring)"
+                    fontWeight: isActive ? 700 : 500,
+                    letterSpacing: "0.01em",
+                    color: isActive ? "var(--gold)" : "var(--ink-2)",
+                    transition: "color 0.25s var(--spring)"
                   }}
                 >
                   {item.label[lang]}

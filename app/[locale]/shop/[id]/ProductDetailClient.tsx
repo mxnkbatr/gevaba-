@@ -9,6 +9,26 @@ import toast from "react-hot-toast";
 import { useLanguage } from "@/app/contexts/LanguageContext";
 import { useCart } from "@/contexts/CartContext";
 
+/** Resilient image — shows Buddhist placeholder on error or missing src */
+function ImageWithFallback({
+  src,
+  alt,
+  ...props
+}: React.ComponentProps<typeof Image>) {
+  const [errored, setErrored] = useState(false);
+  if (!src || errored) {
+    return (
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-[#F7F2E8] gap-2">
+        <span style={{ fontSize: 48, lineHeight: 1 }}>☸️</span>
+        <span style={{ fontSize: 11, color: "var(--ink-4)", fontWeight: 600, letterSpacing: "0.04em" }}>
+          {alt}
+        </span>
+      </div>
+    );
+  }
+  return <Image src={src} alt={alt} {...props} onError={() => setErrored(true)} />;
+}
+
 type ShopProduct = {
   _id: string;
   name: { mn: string; en: string };
@@ -115,18 +135,16 @@ export default function ProductDetailClient({ product }: { product: ShopProduct 
           animate={{ opacity: 1, y: 0 }}
           className="space-y-4"
         >
-          {/* Image section */}
+          {/* Main image */}
           <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-ios-grouped">
-            {mainImg ? (
-              <Image
-                src={mainImg}
-                alt={title}
-                fill
-                sizes="(max-width: 768px) 100vw, 768px"
-                className="object-cover"
-                priority={false}
-              />
-            ) : null}
+            <ImageWithFallback
+              src={mainImg}
+              alt={title}
+              fill
+              sizes="(max-width: 768px) 100vw, 768px"
+              className="object-cover"
+              priority={activeImage === 0}
+            />
             {outOfStock && (
               <div className="absolute inset-0 bg-white/70 backdrop-blur-[1px] flex items-center justify-center">
                 <span className="text-[11px] font-black uppercase tracking-widest text-earth">
@@ -148,7 +166,7 @@ export default function ProductDetailClient({ product }: { product: ShopProduct 
                   }`}
                   aria-label={t({ mn: "Зураг сонгох", en: "Select image" })}
                 >
-                  <Image src={src} alt={title} fill sizes="64px" className="object-cover" />
+                  <ImageWithFallback src={src} alt={title} fill sizes="64px" className="object-cover" />
                 </button>
               ))}
             </div>

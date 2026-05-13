@@ -1,10 +1,13 @@
 import { CapacitorConfig } from '@capacitor/cli';
 import { KeyboardResize, KeyboardStyle } from '@capacitor/keyboard';
 
-// IMPORTANT: webContentsDebuggingEnabled MUST be false in 
-// App Store / Play Store builds. This is enforced by the 
-// CAPACITOR_BUILD check below.
-const isDev = process.env.NODE_ENV === 'development' && process.env.CAPACITOR_BUILD !== 'true';
+/**
+ * IMPORTANT: webContentsDebuggingEnabled MUST be false in
+ * App Store / Play Store builds. Enforced via CAPACITOR_BUILD check.
+ */
+const isDev =
+  process.env.NODE_ENV === 'development' &&
+  process.env.CAPACITOR_BUILD !== 'true';
 
 const config: CapacitorConfig = {
   appId: 'mn.gevabal.buddha',
@@ -12,94 +15,117 @@ const config: CapacitorConfig = {
   webDir: 'out',
 
   server: {
-    // Dev-only live reload URL (never shipped in CAPACITOR_BUILD=true release builds).
-    // Prefer configuring via env so it cannot be accidentally committed.
-    url: isDev ? (process.env.CAPACITOR_DEV_SERVER_URL || 'http://localhost:3000') : undefined,
+    // Dev-only live reload — never shipped in release builds.
+    url: isDev
+      ? process.env.CAPACITOR_DEV_SERVER_URL || 'http://localhost:3000'
+      : undefined,
     cleartext: isDev,
     androidScheme: 'https',
     iosScheme: 'https',
+    // Allow Cloudinary & Clerk origins in the WebView
+    allowNavigation: [
+      'res.cloudinary.com',
+      '*.clerk.com',
+      '*.livekit.cloud',
+      'gevabal.mn',
+    ],
   },
 
-  // iOS-specific optimizations
+  // ── iOS ────────────────────────────────────────────────────────────
   ios: {
+    // "automatic" lets iOS manage the safe area content inset natively,
+    // while our CSS env() vars handle the layout offset.
     contentInset: 'automatic',
-    // Enable WKWebView optimizations
     webContentsDebuggingEnabled: isDev,
+    // Restrict navigation to app-bound domains (App Store requirement).
     limitsNavigationsToAppBoundDomains: true,
+    // WKWebView performance flags
+    preferredContentMode: 'mobile',
+    // Allow inline media (required for LiveKit video)
+    allowsLinkPreview: false,
   },
 
-  // Android-specific optimizations
+  // ── Android ────────────────────────────────────────────────────────
   android: {
     buildOptions: {
       keystorePath: process.env.ANDROID_KEYSTORE_PATH,
       keystoreAlias: process.env.ANDROID_KEYSTORE_ALIAS,
     },
-    // Enable hardware acceleration
     allowMixedContent: false,
     captureInput: true,
     webContentsDebuggingEnabled: isDev,
+    // Edge-to-edge layout (required for translucent nav bar)
+    useLegacyBridge: false,
   },
 
   plugins: {
+    // ── Splash Screen ───────────────────────────────────────────────
     SplashScreen: {
-      // Disable splash screen (show duration 0ms)
-      launchShowDuration: 0,
-      launchAutoHide: true,
-      backgroundColor: '#F9F8F7',
+      launchShowDuration: 1800,          // Show for 1.8s to mask cold start
+      launchAutoHide: false,             // We manually call hide() after paint
+      launchFadeOutDuration: 350,
+      backgroundColor: '#F9F8F7',        // Matches app bg-cream
       androidSplashResourceName: 'splash',
       androidScaleType: 'CENTER_CROP',
       showSpinner: false,
-      androidSpinnerStyle: 'large',
-      iosSpinnerStyle: 'large',
-      spinnerColor: '#BFA46A',
       splashFullScreen: true,
       splashImmersive: true,
     },
 
+    // ── Status Bar ──────────────────────────────────────────────────
     StatusBar: {
-      style: 'DEFAULT', // Adapts to content
-      backgroundColor: '#FAFAF900', // Transparent (with alpha)
-      overlaysWebView: true, // Edge-to-edge: content goes under status bar
+      style: 'LIGHT',               // Dark icons on light backgrounds
+      backgroundColor: '#00000000', // Transparent — we use edge-to-edge
+      overlaysWebView: true,        // Content extends under status bar
     },
 
+    // ── Keyboard ────────────────────────────────────────────────────
     Keyboard: {
+      // Native resize: iOS moves the viewport up instead of shrinking it.
+      // Prevents layout reflow jump when keyboard opens.
       resize: KeyboardResize.Native,
       style: KeyboardStyle.Light,
       resizeOnFullScreen: true,
     },
 
-    // Performance: Limit concurrent HTTP requests
+    // ── HTTP ────────────────────────────────────────────────────────
+    // Use Capacitor's native HTTP bridge for CORS-free API calls.
     CapacitorHttp: {
       enabled: true,
     },
 
-    // Preferences for caching
+    // ── Preferences ─────────────────────────────────────────────────
     Preferences: {
       group: 'mn.gevabal.buddha.preferences',
     },
 
-    // App-specific optimizations
+    // ── App ─────────────────────────────────────────────────────────
     App: {
-      // Handle app state changes efficiently
+      // We handle back button manually in CapacitorInit.tsx
       disableBackButtonHandler: false,
+    },
+
+    // ── Push Notifications ──────────────────────────────────────────
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert'],
     },
   },
 
-  // Performance optimizations
+  // ── Cordova preferences (legacy shims) ─────────────────────────────
   cordova: {
     preferences: {
       ScrollEnabled: 'true',
       BackupWebStorage: 'local',
-      // Disable unnecessary features
       DisallowOverscroll: 'true',
       EnableViewportScale: 'false',
-      KeyboardDisplayRequiresUserAction: 'true',
+      KeyboardDisplayRequiresUserAction: 'false',  // Allow programmatic focus
       SuppressesIncrementalRendering: 'false',
-      // Performance
+      // WKWebView only (iOS 11+)
       CordovaWebViewEngine: 'CDVWKWebViewEngine',
       WKWebViewOnly: 'true',
-      // Security
-      AllowInlineMediaPlayback: 'false',
+      // Allow inline media for LiveKit video
+      AllowInlineMediaPlayback: 'true',
+      MediaTypesRequiringUserActionForPlayback: 'none',
     },
   },
 };

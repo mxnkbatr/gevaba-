@@ -159,21 +159,21 @@ export default function MonkShowcaseClient({
             <div 
               style={{
                 margin: "12px 16px 0",
-                height: "38px",
-                background: "rgba(118,118,128,0.12)",
-                borderRadius: "10px",
+                height: "44px",
+                background: "rgba(0,0,0,0.04)",
+                borderRadius: "16px",
                 display: "flex",
                 alignItems: "center",
                 gap: "8px",
-                padding: "0 10px",
+                padding: "0 14px",
                 transition: "background 0.2s, box-shadow 0.2s"
               }}
-              className="focus-within:bg-[rgba(118,118,128,0.2)]"
+              className="focus-within:bg-[rgba(0,0,0,0.06)]"
             >
               <Search
-                size={16}
-                color="var(--ink-3)"
-                strokeWidth={2.5}
+                size={18}
+                color="rgba(60,60,67,0.4)"
+                strokeWidth={2}
               />
               <input
                 type="text"
@@ -187,7 +187,7 @@ export default function MonkShowcaseClient({
                   border: "none",
                   background: "transparent",
                   flex: 1,
-                  fontSize: "16px",
+                  fontSize: "15px",
                   outline: "none",
                   color: "var(--ink)",
                   fontWeight: 400
@@ -202,16 +202,16 @@ export default function MonkShowcaseClient({
           {filteredMonks.length > 0 ? (
             <>
               {!hideHeader && (
-                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "12px", marginTop: "16px" }}>
+                <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "16px", marginTop: "12px" }}>
                   <div>
-                    <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--ink-3)" }}>
+                    <p style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--ink-4)" }}>
                       {t({ mn: "Удирдамж", en: "Guidance" })}
                     </p>
-                    <p style={{ fontSize: "17px", fontWeight: 600, color: "var(--ink)", letterSpacing: "-0.015em", marginTop: "4px" }}>
+                    <p style={{ fontSize: "20px", fontWeight: 700, color: "var(--ink)", letterSpacing: "-0.015em", marginTop: "2px" }}>
                       {t({ mn: "Багш нар", en: "Mentors" })}
                     </p>
                   </div>
-                  <span style={{ fontSize: "12px", fontWeight: 600, background: "rgba(0,0,0,0.05)", padding: "4px 10px", borderRadius: "var(--r-pill)", color: "var(--ink-3)" }}>
+                  <span style={{ fontSize: "11px", fontWeight: 600, background: "rgba(0,0,0,0.04)", width: "24px", height: "24px", display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "50%", color: "var(--ink-3)" }}>
                     {filteredMonks.length}
                   </span>
                 </div>

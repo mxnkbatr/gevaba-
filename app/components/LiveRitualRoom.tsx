@@ -5,13 +5,15 @@ import {
   LiveKitRoom,
   VideoConference,
   RoomAudioRenderer,
+  useRoomContext,
 } from "@livekit/components-react";
 import "@livekit/components-styles";
 import BookViewer from "./BookViewer";
-import { X, BookOpen } from "lucide-react";
-import { AnimatePresence } from "framer-motion";
+import { X, BookOpen, Mic, MicOff, Video, VideoOff, RotateCcw, Wifi } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
+import { hapticsHeavy, hapticsMedium } from "@/app/capacitor/plugins/haptics";
 
 interface Props {
   token: string;
@@ -19,40 +21,225 @@ interface Props {
   roomName: string;
   onLeave: () => void;
   isMonk?: boolean;
-  bookingId?: string; // New prop for auto-cleanup
+  bookingId?: string;
+  monkName?: string;
 }
 
-export default function LiveRitualRoom({ token, serverUrl, roomName, onLeave, isMonk = false, bookingId }: Props) {
+/** Formats seconds as M:SS */
+function formatTime(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+/** Top HUD bar — safe-area aware */
+function RoomHUD({
+  roomName,
+  timeLeft,
+  isMonk,
+  isBookOpen,
+  onToggleBook,
+  onLeave,
+}: {
+  roomName: string;
+  timeLeft: number;
+  isMonk: boolean;
+  isBookOpen: boolean;
+  onToggleBook: () => void;
+  onLeave: () => void;
+}) {
+  const timerColor =
+    timeLeft < 60
+      ? "#FF3B30"
+      : timeLeft < 300
+      ? "#FF9500"
+      : "rgba(255,255,255,0.85)";
+
+  const isUrgent = timeLeft < 60;
+
+  return (
+    <div
+      className="absolute top-0 left-0 right-0 z-20 flex items-start justify-between"
+      style={{
+        paddingTop: "calc(env(safe-area-inset-top, 44px) + 10px)",
+        paddingLeft: "calc(env(safe-area-inset-left, 0px) + 16px)",
+        paddingRight: "calc(env(safe-area-inset-right, 0px) + 16px)",
+        paddingBottom: "60px",
+        background:
+          "linear-gradient(to bottom, rgba(5,5,20,0.92) 0%, rgba(5,5,20,0.60) 60%, transparent 100%)",
+        pointerEvents: "none",
+      }}
+    >
+      {/* Left: Room info */}
+      <div className="flex flex-col gap-1" style={{ pointerEvents: "auto" }}>
+        <div className="flex items-center gap-2">
+          {/* Live dot */}
+          <span
+            style={{
+              width: 7,
+              height: 7,
+              borderRadius: "50%",
+              background: "#30D158",
+              boxShadow: "0 0 8px #30D158",
+              display: "inline-block",
+              flexShrink: 0,
+            }}
+          />
+          <span
+            style={{
+              color: "rgba(255,255,255,0.55)",
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: "0.12em",
+              textTransform: "uppercase",
+            }}
+          >
+            LIVE SESSION
+          </span>
+        </div>
+        <p
+          style={{
+            color: "rgba(255,255,255,0.75)",
+            fontSize: 12,
+            fontWeight: 500,
+            letterSpacing: 0.2,
+            maxWidth: 140,
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {roomName}
+        </p>
+      </div>
+
+      {/* Right: Timer + controls */}
+      <div
+        className="flex items-center gap-2"
+        style={{ pointerEvents: "auto" }}
+      >
+        {/* Timer pill */}
+        <motion.div
+          animate={isUrgent ? { scale: [1, 1.05, 1] } : { scale: 1 }}
+          transition={
+            isUrgent
+              ? { repeat: Infinity, duration: 0.8 }
+              : { duration: 0 }
+          }
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 5,
+            background: isUrgent
+              ? "rgba(255,59,48,0.25)"
+              : "rgba(0,0,0,0.45)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: `0.5px solid ${isUrgent ? "rgba(255,59,48,0.6)" : "rgba(255,255,255,0.12)"}`,
+            borderRadius: 99,
+            paddingLeft: 10,
+            paddingRight: 10,
+            paddingTop: 5,
+            paddingBottom: 5,
+          }}
+        >
+          <span style={{ fontSize: 13, fontWeight: 700, fontFamily: "var(--font-mono)", color: timerColor }}>
+            {formatTime(timeLeft)}
+          </span>
+        </motion.div>
+
+        {/* Book button (monk only) */}
+        {isMonk && (
+          <button
+            onClick={onToggleBook}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 36,
+              height: 36,
+              borderRadius: "50%",
+              background: isBookOpen
+                ? "rgba(191,164,106,0.85)"
+                : "rgba(0,0,0,0.50)",
+              backdropFilter: "blur(12px)",
+              WebkitBackdropFilter: "blur(12px)",
+              border: `0.5px solid ${isBookOpen ? "rgba(191,164,106,0.6)" : "rgba(255,255,255,0.14)"}`,
+              cursor: "pointer",
+            }}
+            aria-label={isBookOpen ? "Close book" : "Open scripture"}
+          >
+            <BookOpen size={16} color={isBookOpen ? "#fff" : "rgba(255,255,255,0.75)"} />
+          </button>
+        )}
+
+        {/* End call button */}
+        <button
+          onClick={onLeave}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: 36,
+            height: 36,
+            borderRadius: "50%",
+            background: "rgba(255,59,48,0.22)",
+            backdropFilter: "blur(12px)",
+            WebkitBackdropFilter: "blur(12px)",
+            border: "0.5px solid rgba(255,59,48,0.45)",
+            cursor: "pointer",
+          }}
+          aria-label="End session"
+        >
+          <X size={16} color="#FF6B6B" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+export default function LiveRitualRoom({
+  token,
+  serverUrl,
+  roomName,
+  onLeave,
+  isMonk = false,
+  bookingId,
+  monkName,
+}: Props) {
   const [isBookOpen, setIsBookOpen] = React.useState(false);
+  // 30-min session limit
+  const [timeLeft, setTimeLeft] = React.useState(30 * 60);
 
-  // --- TIMER LOGIC (30 MIN LIMIT + AUTO CLEANUP) ---
-  const [timeLeft, setTimeLeft] = React.useState(30 * 60); // 30 minutes in seconds
-
+  // ── Session timer + auto-complete ──
   React.useEffect(() => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          // Auto-complete booking to delete chat history
           if (bookingId) {
-            fetch(`/api/bookings/${bookingId}/complete`, { method: 'POST' })
-              .then(() => console.log('Session auto-completed and chat deleted'))
-              .catch(err => console.error('Auto-complete failed:', err));
+            fetch(`/api/bookings/${bookingId}/complete`, { method: "POST" }).catch(
+              () => {}
+            );
           }
-          onLeave(); // Close the room
+          onLeave();
           return 0;
         }
+        // Pulse haptic at 5-min warning
+        if (prev === 300) hapticsMedium();
+        // Urgent haptic at 1-min warning
+        if (prev === 60) hapticsHeavy();
         return prev - 1;
       });
     }, 1000);
     return () => clearInterval(timer);
   }, [onLeave, bookingId]);
 
+  // ── Auto-leave when app goes to background (native) ──
   React.useEffect(() => {
     if (!Capacitor.isNativePlatform()) return;
     let handle: { remove: () => Promise<void> } | null = null;
     void App.addListener("appStateChange", ({ isActive }) => {
-      // Live audio/video in background is a major battery drain and can violate review expectations.
       if (!isActive) onLeave();
     }).then((h) => {
       handle = h;
@@ -62,53 +249,32 @@ export default function LiveRitualRoom({ token, serverUrl, roomName, onLeave, is
     };
   }, [onLeave]);
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m}:${s.toString().padStart(2, '0')}`;
+  const handleLeave = async () => {
+    await hapticsHeavy();
+    onLeave();
   };
 
-  const timerColor = timeLeft < 60 ? "text-red-500 animate-pulse" : timeLeft < 300 ? "text-amber-500" : "text-white";
-
+  const handleToggleBook = async () => {
+    await hapticsMedium();
+    setIsBookOpen((p) => !p);
+  };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#05051a] flex flex-col">
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 z-10 p-2 md:p-4 flex flex-wrap justify-between items-center bg-gradient-to-b from-black/80 to-transparent pointer-events-none gap-2">
-        <div className="pointer-events-auto flex flex-col">
-          <h2 className="text-white font-serif text-sm md:text-xl tracking-widest leading-none">SPACE</h2>
-          <div className="flex items-center gap-2">
-            <p className="text-cyan-400 text-[10px] md:text-xs uppercase tracking-[0.1em] md:tracking-[0.2em] truncate max-w-[120px] md:max-w-none">
-              {roomName}
-            </p>
-            <div className={`text-[10px] md:text-xs font-mono font-bold px-1.5 py-0.5 rounded border border-white/10 bg-black/40 ${timerColor}`}>
-              {formatTime(timeLeft)}
-            </div>
-          </div>
-        </div>
+    <div
+      className="fixed inset-0 z-[100] flex flex-col overflow-hidden"
+      style={{ background: "#05051a" }}
+    >
+      {/* ── HUD Overlay ── */}
+      <RoomHUD
+        roomName={monkName ? `${monkName}` : roomName}
+        timeLeft={timeLeft}
+        isMonk={isMonk}
+        isBookOpen={isBookOpen}
+        onToggleBook={handleToggleBook}
+        onLeave={handleLeave}
+      />
 
-        <div className="flex items-center gap-2 md:gap-3 pointer-events-auto">
-          {isMonk && (
-            <button
-              onClick={() => setIsBookOpen(prev => !prev)}
-              aria-label={isBookOpen ? "Close book" : "Open book"}
-              className={`${isBookOpen ? 'bg-amber-600 text-white' : 'bg-amber-500 text-black'} hover:bg-amber-600 px-2 md:px-4 py-1.5 md:py-2 rounded-full font-bold text-[10px] md:text-xs uppercase tracking-widest flex items-center gap-1.5 md:gap-2 transition-all shadow-lg shadow-amber-500/20 active:scale-95 whitespace-nowrap`}
-            >
-              <BookOpen size={14} className="md:w-4 md:h-4" /> Nom
-            </button>
-          )}
-
-          <button
-            onClick={onLeave}
-            aria-label="End session"
-            className="bg-red-500/20 hover:bg-red-500/40 text-red-200 px-2 md:px-4 py-1.5 md:py-2 rounded-full border border-red-500/30 backdrop-blur-md flex items-center gap-1.5 md:gap-2 transition-all text-[10px] md:text-xs whitespace-nowrap active:scale-95"
-          >
-            <X size={14} className="md:w-4 md:h-4" /> End
-          </button>
-        </div>
-      </div>
-
-      {/* Main Layout Area */}
+      {/* ── LiveKit Video Area ── */}
       <div className="flex-1 flex overflow-hidden relative">
         <div className="flex-1 relative">
           <LiveKitRoom
@@ -117,17 +283,16 @@ export default function LiveRitualRoom({ token, serverUrl, roomName, onLeave, is
             token={token}
             serverUrl={serverUrl}
             data-lk-theme="default"
-            style={{ height: '100%' }}
+            style={{ height: "100%", background: "#05051a" }}
             onDisconnected={onLeave}
             connect={true}
           >
-            {/* Use default VideoConference for reliable two-way video */}
             <VideoConference />
             <RoomAudioRenderer />
           </LiveKitRoom>
         </div>
 
-        {/* Digital Book Sidebar / Overlay */}
+        {/* ── Book Sidebar / Overlay (Monk only) ── */}
         <AnimatePresence>
           {isBookOpen && (
             <BookViewer
@@ -138,6 +303,9 @@ export default function LiveRitualRoom({ token, serverUrl, roomName, onLeave, is
           )}
         </AnimatePresence>
       </div>
+
+      {/* ── Bottom safe area spacer ── */}
+      <div style={{ height: "env(safe-area-inset-bottom, 0px)", background: "#05051a" }} />
     </div>
   );
 }

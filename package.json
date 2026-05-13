@@ -47,6 +47,7 @@
     "@capacitor/push-notifications": "^8.0.3",
     "@capacitor/splash-screen": "^8.0.0",
     "@capacitor/status-bar": "^8.0.0",
+    "@capgo/capacitor-navigation-bar": "^8.1.8",
     "@clerk/nextjs": "^6.36.5",
     "@livekit/components-react": "^2.9.17",
     "@livekit/components-styles": "^1.2.0",
@@ -79,6 +80,7 @@
     "tailwind-merge": "^3.5.0"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
     "@capacitor/network": "^8.0.0",
     "@next/bundle-analyzer": "^16.1.6",
     "@tailwindcss/postcss": "^4",

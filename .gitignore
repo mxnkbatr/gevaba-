@@ -42,6 +42,7 @@ yarn-error.log*
 .env
 .env.local
 .env*.local
+ios/App/App/GoogleService-Info.plist
 
 # vercel
 .vercel
