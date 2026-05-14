@@ -9,7 +9,7 @@
     "prebuild": "node scripts/capacitor-dynamic.js remove",
     "postbuild": "node scripts/capacitor-dynamic.js restore",
     "build:rust": "node scripts/build-rust.mjs",
-    "build": "next build --webpack",
+    "build": "CAPACITOR_BUILD=true next build --webpack",
     "ionic:build": "CAPACITOR_BUILD=true npm run build && npx cap sync",
     "build:mobile": "CAPACITOR_BUILD=true npm run build && npx cap sync",
     "build:mobile:offline": "CAPACITOR_BUILD=true npm run build && npx cap sync",
