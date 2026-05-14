@@ -13,17 +13,6 @@ const nextConfig: NextConfig = {
    * and this warning stays off: "webpack config and no turbopack config".
    */
   output: process.env.CAPACITOR_BUILD === 'true' ? 'export' : undefined,
-  typescript: {
-    // !! WARN !!
-    // Dangerously allow production builds to successfully complete even if
-    // your project has type errors during static export for mobile.
-    ignoreBuildErrors: process.env.CAPACITOR_BUILD === 'true',
-  },
-  eslint: {
-    // Same for ESLint
-    ignoreDuringBuilds: process.env.CAPACITOR_BUILD === 'true',
-  },
-
   // Keep dev tooling away from the floating tab bar (bottom-left overlaps UX)
   devIndicators: {
     position: "top-right",
