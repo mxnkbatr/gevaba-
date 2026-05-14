@@ -75,10 +75,14 @@ if (action === 'remove') {
                 let originalContent = content;
                 let changed = false;
                 
-                // 1. Disable dynamic exports (e.g. export const dynamic = 'force-dynamic')
-                const dynamicRegex = /^\s*(export\s+const\s+dynamic\s*=\s*['"][\w-]+['"];?)/gm;
-                if (dynamicRegex.test(content)) {
-                    content = content.replace(dynamicRegex, '// CAP_DISABLE: $1');
+                // 1. Disable incompatible Next.js route exports for static export:
+                //    - export const dynamic = 'force-dynamic' / 'force-static' etc.
+                //    - export const revalidate = N  (ISR is not supported in output: export)
+                const dynamicRegex = /^(\s*)(export\s+const\s+(?:dynamic|revalidate)\s*=[^;]+;?)/gm;
+                const hadDynamic = dynamicRegex.test(content);
+                if (hadDynamic) {
+                    dynamicRegex.lastIndex = 0;
+                    content = content.replace(dynamicRegex, '$1// CAP_DISABLE: $2');
                     changed = true;
                 }
                 
