@@ -57,7 +57,6 @@ export default function CapacitorInit() {
           // @ts-ignore — plugin may not be installed; guard with try/catch
           const { NavigationBar } = await import('@capgo/capacitor-navigation-bar').catch(() => ({ NavigationBar: null }));
           if (NavigationBar) {
-            await NavigationBar.setTransparency({ isTransparent: true });
             await NavigationBar.setColor({ color: '#CE813C', darkButtons: false });
           }
         } catch {
