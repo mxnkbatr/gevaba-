@@ -93,16 +93,16 @@ const nextConfig: NextConfig = {
     return config;
   },
 
-  async headers() {
-    return [
+  // Custom HTTP headers — only applied in SSR/web mode.
+  // Static export (Capacitor/Appflow) does not support custom headers.
+  ...(process.env.CAPACITOR_BUILD !== 'true' && {
+    headers: async () => [
       {
         source: "/(.*)",
         headers: [
           {
             key: "Content-Security-Policy",
             value: [
-              // Keep CSP compatible with Next.js (avoid breaking inline scripts) while still
-              // meeting store security requirements around clickjacking / embedding.
               "frame-ancestors 'none'",
               "base-uri 'self'",
               "object-src 'none'",
@@ -113,8 +113,8 @@ const nextConfig: NextConfig = {
           { key: "X-Content-Type-Options", value: "nosniff" },
         ],
       },
-    ];
-  },
+    ],
+  }),
 };
 
 export default withBundleAnalyzer(nextConfig);
