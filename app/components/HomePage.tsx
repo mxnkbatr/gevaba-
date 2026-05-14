@@ -404,7 +404,7 @@ export default function HomePage({
                 return (
                   <LocalizedLink
                     key={id}
-                    href={`/monks/${id}`}
+                    href={`/monks/detail?id=${id}`}
                     className="card shrink-0 active:scale-[0.975] transition-transform duration-200"
                     style={{ width: "166px", scrollSnapAlign: "start" }}
                     onClick={handleTap}
@@ -484,7 +484,7 @@ export default function HomePage({
                 return (
                   <LocalizedLink
                     key={p._id}
-                    href={`/shop/${p._id}`}
+                    href={`/shop/product?id=${p._id}`}
                     className="card shrink-0 active:scale-[0.975] transition-transform duration-200"
                     style={{ width: "176px", scrollSnapAlign: "start", display: "flex", flexDirection: "column" }}
                     onClick={handleTap}
@@ -543,7 +543,7 @@ export default function HomePage({
 
           {latest && (
             <LocalizedLink
-              href={`/blog/${latest.id}`}
+              href={`/blog/post?id=${latest.id}`}
               className="card block active:scale-[0.975] transition-transform duration-200"
               style={{ margin: "0 16px", boxShadow: "var(--depth-3)" }}
               onClick={handleTap}

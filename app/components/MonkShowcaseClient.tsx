@@ -130,7 +130,9 @@ export default function MonkShowcaseClient({
     const validLang = (["mn", "en"].includes(language) ? language : "mn") as
       | "mn"
       | "en";
-    router.push(`/${validLang}/monks/${monkId}`);
+    
+    // Use static path with query param for Capacitor compatibility
+    router.push(`/${validLang}/monks/detail?id=${monkId}`);
   };
 
   const langClass = language === "mn" ? "lang-mn" : "";

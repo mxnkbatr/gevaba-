@@ -221,6 +221,11 @@ export default function NativeNavbar() {
         <header
           className="md:hidden mobile-header"
           style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 50,
             backgroundColor: isScrolled ? "rgba(242,242,247,0.94)" : "transparent",
             backdropFilter: isScrolled ? "saturate(200%) blur(28px)" : "none",
             WebkitBackdropFilter: isScrolled ? "saturate(200%) blur(28px)" : "none",

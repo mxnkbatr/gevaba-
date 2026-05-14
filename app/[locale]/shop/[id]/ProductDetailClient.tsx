@@ -54,14 +54,46 @@ function categoryLabel(category: string, lang: "mn" | "en") {
   return (map[category] ?? map.other)[lang];
 }
 
-export default function ProductDetailClient({ product }: { product: ShopProduct | null }) {
+export default function ProductDetailClient({ product: initialProduct }: { product: ShopProduct | null }) {
   const router = useRouter();
   const { language: lang, t } = useLanguage();
   const { addToCart, totalItems } = useCart();
 
+  const [product, setProduct] = useState<ShopProduct | null>(initialProduct);
+  const [loading, setLoading] = useState(!initialProduct);
   const [activeImage, setActiveImage] = useState(0);
   const [qty, setQty] = useState(1);
   const [expanded, setExpanded] = useState(false);
+
+  React.useEffect(() => {
+    if (initialProduct) return;
+
+    const searchParams = new URLSearchParams(window.location.search);
+    const id = searchParams.get('id');
+    if (!id) return;
+
+    const fetchProduct = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch(`/api/products/${id}`);
+        if (res.ok) {
+          const data = await res.json();
+          setProduct(data);
+        }
+      } catch (e) {
+        console.error("Fetch product error", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProduct();
+  }, [initialProduct]);
+
+  if (loading) return (
+    <div className="h-[100svh] flex items-center justify-center bg-cream">
+      <div className="h-12 w-12 animate-spin rounded-full border-4 border-black/10 border-t-gold" />
+    </div>
+  );
 
   if (!product) {
     return (

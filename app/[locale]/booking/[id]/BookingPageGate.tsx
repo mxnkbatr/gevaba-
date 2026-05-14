@@ -8,7 +8,8 @@ const BookingDetailClient = dynamic(() => import("./BookingDetailClient"), { ssr
 
 export default function BookingPageGate() {
   const params = useParams();
-  const id = params?.id as string;
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const id = (params?.id as string) || searchParams?.get('id');
 
   // MongoDB ObjectId is 24 hex characters.
   // We use this to distinguish between a new booking (id = serviceId or 'initial')

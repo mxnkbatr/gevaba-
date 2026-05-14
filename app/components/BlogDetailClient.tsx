@@ -27,8 +27,43 @@ const getLocalizedText = (field: any, lang: string) => {
 const PLACEHOLDER_TITLE = { mn: "Өдрийн засал ба бясалгал", en: "Daily practice & meditation" };
 const ACCENT = "var(--gold)";
 
-export default function BlogDetailClient({ post, lang }: { post: any, lang: string }) {
+import { useParams } from "next/navigation";
+
+export default function BlogDetailClient({ post: initialPost, lang }: { post: any, lang: string }) {
     const { t } = useLanguage();
+    const params = useParams();
+    const [post, setPost] = React.useState(initialPost);
+    const [loading, setLoading] = React.useState(!initialPost);
+
+    useEffect(() => {
+        if (initialPost) return;
+
+        const searchParams = new URLSearchParams(window.location.search);
+        const id = searchParams.get('id');
+        if (!id) return;
+
+        const fetchPost = async () => {
+            try {
+                setLoading(true);
+                const res = await fetch(`/api/blogs/${id}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setPost(data);
+                }
+            } catch (e) {
+                console.error("Fetch blog error", e);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchPost();
+    }, [initialPost]);
+
+    if (loading) return (
+        <div className="h-[100svh] flex items-center justify-center bg-cream">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-black/10 border-t-gold" />
+        </div>
+    );
 
     if (!post) return null;
 

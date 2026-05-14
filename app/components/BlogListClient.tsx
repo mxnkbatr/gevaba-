@@ -73,7 +73,7 @@ const BlogCard = ({
       className="group block"
     >
       <Link
-        href={`/${lang}/blog/${post.id}`}
+        href={`/${lang}/blog/post?id=${post.id}`}
         className="block overflow-hidden rounded-[20px] bg-white border border-black/[0.05] shadow-sm transition-shadow duration-300 hover:shadow-md active:scale-[0.99]"
       >
         <div className="relative aspect-video w-full overflow-hidden bg-[#F2F2F7]">

@@ -76,7 +76,10 @@ export default function MonkProfileClient({
 }: MonkProfileProps) {
     const params = useParams();
     const router = useRouter();
-    const monkId = Array.isArray(params.id) ? params.id[0] : params.id;
+    const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    
+    // Support both /monks/[id] (web) and /monks/detail?id=[id] (mobile static)
+    const monkId = (Array.isArray(params.id) ? params.id[0] : params.id) || searchParams?.get('id');
 
     const { language: lang, t } = useLanguage();
     const { user } = useAuth();
@@ -248,7 +251,7 @@ export default function MonkProfileClient({
         if (!id) return;
 
         if (isSignedIn) {
-            router.push(`/${lang}/booking/${id}?monkId=${monkId}&date=${selectedDate}`);
+            router.push(`/${lang}/booking/detail?id=${id}&monkId=${monkId}&date=${selectedDate}`);
         } else {
             router.push(`/${lang}/sign-in`);
         }
