@@ -1,5 +1,7 @@
-// Server component — exports generateStaticParams for static export (Capacitor/Appflow).
-// The actual client-side rendering is done in _OrderDetailClient.tsx.
+// Server component — required for output: export (Capacitor/Appflow static build).
+// Renders the client component which handles data fetching via useEffect.
+import OrderDetailClient from "./_OrderDetailClient";
+
 export function generateStaticParams() {
   return [
     { locale: "mn", id: "capacitor" },
@@ -7,4 +9,6 @@ export function generateStaticParams() {
   ];
 }
 
-export { default } from "./_OrderDetailClient";
+export default function OrderDetailPage() {
+  return <OrderDetailClient />;
+}

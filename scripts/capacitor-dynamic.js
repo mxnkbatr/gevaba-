@@ -87,10 +87,13 @@ if (action === 'remove') {
                 
                 // ONLY inject if it's a dynamic route `[...]`
                 if (isPageOrLayout && filePath.includes('[')) {
-                    // Check if it already has generateStaticParams or is a client component
+                    // Check if it already has generateStaticParams
                     const hasGenerateStaticParams = content.includes('generateStaticParams');
                     const isClientComponent = content.includes('"use client"') || content.includes("'use client'");
                     
+                    // For client components: we cannot export generateStaticParams from a "use client" file.
+                    // Instead, we create a separate server wrapper page.tsx alongside it.
+                    // Skip client components here — they should be handled via the server wrapper pattern.
                     if (!hasGenerateStaticParams && !isClientComponent) {
                         let dyns = [];
                         
