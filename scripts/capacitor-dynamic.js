@@ -67,6 +67,9 @@ if (action === 'remove') {
             if (filePath.endsWith('.ts') || filePath.endsWith('.tsx')) {
                 // Skip backup files if they accidentally exist in the tree
                 if (filePath.endsWith('.cap_bak')) return;
+                // Skip underscore-prefixed client component helpers (e.g. _OrderDetailClient.tsx)
+                const basename = path.basename(filePath);
+                if (basename.startsWith('_')) return;
 
                 let content = fs.readFileSync(filePath, 'utf-8');
                 let originalContent = content;
