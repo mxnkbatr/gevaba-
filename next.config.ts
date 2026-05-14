@@ -32,7 +32,6 @@ const nextConfig: NextConfig = {
     optimizePackageImports: [
       "lucide-react",
       "framer-motion",
-      "@clerk/nextjs",
       "react-hot-toast",
     ],
     /** Client router cache (seconds): fewer full RSC refetches after prefetch / revisit */
@@ -78,7 +77,7 @@ const nextConfig: NextConfig = {
   },
   compress: true,
   poweredByHeader: false,
-  webpack: (config) => {
+  webpack: (config, { isServer }) => {
     config.experiments = {
       ...config.experiments,
       asyncWebAssembly: true,
@@ -90,6 +89,15 @@ const nextConfig: NextConfig = {
         asyncFunction: true,
       };
     }
+    
+    // During Capacitor build (static export), @clerk/nextjs Server Actions cause build failures.
+    // We alias them to our custom mocks which use @clerk/clerk-react.
+    if (process.env.CAPACITOR_BUILD === 'true') {
+      const path = require('path');
+      config.resolve.alias['@clerk/nextjs/server'] = path.resolve(__dirname, 'scripts/clerk-server-mock.ts');
+      config.resolve.alias['@clerk/nextjs'] = path.resolve(__dirname, 'scripts/clerk-react-mock.tsx');
+    }
+    
     return config;
   },
 
