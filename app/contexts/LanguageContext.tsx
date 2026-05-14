@@ -21,6 +21,11 @@ export const LanguageProvider = ({ children, initialLocale }: { children: ReactN
 
   useEffect(() => {
     const checkNativeLocale = async () => {
+      // Only auto-detect if initialLocale wasn't explicitly set via route
+      // or if we want to ensure the app matches device language on first load.
+      // For now, let's prioritize the route locale (initialLocale).
+      if (initialLocale) return;
+
       if (Capacitor.getPlatform() !== 'web') {
         try {
           const { value } = await Device.getLanguageCode();
@@ -34,7 +39,7 @@ export const LanguageProvider = ({ children, initialLocale }: { children: ReactN
       }
     };
     checkNativeLocale();
-  }, []);
+  }, [initialLocale]);
 
   const t = <T,>(translations: { mn: T; en: T; }): T => {
     return translations[language] || translations.mn || translations.en;

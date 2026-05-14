@@ -49,7 +49,7 @@ const nextConfig: NextConfig = {
 
   reactStrictMode: true,
   skipTrailingSlashRedirect: true,
-  trailingSlash: false,
+  trailingSlash: true,
   skipProxyUrlNormalize: true,
   images: {
     dangerouslyAllowSVG: false,

@@ -227,7 +227,8 @@ export default function NativeNavbar() {
             borderBottom: isScrolled ? "0.5px solid rgba(60,60,67,0.12)" : "0.5px solid transparent",
             paddingLeft: "16px",
             paddingRight: "16px",
-            paddingBottom: "8px"
+            paddingBottom: "8px",
+            paddingTop: "env(safe-area-inset-top, 44px)",
           }}
         >
           <div className="flex items-center justify-between h-[44px]">
@@ -301,7 +302,13 @@ export default function NativeNavbar() {
         <nav
           className="md:hidden mobile-tab-bar"
           style={{
-            height: "calc(49px + var(--sab))",
+            position: "fixed",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            zIndex: 50,
+            height: "calc(49px + env(safe-area-inset-bottom, 0px))",
+            paddingBottom: "env(safe-area-inset-bottom, 0px)",
             backgroundColor: "rgba(248,248,250,0.90)",
             backdropFilter: "saturate(200%) blur(30px)",
             WebkitBackdropFilter: "saturate(200%) blur(30px)",

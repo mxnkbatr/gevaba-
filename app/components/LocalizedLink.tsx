@@ -27,7 +27,12 @@ export const LocalizedLink = ({
 
   // Ensure leading slash if not root
   const normalizedHref = hrefString.startsWith('/') ? hrefString : `/${hrefString}`;
-  const path = normalizedHref === '/' ? `/${lang}` : `/${lang}${normalizedHref}`;
+  let path = normalizedHref === '/' ? `/${lang}` : `/${lang}${normalizedHref}`;
+  
+  // Ensure trailing slash for Capacitor static export compatibility
+  if (!path.endsWith('/')) {
+    path += '/';
+  }
 
   return (
     <Link href={path} prefetch={prefetch} {...props}>

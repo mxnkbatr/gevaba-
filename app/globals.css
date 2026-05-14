@@ -86,7 +86,7 @@
 
   /* ── SAFE AREA ── */
   --sat: env(safe-area-inset-top, 44px);
-  --sab: env(safe-area-inset-bottom, 34px);
+  --sab: env(safe-area-inset-bottom, 0px);
   --sal: env(safe-area-inset-left, 0px);
   --sar: env(safe-area-inset-right, 0px);
   --nav-h: 88px;
@@ -160,6 +160,7 @@ body {
   font-feature-settings: "kern" 1, "liga" 1;
   /* Prevent double-tap zoom — eliminates 300ms click delay globally */
   touch-action: manipulation;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ── NATIVE FEEL RESET ──────────────────────────────────────────────

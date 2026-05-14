@@ -45,6 +45,7 @@ export default async function RootLayout({
                 <main
                   className="w-full relative overflow-x-hidden bg-cream"
                   style={{
+                    paddingTop: 'calc(env(safe-area-inset-top, 44px) + 44px)',
                     paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 96px)',
                     /* Promote to GPU layer for jank-free page transition */
                     isolation: 'isolate',
