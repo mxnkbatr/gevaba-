@@ -10,7 +10,7 @@ const isDev =
   process.env.CAPACITOR_BUILD !== 'true';
 
 const config: CapacitorConfig = {
-  appId: 'mn.gevabal.buddha',
+  appId: 'mn.gevabal.app',
   appName: 'Gevabal',
   webDir: 'out',
 
