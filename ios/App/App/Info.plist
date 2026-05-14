@@ -61,6 +61,7 @@
 		<string>clerk.gevabal.mn</string>
 		<string>img.clerk.com</string>
 		<string>res.cloudinary.com</string>
+		<string>gevaba.vercel.app</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Профайл зураг авах, шинэчлэхийн тулд камер ашиглана.</string>

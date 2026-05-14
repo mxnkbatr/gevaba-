@@ -18,8 +18,8 @@ const config: CapacitorConfig = {
     // Dev-only live reload — never shipped in release builds.
     url: isDev
       ? process.env.CAPACITOR_DEV_SERVER_URL || 'http://localhost:3000'
-      : undefined,
-    cleartext: isDev,
+      : 'https://gevaba.vercel.app/mn',
+    cleartext: true,
     androidScheme: 'https',
     iosScheme: 'https',
     // Allow Cloudinary & Clerk origins in the WebView
@@ -28,6 +28,7 @@ const config: CapacitorConfig = {
       '*.clerk.com',
       '*.livekit.cloud',
       'gevabal.mn',
+      'gevaba.vercel.app',
     ],
   },
 
