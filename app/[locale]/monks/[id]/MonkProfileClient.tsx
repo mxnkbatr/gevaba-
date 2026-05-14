@@ -251,7 +251,7 @@ export default function MonkProfileClient({
         if (!id) return;
 
         if (isSignedIn) {
-            router.push(`/${lang}/booking/detail?id=${id}&monkId=${monkId}&date=${selectedDate}`);
+            router.push(`/${lang}/booking/detail/?id=${id}&monkId=${monkId}&date=${selectedDate}`);
         } else {
             router.push(`/${lang}/sign-in`);
         }

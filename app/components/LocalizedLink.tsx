@@ -29,9 +29,10 @@ export const LocalizedLink = ({
   const normalizedHref = hrefString.startsWith('/') ? hrefString : `/${hrefString}`;
   let path = normalizedHref === '/' ? `/${lang}` : `/${lang}${normalizedHref}`;
   
-  // Ensure trailing slash for Capacitor static export compatibility
-  if (!path.endsWith('/')) {
-    path += '/';
+  // Ensure trailing slash for Capacitor static export compatibility, but avoid breaking query params
+  const [urlPath, queryString] = path.split('?');
+  if (urlPath && !urlPath.endsWith('/') && !urlPath.includes('.')) {
+    path = `${urlPath}/${queryString ? `?${queryString}` : ''}`;
   }
 
   return (

@@ -132,7 +132,7 @@ export default function MonkShowcaseClient({
       | "en";
     
     // Use static path with query param for Capacitor compatibility
-    router.push(`/${validLang}/monks/detail?id=${monkId}`);
+    router.push(`/${validLang}/monks/detail/?id=${monkId}`);
   };
 
   const langClass = language === "mn" ? "lang-mn" : "";

@@ -242,7 +242,7 @@ export default function ShopClient({ products }: { products: ShopProduct[] }) {
                     <button
                       key={p._id}
                       type="button"
-                      onClick={() => router.push(`/${lang}/shop/product?id=${p._id}`)}
+                      onClick={() => router.push(`/${lang}/shop/product/?id=${p._id}`)}
                       className="shrink-0 w-44 text-left flex flex-col gap-3 group"
                     >
                       <div className="relative w-full aspect-square bg-[#F2F2F7] rounded-[24px] flex items-center justify-center overflow-hidden border border-black/[0.04] transition-shadow group-hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] active:scale-[0.98]">
@@ -279,7 +279,7 @@ export default function ShopClient({ products }: { products: ShopProduct[] }) {
                   key={p._id}
                   type="button"
                   variants={cardVariants}
-                  onClick={() => router.push(`/${lang}/shop/product?id=${p._id}`)}
+                  onClick={() => router.push(`/${lang}/shop/product/?id=${p._id}`)}
                   className="text-left flex flex-col gap-3 group"
                 >
                   <div className="relative w-full aspect-square bg-[#F2F2F7] rounded-[24px] flex items-center justify-center overflow-hidden border border-black/[0.04] transition-shadow group-hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] active:scale-[0.98]">
