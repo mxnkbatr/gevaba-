@@ -14,21 +14,29 @@ const config: CapacitorConfig = {
   appName: 'Gevabal',
   webDir: 'out',
 
-  server: isDev
-    ? {
-        url: process.env.CAPACITOR_DEV_SERVER_URL || 'http://localhost:3000',
-        cleartext: true,
-        androidScheme: 'https',
-        iosScheme: 'https',
-      }
-    : undefined,
+  // ── Remote WebView — Vercel-ийн live сайтыг ачаална ──
+  server: {
+    url: 'https://gevaba.vercel.app/mn',
+    androidScheme: 'https',
+    iosScheme: 'https',
+    cleartext: false,
+    allowNavigation: [
+      'gevaba.vercel.app',
+      'gevabal.mn',
+      '*.clerk.com',
+      'clerk.gevabal.mn',
+      'img.clerk.com',
+      'res.cloudinary.com',
+      '*.livekit.cloud',
+    ],
+  },
 
   // ── iOS ────────────────────────────────────────────────────────────
   ios: {
     // "automatic" lets iOS manage the safe area content inset natively,
     // while our CSS env() vars handle the layout offset.
     contentInset: 'automatic',
-    webContentsDebuggingEnabled: isDev,
+    webContentsDebuggingEnabled: false, // App Store build — false байх ёстой
     // Restrict navigation to app-bound domains (App Store requirement).
     limitsNavigationsToAppBoundDomains: true,
     // WKWebView performance flags

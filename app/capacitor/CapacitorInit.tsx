@@ -128,14 +128,6 @@ export default function CapacitorInit() {
         })
       );
 
-      // ── 8. PUSH NOTIFICATIONS ────────────────────────────────────
-      if (user?._id) {
-        try {
-          await initPushNotifications(user._id.toString(), router);
-        } catch (err) {
-          console.error('[CapacitorInit] Push Notifications init failed:', err);
-        }
-      }
 
       // ── 9. SPLASH SCREEN HIDE ─────────────────────────────────────
       // rAF ensures at least one paint before hiding — prevents blank flash.
@@ -155,7 +147,13 @@ export default function CapacitorInit() {
       isCancelled = true;
       void Promise.allSettled(handles.map((h) => h.remove()));
     };
-  }, [isNative, isAndroid, user, router]);
+  }, [isNative, isAndroid, router]); // user removed from dependencies
+
+  // ── PUSH NOTIFICATIONS ──────────────────────────────────────────
+  useEffect(() => {
+    if (!isNative || !user?._id) return;
+    initPushNotifications(user._id.toString(), router).catch(console.error);
+  }, [isNative, user?._id, router]);
 
   return null;
 }
