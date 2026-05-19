@@ -139,14 +139,14 @@ export default function CapacitorInit() {
 
       // ── 9. SPLASH SCREEN HIDE ─────────────────────────────────────
       // rAF ensures at least one paint before hiding — prevents blank flash.
-      try {
-        requestAnimationFrame(() => {
-          if (isCancelled) return;
-          void SplashScreen.hide({ fadeOutDuration: 350 });
-        });
-      } catch (e) {
-        console.warn('[CapacitorInit] SplashScreen.hide() failed:', e);
-      }
+      // Also set a hard timeout fallback in case something delays rendering.
+      const hideSplash = () => {
+        if (isCancelled) return;
+        void SplashScreen.hide({ fadeOutDuration: 400 }).catch(() => {});
+      };
+      requestAnimationFrame(hideSplash);
+      // Hard fallback: force hide after 3s regardless
+      setTimeout(hideSplash, 3000);
     };
 
     void initialize();

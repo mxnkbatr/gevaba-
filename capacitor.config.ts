@@ -53,9 +53,9 @@ const config: CapacitorConfig = {
   plugins: {
     // ── Splash Screen ───────────────────────────────────────────────
     SplashScreen: {
-      launchShowDuration: 1800,          // Show for 1.8s to mask cold start
-      launchAutoHide: false,             // We manually call hide() after paint
-      launchFadeOutDuration: 350,
+      launchShowDuration: 2500,          // Show for 2.5s minimum
+      launchAutoHide: true,              // Auto-hide as safety fallback
+      launchFadeOutDuration: 400,
       backgroundColor: '#F9F8F7',        // Matches app bg-cream
       androidSplashResourceName: 'splash',
       androidScaleType: 'CENTER_CROP',
