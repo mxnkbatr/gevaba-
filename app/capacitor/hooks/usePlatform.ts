@@ -38,41 +38,43 @@ export interface PlatformInfo {
  * );
  * ```
  */
-export function usePlatform(): PlatformInfo {
-    const [platform, setPlatform] = useState<Platform>('web');
-    const [safeArea, setSafeArea] = useState<SafeAreaInsets>({
-        top: 0,
-        bottom: 0,
+// Synchronous initial detection — avoids a flash of wrong UI on first render.
+// Capacitor.getPlatform() is safe to call outside useEffect (no DOM access).
+function getInitialPlatform(): Platform {
+    try { return Capacitor.getPlatform() as Platform; } catch { return 'web'; }
+}
+
+function getInitialInsets(p: Platform): SafeAreaInsets {
+    return {
+        top:    p === 'ios' ? 44 : p === 'android' ? 24 : 0,
+        bottom: p === 'ios' ? 34 : 0,
         left: 0,
         right: 0,
-    });
+    };
+}
+
+export function usePlatform(): PlatformInfo {
+    const [platform, setPlatform] = useState<Platform>(getInitialPlatform);
+    const [safeArea, setSafeArea] = useState<SafeAreaInsets>(() =>
+        getInitialInsets(getInitialPlatform())
+    );
 
     useEffect(() => {
         const detectedPlatform = Capacitor.getPlatform() as Platform;
         setPlatform(detectedPlatform);
 
-        // Set safe area insets based on platform
-        // iOS has notch/Dynamic Island, Android has status bar
-        const insets: SafeAreaInsets = {
-            top: detectedPlatform === 'ios' ? 44 : detectedPlatform === 'android' ? 24 : 0,
-            bottom: detectedPlatform === 'ios' ? 34 : 0, // iOS home indicator
-            left: 0,
-            right: 0,
-        };
+        const insets = getInitialInsets(detectedPlatform);
 
-        // On native, try to get actual safe area values
+        // Refine with actual CSS env() values if available
         if (detectedPlatform !== 'web') {
             try {
-                // Try to read CSS env() variables for safe area
                 const style = getComputedStyle(document.documentElement);
-                const topSafe = style.getPropertyValue('--sat') || style.getPropertyValue('env(safe-area-inset-top)');
-                const bottomSafe = style.getPropertyValue('--sab') || style.getPropertyValue('env(safe-area-inset-bottom)');
-
-                if (topSafe) insets.top = parseInt(topSafe) || insets.top;
+                const topSafe    = style.getPropertyValue('--sat');
+                const bottomSafe = style.getPropertyValue('--sab');
+                if (topSafe)    insets.top    = parseInt(topSafe)    || insets.top;
                 if (bottomSafe) insets.bottom = parseInt(bottomSafe) || insets.bottom;
-            } catch (e) {
-                // Fallback to defaults
-                console.warn('Could not read safe area insets, using defaults');
+            } catch {
+                // fallback already set
             }
         }
 
