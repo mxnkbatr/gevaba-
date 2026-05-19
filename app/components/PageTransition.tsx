@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname } from "next/navigation";
 import { useRef } from "react";
+import { usePlatform } from "@/app/capacitor/hooks/usePlatform";
 
 /**
  * PageTransition — Native-style slide/fade transition between routes.
@@ -19,47 +20,56 @@ import { useRef } from "react";
  * Usage: Wrap {children} in [locale]/layout.tsx
  */
 
-const VARIANTS = {
-  initial: {
-    opacity: 0,
-    // Slides in 14px from right — subtle, not dramatic
-    x: 14,
-  },
+// iOS push animation — нарийн тохиргоо
+const IOS_VARIANTS = {
+  initial: { opacity: 0, x: '100%' },
   animate: {
     opacity: 1,
     x: 0,
-    transition: {
-      duration: 0.22,
-      ease: [0.25, 0.46, 0.45, 0.94] as [number, number, number, number],
-    },
+    transition: { duration: 0.35, ease: [0.36, 0.66, 0.04, 1] },
   },
   exit: {
     opacity: 0,
-    // Exits to left (slightly) — feels like page is being pushed behind
+    x: '-30%',
+    transition: { duration: 0.25, ease: 'easeIn' },
+  },
+};
+
+// Web-д илүү хөнгөн animation
+const WEB_VARIANTS = {
+  initial: { opacity: 0, x: 14 },
+  animate: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] },
+  },
+  exit: {
+    opacity: 0,
     x: -8,
-    transition: {
-      duration: 0.12,
-      ease: "easeIn",
-    },
+    transition: { duration: 0.12, ease: 'easeIn' },
   },
 };
 
 export default function PageTransition({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { isIOS, isAndroid } = usePlatform();
+  const variants = (isIOS || isAndroid) ? IOS_VARIANTS : WEB_VARIANTS;
 
   return (
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={pathname}
-        initial={{ opacity: 0, x: 14 }}
-        animate={{ opacity: 1, x: 0 }}
-        exit={{ opacity: 0, x: -8 }}
-        transition={{ duration: 0.22, ease: "easeOut" }}
+        variants={variants as any}
+        initial="initial"
+        animate="animate"
+        exit="exit"
         style={{
           width: "100%",
           willChange: "transform, opacity",
           backfaceVisibility: "hidden",
           WebkitBackfaceVisibility: "hidden",
+          // GPU compositing layer
+          transform: 'translateZ(0)',
         }}
       >
         {children}

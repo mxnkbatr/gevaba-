@@ -14,23 +14,14 @@ const config: CapacitorConfig = {
   appName: 'Gevabal',
   webDir: 'out',
 
-  server: {
-    // Dev-only live reload — never shipped in release builds.
-    url: isDev
-      ? process.env.CAPACITOR_DEV_SERVER_URL || 'http://localhost:3000'
-      : 'https://gevaba.vercel.app/mn',
-    cleartext: true,
-    androidScheme: 'https',
-    iosScheme: 'https',
-    // Allow Cloudinary & Clerk origins in the WebView
-    allowNavigation: [
-      'res.cloudinary.com',
-      '*.clerk.com',
-      '*.livekit.cloud',
-      'gevabal.mn',
-      'gevaba.vercel.app',
-    ],
-  },
+  server: isDev
+    ? {
+        url: process.env.CAPACITOR_DEV_SERVER_URL || 'http://localhost:3000',
+        cleartext: true,
+        androidScheme: 'https',
+        iosScheme: 'https',
+      }
+    : undefined,
 
   // ── iOS ────────────────────────────────────────────────────────────
   ios: {

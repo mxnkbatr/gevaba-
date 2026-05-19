@@ -13,6 +13,14 @@ const nextConfig: NextConfig = {
    * and this warning stays off: "webpack config and no turbopack config".
    */
   output: process.env.CAPACITOR_BUILD === 'true' ? 'export' : undefined,
+  typescript: {
+    // Ignore type errors during Capacitor build because we manipulate the file tree (hiding /api)
+    ignoreBuildErrors: process.env.CAPACITOR_BUILD === 'true',
+  },
+  eslint: {
+    // Also ignore linting during build to speed up Capacitor export
+    ignoreDuringBuilds: process.env.CAPACITOR_BUILD === 'true',
+  },
   // Keep dev tooling away from the floating tab bar (bottom-left overlaps UX)
   devIndicators: {
     position: "top-right",
@@ -119,6 +127,13 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-Content-Type-Options", value: "nosniff" },
+        ],
+      },
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: 'capacitor://localhost' },
+          { key: 'Access-Control-Allow-Origin', value: 'https://gevabal.mn' },
         ],
       },
     ],

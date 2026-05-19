@@ -1,0 +1,5 @@
+1:"$Sreact.fragment"
+2:I[90484,[],"OutletBoundary"]
+3:"$Sreact.suspense"
+0:{"buildId":"xB5m-IjooMEjzRGgz1G5D","rsc":["$","$1","c",{"children":[["$","div",null,{"className":"min-h-[100svh] bg-cream px-5 pt-[calc(env(safe-area-inset-top,44px)+16px)] animate-pulse","children":[["$","div",null,{"className":"w-full h-64 bg-stone/20 rounded-3xl mb-6"}],["$","div",null,{"className":"w-3/4 h-10 bg-stone/20 rounded-xl mb-4"}],["$","div",null,{"className":"w-1/2 h-6 bg-stone/20 rounded-xl mb-8"}],["$","div",null,{"className":"space-y-4","children":[["$","div",null,{"className":"w-full h-4 bg-stone/20 rounded"}],["$","div",null,{"className":"w-full h-4 bg-stone/20 rounded"}],["$","div",null,{"className":"w-5/6 h-4 bg-stone/20 rounded"}]]}]]}],null,["$","$L2",null,{"children":["$","$3",null,{"name":"Next.MetadataOutlet","children":"$@4"}]}]]}],"loading":null,"isPartial":false}
+4:null

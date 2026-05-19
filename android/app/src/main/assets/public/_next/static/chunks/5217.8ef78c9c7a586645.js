@@ -1,0 +1,1 @@
+"use strict";(self.webpackChunk_N_E=self.webpackChunk_N_E||[]).push([[5217],{5217:(a,e,n)=>{n.r(e),n.d(e,{NavigationBar:()=>N,NavigationBarColor:()=>i});var t,i,r=n(77805);(t=i||(i={})).WHITE="#FFFFFF",t.BLACK="#000000",t.TRANSPARENT="transparent";let N=(0,r.F3)("NavigationBar",{web:()=>n.e(4423).then(n.bind(n,74423)).then(a=>new a.NavigationBarWeb)})}}]);

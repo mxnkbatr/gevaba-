@@ -7,11 +7,13 @@ import { Loader2, Eye, EyeOff, Home } from "lucide-react";
 import type { PhoneCodeFactor } from "@clerk/types";
 import { useLanguage } from "../../contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePlatform } from "@/app/capacitor/hooks/usePlatform";
 
 function SignInPageInner() {
   const { t, language } = useLanguage();
   const { isLoaded, signIn, setActive } = useSignIn();
   const { user, login, loading: authLoading } = useAuth();
+  const { isNative } = usePlatform();
   const router = useRouter();
   const searchParams = useSearchParams();
 
@@ -32,8 +34,10 @@ function SignInPageInner() {
   const [error, setError] = useState("");
 
   React.useEffect(() => {
-    if (!authLoading && user) router.replace(postAuthPath());
-  }, [user, authLoading, router, postAuthPath]);
+    if (!authLoading && user) {
+      router.replace(isNative ? `/${language}` : postAuthPath());
+    }
+  }, [user, authLoading, router, postAuthPath, isNative, language]);
 
   const formatId = (v: string) => {
     const c = v.replace(/\s+/g, "");
@@ -54,14 +58,14 @@ function SignInPageInner() {
         const r = await signIn!.attemptFirstFactor({ strategy: "phone_code", code: otp });
         if (r.status === "complete") {
           await setActive!({ session: r.createdSessionId });
-          router.replace(postAuthPath());
+          router.replace(isNative ? `/${language}` : postAuthPath());
         }
         setLoading(false); return;
       }
 
       try {
         await login({ identifier: fmtId, password });
-        router.replace(postAuthPath()); return;
+        router.replace(isNative ? `/${language}` : postAuthPath()); return;
       } catch (dbErr: any) {
         if (dbErr.message === "Invalid password") {
           setError(t({ mn: "Нууц үг буруу байна", en: "Incorrect password" }));
@@ -72,7 +76,7 @@ function SignInPageInner() {
       const r = await signIn!.create({ identifier: fmtId, password });
       if (r.status === "complete") {
         await setActive!({ session: r.createdSessionId });
-        router.replace(postAuthPath());
+        router.replace(isNative ? `/${language}` : postAuthPath());
       } else if (r.status === "needs_first_factor") {
         const pf = r.supportedFirstFactors?.find(f => f.strategy === "phone_code") as PhoneCodeFactor | undefined;
         if (pf) {

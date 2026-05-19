@@ -124,3 +124,5 @@ export async function vibrate(duration: number = 200): Promise<void> {
         console.warn('Vibration not available:', error);
     }
 }
+// Button-уудад ашиглах жишээ:
+// <button onClick={() => { hapticsLight(); doSomething(); }}>
