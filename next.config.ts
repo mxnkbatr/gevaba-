@@ -17,10 +17,7 @@ const nextConfig: NextConfig = {
     // Ignore type errors during Capacitor build because we manipulate the file tree (hiding /api)
     ignoreBuildErrors: process.env.CAPACITOR_BUILD === 'true',
   },
-  eslint: {
-    // Also ignore linting during build to speed up Capacitor export
-    ignoreDuringBuilds: process.env.CAPACITOR_BUILD === 'true',
-  },
+
   // Keep dev tooling away from the floating tab bar (bottom-left overlaps UX)
   devIndicators: {
     position: "top-right",

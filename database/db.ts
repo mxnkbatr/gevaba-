@@ -27,12 +27,27 @@ function ensureClientPromise(): Promise<MongoClient> {
     const client = new MongoClient(uri, {
       maxPoolSize: 10,
       minPoolSize: 1,
-      connectTimeoutMS: 5000,       // was 10000 — fail fast on Vercel cold start
-      socketTimeoutMS: 20000,       // was 45000
-      serverSelectionTimeoutMS: 4000, // was 10000 — critical for LCP
-      compressors: ['zstd', 'zlib'], // compress wire protocol data
+      connectTimeoutMS: 5000,         // fail fast on Vercel cold start
+      socketTimeoutMS: 20000,
+      serverSelectionTimeoutMS: 4000, // critical for LCP — don't wait forever
+      compressors: ['zstd', 'zlib'],  // compress wire protocol data
     });
-    global._mongoClientPromise = client.connect();
+
+    // Wrap connect() with a hard 5s timeout so DNS ETIMEOUT can't block for 50s
+    const connectWithTimeout = () => {
+      const timeout = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('MongoDB connect timeout (5s)')), 5000)
+      );
+      return Promise.race([client.connect(), timeout]);
+    };
+
+    global._mongoClientPromise = connectWithTimeout()
+      .then(() => client)
+      .catch((err) => {
+        // Clear the cached promise so next request tries again
+        global._mongoClientPromise = undefined;
+        throw err;
+      }) as Promise<MongoClient>;
   }
   return global._mongoClientPromise;
 }
