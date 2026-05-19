@@ -3,8 +3,13 @@ import HomePage from "../components/HomePage";
 import { connectToDatabase } from "@/database/db";
 import { Monk } from "@/database/types";
 
-/** ISR: CDN / edge cache — Mongo-г секунд бүр биш ~60s тутамд шинэчилнэ (CAPACITOR_BUILD export үед үл хэрэгжинэ). */
-export const revalidate = 60;
+/** ISR: Vercel CDN cache — 5min. Reduces MongoDB cold starts significantly. */
+export const revalidate = 300;
+
+// Vercel will pre-render both locales at build time
+export function generateStaticParams() {
+  return [{ locale: 'mn' }, { locale: 'en' }];
+}
 
 const getMonks = cache(async () => {
   try {

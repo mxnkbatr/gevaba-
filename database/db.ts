@@ -26,10 +26,11 @@ function ensureClientPromise(): Promise<MongoClient> {
   if (!global._mongoClientPromise) {
     const client = new MongoClient(uri, {
       maxPoolSize: 10,
-      minPoolSize: 2,
-      connectTimeoutMS: 10000,
-      socketTimeoutMS: 45000,
-      serverSelectionTimeoutMS: 10000,
+      minPoolSize: 1,
+      connectTimeoutMS: 5000,       // was 10000 — fail fast on Vercel cold start
+      socketTimeoutMS: 20000,       // was 45000
+      serverSelectionTimeoutMS: 4000, // was 10000 — critical for LCP
+      compressors: ['zstd', 'zlib'], // compress wire protocol data
     });
     global._mongoClientPromise = client.connect();
   }

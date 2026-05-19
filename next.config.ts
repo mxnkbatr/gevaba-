@@ -66,7 +66,7 @@ const nextConfig: NextConfig = {
     // Device sizes optimized for common breakpoints
     deviceSizes: [640, 750, 828, 1080, 1200],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60,
+    minimumCacheTTL: 2592000, // 30 days — images rarely change
     remotePatterns: [
       // Avatar / mock data
       { protocol: "https", hostname: "i.pravatar.cc" },
@@ -127,6 +127,15 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
           { key: "X-Content-Type-Options", value: "nosniff" },
+          // Stale-while-revalidate: browser uses cache while fetching new version
+          { key: "Cache-Control", value: "public, max-age=0, s-maxage=300, stale-while-revalidate=86400" },
+        ],
+      },
+      {
+        source: "/_next/static/(.*)",
+        headers: [
+          // Static JS/CSS chunks are content-hashed — cache forever
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
         ],
       },
       {
