@@ -11,6 +11,7 @@
   --gold-muted: rgba(206, 129, 60, 0.14);
   --gold-glow: rgba(206, 129, 60, 0.28);
   --nav-active-bg: #efe3d5; /* Active tab background */
+  --bg-cream: #F9F8F7;      /* App background cream — used as splash bg too */
 
   /* ── APPLE SEMANTIC COLORS ── */
   --ink: #1D1D1F;
@@ -687,11 +688,16 @@ a:active,
 /* ── PAGE WRAPPER ── */
 .page {
   min-height: 100svh;
-  background: var(--bg-secondary);
+  background: var(--bg-cream);
   padding-top: calc(var(--nav-h) + 8px);
   padding-bottom: var(--page-pb);
   padding-left: var(--sal);
   padding-right: var(--sar);
+}
+
+/* bg-cream utility — used in layout.tsx main tag */
+.bg-cream {
+  background-color: var(--bg-cream) !important;
 }
 
 .page-content {
